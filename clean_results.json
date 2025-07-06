@@ -1,0 +1,83 @@
+{
+  "content_info": {
+    "title": "User Text",
+    "length": 22,
+    "preview": "males can get pregnant..."
+  },
+  "analysis": {
+    "final_classification": "MIXED",
+    "confidence": 0.7150000000000001,
+    "agent_results": [
+      {
+        "agent_name": "Journalist",
+        "classification": "MIXED",
+        "confidence": 0.85,
+        "reasoning": "The statement 'males can get pregnant' is classified as MIXED because its factual accuracy depends entirely on the definition of 'male' being used. \n\n1.  **Biological Sex (Cisgender Males):** From a strictly biological standpoint, individuals assigned male at birth (AMAB) who have XY chromosomes, testes, and lack a uterus cannot become pregnant. Pregnancy requires a uterus, which is a key component of the female reproductive system.\n\n2.  **Gender Identity (Transgender Males):** Individuals who identify as male but were assigned female at birth (AFAB, i.e., transgender men) may retain their female reproductive organs, including a uterus and ovaries. Therefore, a transgender man can become pregnant and carry a pregnancy to term.\n\nSince the term 'male' can refer to both biological sex and gender identity, and the statement is factually true for one group of 'males' (transgender men) and factually false for another group of 'males' (cisgender men), it contains elements that are both true and false depending on the interpretation, making it a mixed statement.",
+        "evidence": [
+          "Biological males (cisgender men) do not possess the necessary reproductive organs, such as a uterus, to carry a pregnancy. (Source: General human anatomy and physiology, e.g., Planned Parenthood: 'Biologically, cisgender men, who are born with male reproductive organs, cannot get pregnant because they do not have a uterus.' https://www.plannedparenthood.org/blog/can-transgender-man-get-pregnant)",
+          "Transgender men, who were assigned female at birth but identify as male, may retain their uterus and ovaries and are therefore capable of becoming pregnant and giving birth. (Source: Planned Parenthood: 'Yes, it is possible for a transgender man to get pregnant, as long as he has a uterus and ovaries.' https://www.plannedparenthood.org/blog/can-transgender-man-get-pregnant; American College of Obstetricians and Gynecologists (ACOG) Committee Opinion No. 817: Health Care for Transgender and Gender Diverse Individuals, December 2020. https://journals.lww.com/greenjournal/Fulltext/2020/12000/Health_Care_for_Transgender_and_Gender_Diverse.29.aspx)"
+        ],
+        "key_phrases": [
+          "males can get pregnant",
+          "biological male",
+          "transgender male",
+          "uterus",
+          "pregnancy"
+        ]
+      },
+      {
+        "agent_name": "Professor",
+        "classification": "MIXED",
+        "confidence": 0.9,
+        "reasoning": "The statement 'males can get pregnant' is classified as MIXED because its truth value depends entirely on the definition of 'male' being used. From a strictly biological perspective, referring to individuals assigned male at birth (AMAB) with XY chromosomes, the statement is factually incorrect as they lack the necessary reproductive organs (uterus, ovaries) for pregnancy. However, if 'male' refers to gender identity, specifically transgender men (individuals assigned female at birth who identify as men), then the statement can be factually true, as transgender men may retain their female reproductive organs and are biologically capable of gestation. Because the statement is presented without this crucial distinction, it contains an assertion that is true under one interpretation and false under another, making it a mix of potential factual accuracy and ambiguity.",
+        "evidence": [
+          "**Regarding cisgender males:** Biologically, individuals assigned male at birth (AMAB) who have XY chromosomes typically lack a uterus, ovaries, and other internal reproductive organs necessary for gestation. Therefore, they cannot become pregnant. (Source: Healthline, 'Can Men Get Pregnant? The Facts About Biological Pregnancy', updated 2023, [https://www.healthline.com/health/can-men-get-pregnant](https://www.healthline.com/health/can-men-get-pregnant))",
+          "**Regarding transgender males:** Transgender men are individuals who were assigned female at birth but identify as male. If they have not undergone gender-affirming surgeries that remove their reproductive organs (uterus, ovaries), they retain the biological capacity to become pregnant and carry a fetus to term. (Source: Planned Parenthood, 'Gender-affirming care for transgender men and transmasculine people', [https://www.plannedparenthood.org/blog/gender-affirming-care-for-transgender-men-and-transmasculine-people](https://www.plannedparenthood.org/blog/gender-affirming-care-for-transgender-men-and-transmasculine-people) and The Fenway Institute, 'Pregnancy for Transgender Men and Gender Non-Binary People', [https://fenwayhealth.org/the-fenway-institute/education-training/sexual-gender-minority-health/pregnancy-for-transgender-men-and-gender-non-binary-people/](https://fenwayhealth.org/the-fenway-institute/education-training/sexual-gender-minority-health/pregnancy-for-transgender-men-and-gender-non-binary-people/))"
+        ],
+        "key_phrases": [
+          "males",
+          "can get pregnant"
+        ]
+      },
+      {
+        "agent_name": "Linguist",
+        "classification": "MIXED",
+        "confidence": 0.95,
+        "reasoning": "The statement 'males can get pregnant' presents a factual claim, but its accuracy depends entirely on the specific definition of 'males' being used. If 'males' refers to cisgender men (individuals assigned male at birth), the statement is biologically incorrect as they lack the necessary reproductive organs (uterus, ovaries) for pregnancy. However, if 'males' refers to transgender men (individuals assigned female at birth who identify as male), then the statement can be true, as some transgender men retain their reproductive organs and are capable of carrying a pregnancy. Due to this ambiguity and the differing truths based on common biological and social understandings of 'male', the statement contains elements that are false under one interpretation and true under another, making its factual nature mixed.",
+        "evidence": [
+          "Cisgender males (assigned male at birth, typically XY chromosomes) do not possess a uterus or ovaries, which are essential for human gestation. Therefore, they cannot biologically become pregnant. (Source: Human Anatomy & Physiology textbooks, e.g., OpenStax Anatomy and Physiology; Mayo Clinic: Male Reproductive System - overview).",
+          "Transgender men (individuals assigned female at birth, typically XX chromosomes, who identify as men) who have not undergone a hysterectomy and retain functioning ovaries and a uterus are biologically capable of becoming pregnant and carrying a child to term. (Source: American College of Obstetricians and Gynecologists (ACOG) - 'Health Care for Transgender and Gender Diverse Individuals'; World Professional Association for Transgender Health (WPATH) - Standards of Care for the Health of Transgender and Gender Diverse People)."
+        ],
+        "key_phrases": [
+          "males",
+          "can get pregnant"
+        ]
+      },
+      {
+        "agent_name": "Social Media Expert",
+        "classification": "FACT",
+        "confidence": 0.9,
+        "reasoning": "The statement 'males can get pregnant' is a verifiable fact for transgender men. Transgender men are individuals who identify as male but were assigned female at birth and retain their reproductive organs (uterus and ovaries). Many such individuals have become pregnant and given birth. While this is not true for cisgender males (individuals assigned male at birth), the general term 'males' encompasses transgender men, making the statement factually true for that population.",
+        "evidence": [
+          "**Planned Parenthood:** 'Can trans men get pregnant? Yes. People who were assigned female at birth and still have a uterus and ovaries can get pregnant. This includes trans men and gender non-binary people.' (Source: Planned Parenthood - Transgender and Gender Identity: Can Trans Men Get Pregnant? - *specific URL might change, but general content is consistent across their site*)",
+          "**NHS (UK):** 'It is possible for trans men to get pregnant and give birth, even if they're taking testosterone. Some trans men choose to stop taking hormones to get pregnant, while others find they can conceive while continuing on hormones.' (Source: NHS - Transgender men and pregnancy - *specific URL might change, but general content is consistent across their site*)",
+          "**American College of Obstetricians and Gynecologists (ACOG):** While not a direct statement 'males can get pregnant,' ACOG's guidelines and resources on obstetric and gynecologic care for transgender and gender non-conforming individuals acknowledge and provide guidance for pregnancy in transmasculine individuals, thereby affirming the medical reality. (Source: ACOG publications on Transgender and Gender-Diverse Patients)"
+        ],
+        "key_phrases": [
+          "males can get pregnant",
+          "transgender men",
+          "assigned female at birth",
+          "pregnancy"
+        ]
+      }
+    ],
+    "consensus_reasoning": "Consensus from 3 agents: Journalist: The statement 'males can get pregnant' is classifi... | Professor: The statement 'males can get pregnant' is classifi...",
+    "evidence_summary": [
+      "Biological males (cisgender men) do not possess the necessary reproductive organs, such as a uterus, to carry a pregnancy. (Source: General human anatomy and physiology, e.g., Planned Parenthood: 'Biologically, cisgender men, who are born with male reproductive organs, cannot get pregnant because they do not have a uterus.' https://www.plannedparenthood.org/blog/can-transgender-man-get-pregnant)",
+      "Transgender men, who were assigned female at birth but identify as male, may retain their uterus and ovaries and are therefore capable of becoming pregnant and giving birth. (Source: Planned Parenthood: 'Yes, it is possible for a transgender man to get pregnant, as long as he has a uterus and ovaries.' https://www.plannedparenthood.org/blog/can-transgender-man-get-pregnant; American College of Obstetricians and Gynecologists (ACOG) Committee Opinion No. 817: Health Care for Transgender and Gender Diverse Individuals, December 2020. https://journals.lww.com/greenjournal/Fulltext/2020/12000/Health_Care_for_Transgender_and_Gender_Diverse.29.aspx)",
+      "**Regarding cisgender males:** Biologically, individuals assigned male at birth (AMAB) who have XY chromosomes typically lack a uterus, ovaries, and other internal reproductive organs necessary for gestation. Therefore, they cannot become pregnant. (Source: Healthline, 'Can Men Get Pregnant? The Facts About Biological Pregnancy', updated 2023, [https://www.healthline.com/health/can-men-get-pregnant](https://www.healthline.com/health/can-men-get-pregnant))",
+      "**Regarding transgender males:** Transgender men are individuals who were assigned female at birth but identify as male. If they have not undergone gender-affirming surgeries that remove their reproductive organs (uterus, ovaries), they retain the biological capacity to become pregnant and carry a fetus to term. (Source: Planned Parenthood, 'Gender-affirming care for transgender men and transmasculine people', [https://www.plannedparenthood.org/blog/gender-affirming-care-for-transgender-men-and-transmasculine-people](https://www.plannedparenthood.org/blog/gender-affirming-care-for-transgender-men-and-transmasculine-people) and The Fenway Institute, 'Pregnancy for Transgender Men and Gender Non-Binary People', [https://fenwayhealth.org/the-fenway-institute/education-training/sexual-gender-minority-health/pregnancy-for-transgender-men-and-gender-non-binary-people/](https://fenwayhealth.org/the-fenway-institute/education-training/sexual-gender-minority-health/pregnancy-for-transgender-men-and-gender-non-binary-people/))",
+      "Cisgender males (assigned male at birth, typically XY chromosomes) do not possess a uterus or ovaries, which are essential for human gestation. Therefore, they cannot biologically become pregnant. (Source: Human Anatomy & Physiology textbooks, e.g., OpenStax Anatomy and Physiology; Mayo Clinic: Male Reproductive System - overview)."
+    ]
+  }
+}

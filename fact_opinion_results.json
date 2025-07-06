@@ -1,0 +1,103 @@
+{
+  "analysis_metadata": {
+    "timestamp": "2025-07-06T20:19:30.632056",
+    "total_articles_scraped": 5,
+    "total_articles_analyzed": 5,
+    "agent_roles": [
+      "Journalist",
+      "Media Professor",
+      "Linguist",
+      "Social Media Veteran"
+    ],
+    "data_source": "sample_data"
+  },
+  "summary": {
+    "overall_statistics": {
+      "total_articles": 5,
+      "average_confidence": 0.4,
+      "classification_distribution": {
+        "mostly_factual": 0,
+        "mostly_opinion": 0,
+        "mixed_content": 5
+      }
+    },
+    "source_breakdown": {
+      "sample_news": {
+        "mostly_factual": 0,
+        "mostly_opinion": 0,
+        "mixed_content": 1,
+        "total": 1
+      },
+      "sample_editorial": {
+        "mostly_factual": 0,
+        "mostly_opinion": 0,
+        "mixed_content": 1,
+        "total": 1
+      },
+      "sample_mixed": {
+        "mostly_factual": 0,
+        "mostly_opinion": 0,
+        "mixed_content": 1,
+        "total": 1
+      },
+      "sample_tech": {
+        "mostly_factual": 0,
+        "mostly_opinion": 0,
+        "mixed_content": 1,
+        "total": 1
+      },
+      "sample_health": {
+        "mostly_factual": 0,
+        "mostly_opinion": 0,
+        "mixed_content": 1,
+        "total": 1
+      }
+    },
+    "source_analysis": {
+      "sample_news": {
+        "fact_ratio": 0.0,
+        "opinion_ratio": 0.0,
+        "mixed_ratio": 1.0
+      },
+      "sample_editorial": {
+        "fact_ratio": 0.0,
+        "opinion_ratio": 0.0,
+        "mixed_ratio": 1.0
+      },
+      "sample_mixed": {
+        "fact_ratio": 0.0,
+        "opinion_ratio": 0.0,
+        "mixed_ratio": 1.0
+      },
+      "sample_tech": {
+        "fact_ratio": 0.0,
+        "opinion_ratio": 0.0,
+        "mixed_ratio": 1.0
+      },
+      "sample_health": {
+        "fact_ratio": 0.0,
+        "opinion_ratio": 0.0,
+        "mixed_ratio": 1.0
+      }
+    },
+    "key_insights": [
+      "Content is mixed: 0.0% factual, 0.0% opinion-based",
+      "Low confidence in classifications (average: 0.40) - content may be ambiguous",
+      "Most factual source: sample_news (0.0% factual content)",
+      "Most opinion-based source: sample_news (0.0% opinion content)"
+    ]
+  },
+  "detailed_analyses": [
+    {
+      "article_info": {
+        "source": "sample_news",
+        "url": "https://example.com/climate-study",
+        "timestamp": 1751825780.3124044,
+        "content_preview": "According to a new study published in Nature Climate Change, global temperatures have risen by 1.1 degrees Celsius since pre-industrial times. The research, conducted by scientists at MIT, analyzed te..."
+      },
+      "analysis": {
+        "sentence_analyses": [
+          {
+            "sentence": "According to a new study published in Nature Climate Change, global temperatures have risen by 1",
+            "agent_results": [
+              
