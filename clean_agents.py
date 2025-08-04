@@ -99,132 +99,123 @@ Respond with JSON only:
             return AnalysisResult(
                 agent_name=self.agent_name,
                 classification="MIXED",
-                confidence=0.3,
-                reasoning=f"Analysis failed: {str(e)[:100]}",
+                confidence=0.5,
+                reasoning=f"Error occurred: {e}",
                 evidence=[],
                 key_phrases=[]
             )
     
     def _parse_response(self, response: str) -> AnalysisResult:
-        """Parse JSON response"""
+        """Parse JSON response from agent"""
         try:
-            # Find JSON in response
-            start = response.find('{')
-            end = response.rfind('}') + 1
-            if start == -1 or end == 0:
-                raise ValueError("No JSON found")
+            # Clean the response to extract JSON
+            response = response.strip()
+            if response.startswith('```json'):
+                response = response[7:]
+            if response.endswith('```'):
+                response = response[:-3]
             
-            json_str = response[start:end]
-            data = json.loads(json_str)
+            data = json.loads(response)
             
             return AnalysisResult(
                 agent_name=self.agent_name,
                 classification=data.get('classification', 'MIXED'),
                 confidence=float(data.get('confidence', 0.5)),
-                reasoning=data.get('reasoning', 'Analysis completed'),
+                reasoning=data.get('reasoning', 'No reasoning provided'),
                 evidence=data.get('evidence', []),
                 key_phrases=data.get('key_phrases', [])
             )
-        except Exception as e:
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
             print(f"Parse error in {self.agent_name}: {e}")
             return AnalysisResult(
                 agent_name=self.agent_name,
                 classification="MIXED",
-                confidence=0.3,
-                reasoning="Failed to parse response",
+                confidence=0.5,
+                reasoning=f"Parse error: {e}",
                 evidence=[],
                 key_phrases=[]
             )
+
+class ConsensusBuilder:
+    """Build consensus from multiple agent results"""
+    
+    def build_consensus(self, results: List[AnalysisResult]) -> ConsensusResult:
+        """Build consensus from agent results"""
+        if not results:
+            return ConsensusResult(
+                final_classification="MIXED",
+                confidence=0.0,
+                agent_results=[],
+                consensus_reasoning="No results to analyze",
+                evidence_summary=[]
+            )
+        
+        # Count classifications
+        classifications = [r.classification for r in results]
+        fact_count = classifications.count('FACT')
+        opinion_count = classifications.count('OPINION')
+        mixed_count = classifications.count('MIXED')
+        
+        # Determine final classification
+        if fact_count > opinion_count and fact_count > mixed_count:
+            final_classification = 'FACT'
+        elif opinion_count > fact_count and opinion_count > mixed_count:
+            final_classification = 'OPINION'
+        else:
+            final_classification = 'MIXED'
+        
+        # Calculate confidence (average of agreeing agents)
+        agreeing_results = [r for r in results if r.classification == final_classification]
+        if agreeing_results:
+            confidence = sum(r.confidence for r in agreeing_results) / len(agreeing_results)
+        else:
+            confidence = 0.5
+        
+        # Build consensus reasoning
+        reasoning_parts = []
+        for result in results:
+            reasoning_parts.append(f"{result.agent_name}: {result.reasoning[:100]}...")
+        
+        consensus_reasoning = f"Final classification: {final_classification} based on {len(agreeing_results)}/{len(results)} agents. " + " | ".join(reasoning_parts)
+        
+        # Aggregate evidence
+        evidence_summary = []
+        for result in results:
+            evidence_summary.extend(result.evidence)
+        
+        return ConsensusResult(
+            final_classification=final_classification,
+            confidence=confidence,
+            agent_results=results,
+            consensus_reasoning=consensus_reasoning,
+            evidence_summary=list(set(evidence_summary))  # Remove duplicates
+        )
 
 class CleanAnalysisSystem:
     """Main analysis system with 4 agents"""
     
     def __init__(self):
         self.client = CleanGeminiClient()
-        self.agents = [
-            Agent(self.client, "Journalist", "experienced journalist focused on factual accuracy"),
-            Agent(self.client, "Professor", "media studies professor applying academic standards"),
-            Agent(self.client, "Linguist", "linguist analyzing language patterns"),
-            Agent(self.client, "Social Media Expert", "social media expert identifying viral vs factual content")
-        ]
+        self.consensus_builder = ConsensusBuilder()
         
-        # Weights for consensus
-        self.weights = [0.3, 0.3, 0.2, 0.2]
+        # Initialize 4 agents with different roles
+        self.agents = [
+            Agent(self.client, "News Journalist", "experienced news journalist focused on factual accuracy"),
+            Agent(self.client, "Academic Professor", "university professor specializing in critical analysis"),
+            Agent(self.client, "Social Media Analyst", "social media analyst expert in identifying opinions and bias"),
+            Agent(self.client, "Linguist", "linguist expert in language patterns and semantic analysis")
+        ]
     
     def analyze_content(self, content: str) -> ConsensusResult:
-        """Run analysis with all agents"""
-        print(f"🤖 Starting analysis with {len(self.agents)} agents...")
+        """Analyze content with all agents and build consensus"""
+        print(f"Analyzing content with {len(self.agents)} agents...")
         
-        agent_results = []
-        
-        for i, agent in enumerate(self.agents):
-            print(f"   Agent {i+1}/4: {agent.agent_name} analyzing...")
+        results = []
+        for i, agent in enumerate(self.agents, 1):
+            print(f"  Agent {i}/{len(self.agents)}: {agent.agent_name}...")
             result = agent.analyze(content)
-            agent_results.append(result)
-            print(f"   ✓ {agent.agent_name}: {result.classification} ({result.confidence:.2f})")
+            results.append(result)
             time.sleep(1)  # Rate limiting
         
-        # Build consensus
-        consensus = self._build_consensus(agent_results)
-        print(f"🎯 Final: {consensus.final_classification} ({consensus.confidence:.2f})")
-        
+        consensus = self.consensus_builder.build_consensus(results)
         return consensus
-    
-    def _build_consensus(self, results: List[AnalysisResult]) -> ConsensusResult:
-        """Build weighted consensus"""
-        scores = {"FACT": 0.0, "OPINION": 0.0, "MIXED": 0.0}
-        
-        for result, weight in zip(results, self.weights):
-            scores[result.classification] += weight * result.confidence
-        
-        final_classification = max(scores.keys(), key=lambda k: scores[k])
-        final_confidence = scores[final_classification]
-        
-        # Build reasoning
-        agreeing_agents = [r for r in results if r.classification == final_classification]
-        reasoning = f"Consensus from {len(agreeing_agents)} agents: " + \
-                   " | ".join([f"{r.agent_name}: {r.reasoning[:50]}..." for r in agreeing_agents[:2]])
-        
-        # Collect evidence
-        all_evidence = []
-        for result in results:
-            all_evidence.extend(result.evidence)
-        unique_evidence = list(dict.fromkeys(all_evidence))[:5]
-        
-        return ConsensusResult(
-            final_classification=final_classification,
-            confidence=min(final_confidence, 1.0),
-            agent_results=results,
-            consensus_reasoning=reasoning,
-            evidence_summary=unique_evidence
-        )
-
-def main():
-    """Test the clean system"""
-    test_content = """
-    The Federal Reserve announced today that it will raise interest rates by 0.25 percentage points, 
-    bringing the federal funds rate to 5.25%. This decision was made during the Federal Open Market 
-    Committee meeting held on March 15-16, 2024.
-    """
-    
-    try:
-        system = CleanAnalysisSystem()
-        result = system.analyze_content(test_content)
-        
-        print("\n" + "="*50)
-        print("📋 ANALYSIS RESULTS")
-        print("="*50)
-        print(f"Classification: {result.final_classification}")
-        print(f"Confidence: {result.confidence:.2f}")
-        print(f"Reasoning: {result.consensus_reasoning}")
-        print(f"Evidence: {', '.join(result.evidence_summary)}")
-        
-        print("\n🤖 Agent Results:")
-        for agent_result in result.agent_results:
-            print(f"  • {agent_result.agent_name}: {agent_result.classification} ({agent_result.confidence:.2f})")
-        
-    except Exception as e:
-        print(f"❌ Error: {e}")
-
-if __name__ == "__main__":
-    main()

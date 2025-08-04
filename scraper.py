@@ -8,15 +8,24 @@ import time
 import logging
 from typing import Dict, List, Optional, Any
 from urllib.parse import urljoin
-from config import NEWS_SOURCES, HEADERS, MAX_ARTICLES_PER_SOURCE
+# Configuration constants
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+}
+
+NEWS_SOURCES = {
+    'bbc': 'https://www.bbc.com/news',
+    'cnn': 'https://edition.cnn.com',
+    'reuters': 'https://www.reuters.com'
+}
+
+MAX_ARTICLES_PER_SOURCE = 10
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class NewsContentScraper:
-    """Simple content scraper for individual URLs"""
-    
+class NewsContentScraper:    
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update(HEADERS)

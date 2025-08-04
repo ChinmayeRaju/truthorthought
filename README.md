@@ -19,7 +19,7 @@ This project implements a multi-agent system that analyzes scraped news content 
 - **Detailed reporting** with confidence scores and reasoning
 - **Configurable news sources** and analysis parameters
 - **Comprehensive logging** and error handling
-- **Real AI analysis** using Google's Gemini 2.0 Flash model
+- **Real AI analysis** using Google's Gemini 2.5 Flash model
 
 ## Project Structure
 
