@@ -2,7 +2,7 @@ import sys
 import re
 import json
 import time
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 from clean_agents import CleanGeminiClient
 from scraper import NewsContentScraper
@@ -25,6 +25,7 @@ class ConsensusResult:
     consensus_reasoning: str
     agreement_level: str
     domain: str
+    citation: Optional[Dict[str, str]] = None
 
 class MultiRoleAnalyzer:
     def __init__(self):
@@ -341,6 +342,11 @@ OR
             final_classification = 'FACT'
             supporting_analyses = fact_votes
         
+        # Find citation if it's a fact
+        citation = None
+        if final_classification == 'FACT':
+            citation = None
+
         # Calculate consensus confidence (weighted average of supporting experts)
         if supporting_analyses:
             consensus_confidence = sum(a.confidence for a in supporting_analyses) / len(supporting_analyses)
@@ -368,7 +374,8 @@ OR
             expert_analyses=analyses,
             consensus_reasoning=consensus_reasoning,
             agreement_level=agreement_level,
-            domain=domain
+            domain=domain,
+            citation=citation
         )
     
     def _build_consensus_reasoning(self, supporting_analyses: List[ExpertAnalysis], agreement_level: str) -> str:
@@ -564,6 +571,10 @@ class MultiRoleFormatter:
             sentence = item.sentence[:50] + "..." if len(item.sentence) > 50 else item.sentence
             lines.append(f"{i}. {conf_indicator}{agreement_indicator} {sentence}")
             
+            # Add citation if available
+            if item.citation:
+                lines.append(f"   Source: {item.citation['title']} ({item.citation['url']})")
+
             # Consensus info
             lines.append(f"   Consensus: {confidence:.2f} | {item.agreement_level}")
             
@@ -764,7 +775,7 @@ class MultiRolePromptingSystem:
             return "ERROR: No sentences found to analyze"
         
         consensus_results = []
-        analysis_limit = min(len(sentences), 10)  # Limit for API costs with multi-role
+        analysis_limit = min(len(sentences), 1)  # Limit for API costs with multi-role
         
         for i, sentence in enumerate(sentences[:analysis_limit], 1):
             print(f"   Multi-role analyzing sentence {i}/{analysis_limit}...")

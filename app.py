@@ -8,7 +8,7 @@ import os
 import json
 import time
 from datetime import datetime
-from multi_role_prompting_system import MultiRolePromptingSystem
+from clean_agents import CleanAnalysisSystem
 import uuid
 from dotenv import load_dotenv
 
@@ -27,7 +27,7 @@ def get_system():
     if analysis_system is None:
         # API key validation removed - system will handle API errors gracefully
         pass
-        analysis_system = MultiRolePromptingSystem()
+        analysis_system = CleanAnalysisSystem()
     return analysis_system
 
 @app.route('/')
@@ -70,15 +70,15 @@ def analyze():
             total_confidence = sum(r.consensus_confidence for r in analysis_data['results'])
             confidence = round((total_confidence / len(analysis_data['results'])) * 100)
         
-        return jsonify({
-            'success': True,
-            'result': result,
-            'session_id': session_id,
-            'analysis_data': {
-                'domain': analysis_data['domain'] if analysis_data else 'unknown',
-                'title': analysis_data['title'] if analysis_data else 'Unknown',
-                'facts_count': len([r for r in analysis_data['results'] if r.final_classification == 'FACT']) if analysis_data else 0,
-                'opinions_count': len([r for r in analysis_data['results'] if r.final_classification == 'OPINION']) if analysis_data else 0,
+            return jsonify({
+                'success': True,
+                'result': result,
+                'session_id': session_id,
+                'analysis_data': {
+                    'domain': analysis_data['domain'] if analysis_data else 'unknown',
+                    'title': analysis_data['title'] if analysis_data else 'Unknown',
+                    'facts_count': len([r for r in analysis_data['results'] if r['final_classification'] == 'FACT']) if analysis_data else 0,
+                    'opinions_count': len([r for r in analysis_data['results'] if r['final_classification'] == 'OPINION']) if analysis_data else 0,
                 'total_sentences': len(analysis_data['results']) if analysis_data else 0,
                 'confidence': confidence
             }
@@ -130,20 +130,23 @@ def analyze_multiple():
                         'url': url,
                         'title': analysis_data['title'],
                         'domain': analysis_data['domain'],
+                        'specialists': [agent.agent_name for agent in system.agents],
                         'summary': summary,
                         'analysis': result,
-                        'facts_count': len([r for r in analysis_data['results'] if r.final_classification == 'FACT']),
-                        'opinions_count': len([r for r in analysis_data['results'] if r.final_classification == 'OPINION']),
+                        'facts_count': len([r for r in analysis_data['results'] if r['final_classification'] == 'FACT']),
+                        'opinions_count': len([r for r in analysis_data['results'] if r['final_classification'] == 'OPINION']),
                         'sentences_count': len(analysis_data['results']),
-                        'facts': [r.sentence for r in analysis_data['results'] if r.final_classification == 'FACT'],
-                        'opinions': [r.sentence for r in analysis_data['results'] if r.final_classification == 'OPINION']
+                        'facts': [{'sentence': r['sentence'], 'citation': r['citation']} for r in analysis_data['results'] if r['final_classification'] == 'FACT'],
+                        'opinions': [{'sentence': r['sentence']} for r in analysis_data['results'] if r['final_classification'] == 'OPINION']
                     })
                     
                     # Debug: Print what we're sending
-                    print(f"DEBUG: Facts count: {len([r for r in analysis_data['results'] if r.final_classification == 'FACT'])}")
-                    print(f"DEBUG: Opinions count: {len([r for r in analysis_data['results'] if r.final_classification == 'OPINION'])}")
-                    print(f"DEBUG: Facts: {[r.sentence for r in analysis_data['results'] if r.final_classification == 'FACT']}")
-                    print(f"DEBUG: Opinions: {[r.sentence for r in analysis_data['results'] if r.final_classification == 'OPINION']}")
+                    print(f"DEBUG: Facts count: {len([r for r in analysis_data['results'] if r['final_classification'] == 'FACT'])}")
+                    print(f"DEBUG: Opinions count: {len([r for r in analysis_data['results'] if r['final_classification'] == 'OPINION'])}")
+                    print(f"DEBUG: Facts: {[r['sentence'] for r in analysis_data['results'] if r['final_classification'] == 'FACT']}")
+                    print(f"DEBUG: Opinions: {[r['sentence'] for r in analysis_data['results'] if r['final_classification'] == 'OPINION']}")
+                    print(f"DEBUG: Domain: {analysis_data['domain']}")
+                    print(f"DEBUG: Specialists: {[agent.agent_name for agent in system.agents]}")
                     
                     # Accumulate for combined analysis
                     if analysis_mode == 'combined':
@@ -151,8 +154,8 @@ def analyze_multiple():
                         all_results.extend(analysis_data['results'])
                     
                     # Update totals
-                    total_facts += len([r for r in analysis_data['results'] if r.final_classification == 'FACT'])
-                    total_opinions += len([r for r in analysis_data['results'] if r.final_classification == 'OPINION'])
+                    total_facts += len([r for r in analysis_data['results'] if r['final_classification'] == 'FACT'])
+                    total_opinions += len([r for r in analysis_data['results'] if r['final_classification'] == 'OPINION'])
                     total_sentences += len(analysis_data['results'])
                     
             except Exception as e:
@@ -161,6 +164,7 @@ def analyze_multiple():
                     'url': url,
                     'title': f'Error: {str(e)}',
                     'domain': 'error',
+                    'specialists': [],
                     'analysis': f'Failed to analyze: {str(e)}',
                     'facts_count': 0,
                     'opinions_count': 0,
@@ -188,21 +192,33 @@ def analyze_multiple():
             # Calculate average confidence
             confidence = 0
             if all_results:
-                total_confidence = sum(r.consensus_confidence for r in all_results)
-                confidence = round((total_confidence / len(all_results)) * 100)
+                total_confidence = sum(r['consensus_confidence'] for r in all_results)
+                confidence = round((total_confidence / len(all_results)) * 100, 1)
+            
+            # Determine overall classification based on facts vs opinions count
+            if total_facts > total_opinions:
+                overall_classification = "FACT-DOMINANT"
+            elif total_opinions > total_facts:
+                overall_classification = "OPINION-DOMINANT"  
+            elif total_facts == total_opinions and total_facts > 0:
+                overall_classification = "BALANCED"
+            else:
+                overall_classification = "INCONCLUSIVE"
             
             return jsonify({
                 'success': True,
                 'analysis_mode': 'combined',
                 'urls_analyzed': len(urls),
                 'results': combined_result,
+                'final_classification': overall_classification,
                 'total_facts': total_facts,
                 'total_opinions': total_opinions,
                 'total_sentences': total_sentences,
                 'confidence': confidence,
-                'facts': [r.sentence for r in all_results if r.final_classification == 'FACT'],
-                'opinions': [r.sentence for r in all_results if r.final_classification == 'OPINION'],
+                'facts': [{'sentence': r['sentence'], 'citation': r['citation']} for r in all_results if r['final_classification'] == 'FACT'],
+                'opinions': [{'sentence': r['sentence']} for r in all_results if r['final_classification'] == 'OPINION'],
                 'domain': 'MULTI-SOURCE',
+                'specialists': ['Cross-Domain Analyst', 'Multi-Source Verifier', 'Consensus Expert'],
                 'session_id': session_id
             })
         else:
@@ -235,14 +251,32 @@ def analyze_multiple():
                     'timestamp': datetime.now().isoformat()
                 }
             
+            # Get the domain and specialists from the first successful result
+            first_successful_result = next((r for r in individual_results if r.get('domain') != 'error'), None)
+            detected_domain = first_successful_result.get('domain', 'GENERAL') if first_successful_result else 'GENERAL'
+            detected_specialists = first_successful_result.get('specialists', ['General Analyst']) if first_successful_result else ['General Analyst']
+            
+            # Collect all facts and opinions from individual results for display
+            all_facts = []
+            all_opinions = []
+            for result in individual_results:
+                if result.get('facts'):
+                    all_facts.extend(result['facts'])
+                if result.get('opinions'):
+                    all_opinions.extend(result['opinions'])
+            
             return jsonify({
                 'success': True,
                 'analysis_mode': 'individual',
                 'urls_analyzed': len(urls),
                 'results': individual_results,
+                'facts': all_facts,  # Add facts array for frontend
+                'opinions': all_opinions,  # Add opinions array for frontend
                 'total_facts': total_facts,
                 'total_opinions': total_opinions,
                 'total_sentences': total_sentences,
+                'domain': detected_domain,
+                'specialists': detected_specialists,
                 'session_id': session_id
             })
             

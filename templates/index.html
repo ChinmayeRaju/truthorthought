@@ -441,6 +441,71 @@
             color: #6c757d;
             font-weight: 500;
         }
+
+        .domain-info {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 5px solid #2196f3;
+            margin: 20px 0;
+        }
+
+        .domain-card {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .domain-card i {
+            color: #2196f3;
+            margin-right: 8px;
+            font-size: 1.2em;
+        }
+
+        .domain-card strong {
+            color: #1976d2;
+            font-size: 1.1em;
+        }
+
+        .specialists-info {
+            font-size: 0.95em;
+            color: #424242;
+            margin-top: 5px;
+        }
+
+        .specialists-info strong {
+            color: #666;
+            font-size: 1em;
+        }
+
+        .domain-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-left: 8px;
+        }
+
+        .domain-news { background: #e8f5e8; color: #2e7d32; }
+        .domain-conflict { background: #ffebee; color: #c62828; }
+        .domain-politics { background: #e3f2fd; color: #1565c0; }
+        .domain-finance { background: #fff3e0; color: #ef6c00; }
+        .domain-health { background: #fce4ec; color: #c2185b; }
+        .domain-technology { background: #e3f2fd; color: #1976d2; }
+        .domain-sports { background: #f3e5f5; color: #7b1fa2; }
+        .domain-entertainment { background: #fff8e1; color: #f57c00; }
+        .domain-science { background: #e8f5e8; color: #388e3c; }
+        .domain-environment { background: #e0f2f1; color: #00695c; }
+        .domain-legal { background: #fafafa; color: #424242; }
+        .domain-general { background: #f5f5f5; color: #424242; }
+        .domain-multi-source { background: #e8eaf6; color: #3f51b5; }
+
+        .classification-fact { color: #2e7d32; font-weight: bold; }
+        .classification-opinion { color: #ef6c00; font-weight: bold; }
+        .classification-contested { color: #9c27b0; font-weight: bold; }
+        .classification-mixed { color: #607d8b; font-weight: bold; }
+        .classification-inconclusive { color: #757575; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -501,67 +566,67 @@ Add multiple URLs to analyze and compare facts vs opinions across sources..."></
                 <div class="spinner-border" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
-                <p class="mt-3">Analyzing content with multi-role AI experts...</p>
-                <small class="text-muted">This may take a few moments</small>
+                <p class="mt-3">Analyzing... this may take a moment.</p>
             </div>
 
             <!-- Results Section -->
             <div class="results-section" id="resultsSection">
                 <div class="analysis-header">
-                    <h3><i class="fas fa-chart-line"></i> Analysis Results</h3>
+                    <h3 class="mb-3"><i class="fas fa-poll"></i> Analysis Results</h3>
                     <div id="analysisInfo">
-                        <p><strong>Title:</strong> <span id="articleTitle">-</span></p>
-                        <p><strong>Domain:</strong> <span id="articleDomain" class="badge bg-primary">-</span></p>
+                        <!-- Analysis info will be populated here -->
                     </div>
-                    
+                    <div id="domainInfo" class="domain-info mb-3" style="display: none;">
+                        <div class="domain-card">
+                            <i class="fas fa-layer-group"></i>
+                            <strong>Domain:</strong> <span id="domainType"></span>
+                            <div class="specialists-info">
+                                <strong>AI Specialists:</strong> <span id="specialistsList"></span>
+                            </div>
+                        </div>
+                    </div>
                     <div class="metrics-row">
                         <div class="metric-card">
-                            <div class="metric-number" id="factsCount">0</div>
-                            <div class="metric-label">Facts</div>
+                            <div id="finalClassification" class="metric-number"></div>
+                            <div class="metric-label">Final Classification</div>
                         </div>
                         <div class="metric-card">
-                            <div class="metric-number" id="opinionsCount">0</div>
-                            <div class="metric-label">Opinions</div>
+                            <div id="confidenceScore" class="metric-number"></div>
+                            <div class="metric-label">Confidence Score</div>
                         </div>
                         <div class="metric-card">
-                            <div class="metric-number" id="totalSentences">0</div>
-                            <div class="metric-label">Total Analyzed</div>
+                            <div id="factCount" class="metric-number"></div>
+                            <div class="metric-label">Total Facts</div>
                         </div>
                         <div class="metric-card">
-                            <div class="metric-number" id="confidenceScore">0%</div>
-                            <div class="metric-label">Confidence</div>
+                            <div id="opinionCount" class="metric-number"></div>
+                            <div class="metric-label">Total Opinions</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Article Summaries Section -->
                 <div id="summariesSection" style="display: none;">
                     <div class="summaries-header">
-                        <h4><i class="fas fa-file-text"></i> Article Summaries</h4>
-                        <p class="text-muted">Key information from each analyzed source</p>
+                        <h4><i class="fas fa-book-open"></i> Consensus Summary</h4>
                     </div>
-                    <div id="summariesContainer">
-                        <!-- Summaries will be populated here -->
+                    <div id="consensusReasoning"></div>
+                </div>
+
+                <div id="sourcesSection" style="display: none;">
+                    <div class="summaries-header">
+                        <h4><i class="fas fa-link"></i> Verified Sources</h4>
                     </div>
+                    <div id="sourcesList"></div>
                 </div>
 
                 <div class="results-columns">
                     <div class="facts-column">
-                        <div class="column-header facts-header">
-                            <i class="fas fa-check-circle"></i> Facts (Multi-Expert Verified)
-                        </div>
-                        <div id="factsContainer">
-                            <!-- Facts will be populated here -->
-                        </div>
+                        <div class="column-header facts-header"><i class="fas fa-check-circle"></i> Verified Facts</div>
+                        <div id="factsList"></div>
                     </div>
-                    
                     <div class="opinions-column">
-                        <div class="column-header opinions-header">
-                            <i class="fas fa-comment"></i> Opinions (Multi-Expert Identified)
-                        </div>
-                        <div id="opinionsContainer">
-                            <!-- Opinions will be populated here -->
-                        </div>
+                        <div class="column-header opinions-header"><i class="fas fa-comment-dots"></i> Identified Opinions</div>
+                        <div id="opinionsList"></div>
                     </div>
                 </div>
             </div>
@@ -569,21 +634,14 @@ Add multiple URLs to analyze and compare facts vs opinions across sources..."></
             <!-- Chat Section -->
             <div class="chat-section" id="chatSection">
                 <div class="chat-header">
-                    <h4><i class="fas fa-comments"></i> Ask Questions About the Analysis</h4>
-                    <p class="text-muted">Get deeper insights and explanations about the analyzed content</p>
+                    <h4><i class="fas fa-comments"></i> Chat with the AI</h4>
                 </div>
-                
                 <div class="chat-input-group">
-                    <input type="text" class="form-control chat-input" id="chatInput" placeholder="Ask a question about the analysis...">
-                    <button class="btn btn-chat" onclick="askQuestion()">
-                        <i class="fas fa-paper-plane"></i> Ask
-                    </button>
+                    <input type="text" id="chatInput" class="form-control chat-input" placeholder="Ask a follow-up question...">
+                    <button class="btn btn-chat" onclick="askQuestion()"><i class="fas fa-paper-plane"></i> Send</button>
                 </div>
-                
                 <div class="chat-messages" id="chatMessages">
-                    <div class="chat-message bot-message">
-                        <strong>AI Assistant:</strong> Hello! I'm ready to answer questions about the analysis. You can ask about specific facts, opinions, expert consensus, or request summaries.
-                    </div>
+                    <!-- Chat messages will appear here -->
                 </div>
             </div>
         </div>
@@ -617,7 +675,6 @@ Add multiple URLs to analyze and compare facts vs opinions across sources..."></
                 return;
             }
             
-            // Parse URLs from textarea (one per line)
             const urls = urlListText.split('\n')
                 .map(url => url.trim())
                 .filter(url => url.length > 0);
@@ -627,7 +684,6 @@ Add multiple URLs to analyze and compare facts vs opinions across sources..."></
                 return;
             }
             
-            // Basic URL validation
             const urlPattern = /^https?:\/\/.+/;
             const invalidUrls = urls.filter(url => !urlPattern.test(url));
             if (invalidUrls.length > 0) {
@@ -664,256 +720,159 @@ Add multiple URLs to analyze and compare facts vs opinions across sources..."></
             });
         }
 
-        function displayResults(data) {
-            // Show results section
-            document.getElementById('resultsSection').style.display = 'block';
-            document.getElementById('chatSection').style.display = 'block';
-            
-            // Update analysis info
-            document.getElementById('articleTitle').textContent = data.analysis_data.title;
-            document.getElementById('articleDomain').textContent = data.analysis_data.domain.toUpperCase();
-            
-            // Update metrics
-            document.getElementById('factsCount').textContent = data.analysis_data.facts_count;
-            document.getElementById('opinionsCount').textContent = data.analysis_data.opinions_count;
-            document.getElementById('totalSentences').textContent = data.analysis_data.total_sentences;
-            
-            // Update confidence score if available
-            if (data.analysis_data.confidence !== undefined) {
-                document.getElementById('confidenceScore').textContent = data.analysis_data.confidence + '%';
-            } else {
-                document.getElementById('confidenceScore').textContent = '0%';
-            }
-            
-            // Parse and display the results
-            parseAndDisplayResults(data.result);
-            
-            // Scroll to results
-            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
-        }
-
         function displayMultipleResults(data) {
-            // Show results section
-            document.getElementById('resultsSection').style.display = 'block';
-            document.getElementById('chatSection').style.display = 'block';
-            
-            // Update analysis info for multiple URLs
-            if (data.analysis_mode === 'combined') {
-                document.getElementById('articleTitle').textContent = `Combined Analysis (${data.urls_analyzed} sources)`;
-                document.getElementById('articleDomain').textContent = 'MULTI-SOURCE';
-            } else {
-                document.getElementById('articleTitle').textContent = `Individual Analysis (${data.urls_analyzed} sources)`;
-                document.getElementById('articleDomain').textContent = 'MULTI-SOURCE';
-            }
-            
-            // Update metrics with combined totals
-            document.getElementById('factsCount').textContent = data.total_facts;
-            document.getElementById('opinionsCount').textContent = data.total_opinions;
-            document.getElementById('totalSentences').textContent = data.total_sentences;
-            
-            // Update confidence score if available
-            if (data.confidence !== undefined) {
-                document.getElementById('confidenceScore').textContent = data.confidence + '%';
-            } else {
-                document.getElementById('confidenceScore').textContent = '0%';
-            }
-            
-            // Display summaries if available
-            displaySummaries(data.results, data.analysis_mode);
-            
-            // Parse and display the results
-            parseAndDisplayMultipleResults(data.results, data);
-            
-            // Scroll to results
-            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function displaySummaries(results, analysisMode) {
+            const resultsSection = document.getElementById('resultsSection');
+            const loadingSection = document.getElementById('loadingSection');
+            const finalClassification = document.getElementById('finalClassification');
+            const confidenceScore = document.getElementById('confidenceScore');
+            const factCount = document.getElementById('factCount');
+            const opinionCount = document.getElementById('opinionCount');
+            const consensusReasoning = document.getElementById('consensusReasoning');
             const summariesSection = document.getElementById('summariesSection');
-            const summariesContainer = document.getElementById('summariesContainer');
-            
-            if (analysisMode === 'individual' && Array.isArray(results)) {
-                summariesSection.style.display = 'block';
-                summariesContainer.innerHTML = '';
+            const factsList = document.getElementById('factsList');
+            const opinionsList = document.getElementById('opinionsList');
+            const analysisInfo = document.getElementById('analysisInfo');
+            const sourcesSection = document.getElementById('sourcesSection');
+            const sourcesList = document.getElementById('sourcesList');
+            const domainInfo = document.getElementById('domainInfo');
+            const domainType = document.getElementById('domainType');
+            const specialistsList = document.getElementById('specialistsList');
+
+            // Clear previous results
+            factsList.innerHTML = '';
+            opinionsList.innerHTML = '';
+            consensusReasoning.innerHTML = '';
+            sourcesList.innerHTML = '';
+            analysisInfo.innerHTML = '';
+
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+
+            // Populate analysis info
+            analysisInfo.innerHTML = `
+                <p><strong>Analysis Mode:</strong> ${data.analysis_mode}</p>
+                <p><strong>Analyzed URLs:</strong> ${data.urls_analyzed}</p>
+            `;
+
+            // Populate domain information if available
+            if (data.domain || data.specialists) {
+                domainInfo.style.display = 'block';
+                const domain = data.domain || 'GENERAL';
+                const domainClass = `domain-${domain.toLowerCase()}`;
+                domainType.innerHTML = `${domain} <span class="domain-badge ${domainClass}">${domain}</span>`;
                 
-                results.forEach((result, index) => {
-                    if (result.summary) {
-                        const summaryCard = document.createElement('div');
-                        summaryCard.className = 'summary-card';
-                        summaryCard.innerHTML = `
-                            <h5><i class="fas fa-newspaper"></i> ${result.title}</h5>
-                            <div class="summary-text">${result.summary}</div>
-                            <div class="summary-meta">
-                                <span><strong>Domain:</strong> ${result.domain}</span>
-                                <span><strong>Facts:</strong> ${result.facts_count} | <strong>Opinions:</strong> ${result.opinions_count}</span>
-                            </div>
-                        `;
-                        summariesContainer.appendChild(summaryCard);
-                    }
-                });
+                if (data.specialists && data.specialists.length > 0) {
+                    specialistsList.textContent = data.specialists.join(', ');
+                } else {
+                    specialistsList.textContent = 'General Analysis Team';
+                }
+            } else {
+                domainInfo.style.display = 'none';
+            }
+
+            // Populate consensus results
+            confidenceScore.textContent = `${(data.confidence || 0).toFixed(1)}%`;
+            
+            if (data.results) {
+                summariesSection.style.display = 'block';
+                consensusReasoning.innerHTML = `<div class="summary-card"><div class="summary-text">${data.results}</div></div>`;
             } else {
                 summariesSection.style.display = 'none';
             }
-        }
 
-        function parseAndDisplayMultipleResults(results, data) {
-            console.log('DEBUG: parseAndDisplayMultipleResults called with results:', results);
-            console.log('DEBUG: parseAndDisplayMultipleResults called with data:', data);
-            
-            const factsContainer = document.getElementById('factsContainer');
-            const opinionsContainer = document.getElementById('opinionsContainer');
-            
-            factsContainer.innerHTML = '';
-            opinionsContainer.innerHTML = '';
-            
-            // Handle both individual and combined results
-            if (Array.isArray(results)) {
-                // Individual analysis mode - results is array of analysis results
-                results.forEach((result, index) => {
-                    const sourceHeader = document.createElement('div');
-                    sourceHeader.className = 'source-header';
-                    sourceHeader.innerHTML = `<h5><i class="fas fa-globe"></i> Source ${index + 1}: ${result.title}</h5>`;
-                    
-                    factsContainer.appendChild(sourceHeader.cloneNode(true));
-                    opinionsContainer.appendChild(sourceHeader.cloneNode(true));
-                    
-                    // Display enhanced facts and opinions if available
-                    if (result.facts && result.opinions) {
-                        displayEnhancedFactsOpinions(result.facts, result.opinions, result.domain);
-                    } else {
-                        parseAndDisplayResults(result.analysis);
-                    }
+            // Populate sources
+            if (data.sources_summary && data.sources_summary.length > 0) {
+                sourcesSection.style.display = 'block';
+                data.sources_summary.forEach(source => {
+                    const sourceItem = document.createElement('div');
+                    sourceItem.className = 'summary-card';
+                    sourceItem.innerHTML = `<a href="${source.url}" target="_blank">${source.title}</a>`;
+                    sourcesList.appendChild(sourceItem);
                 });
             } else {
-                // Combined analysis mode - results is single combined analysis
-                // Check if we have facts and opinions arrays in the response
-                if (data.facts !== undefined && data.opinions !== undefined) {
-                    console.log('DEBUG: Combined mode with facts/opinions arrays');
-                    console.log('DEBUG: facts:', data.facts);
-                    console.log('DEBUG: opinions:', data.opinions);
-                    displayEnhancedFactsOpinions(data.facts, data.opinions, data.domain || 'MULTI-SOURCE');
-                } else {
-                    console.log('DEBUG: Combined mode with text parsing');
-                    parseAndDisplayResults(results);
-                }
+                sourcesSection.style.display = 'none';
             }
+
+            // Populate individual statements
+            let totalFacts = 0;
+            let totalOpinions = 0;
+            
+            console.log('DEBUG: Full data object:', data);
+            console.log('DEBUG: data.facts:', data.facts);
+            console.log('DEBUG: data.opinions:', data.opinions);
+            
+            if (data.facts) {
+                console.log('DEBUG: Facts array length:', data.facts.length);
+                data.facts.forEach((item, index) => {
+                    console.log(`DEBUG: Fact ${index}:`, item);
+                    factsList.appendChild(createStatementItem(item, 'FACT'));
+                    totalFacts++;
+                });
+            }
+            if (data.opinions) {
+                console.log('DEBUG: Opinions array length:', data.opinions.length);
+                data.opinions.forEach((item, index) => {
+                    console.log(`DEBUG: Opinion ${index}:`, item);
+                    opinionsList.appendChild(createStatementItem(item, 'OPINION'));
+                    totalOpinions++;
+                });
+            }
+
+            factCount.textContent = totalFacts;
+            opinionCount.textContent = totalOpinions;
+            
+            // Set final classification with proper handling of new values
+            let finalClassificationText = data.final_classification || 'UNKNOWN';
+            let classificationClass = '';
+            
+            switch(finalClassificationText) {
+                case 'FACT':
+                case 'FACT-DOMINANT':
+                    classificationClass = 'classification-fact';
+                    break;
+                case 'OPINION':
+                case 'OPINION-DOMINANT':
+                    classificationClass = 'classification-opinion';
+                    break;
+                case 'CONTESTED':
+                case 'BALANCED':
+                    classificationClass = 'classification-contested';
+                    break;
+                case 'MIXED':
+                case 'INCONCLUSIVE':
+                    classificationClass = 'classification-mixed';
+                    break;
+                default:
+                    classificationClass = 'classification-unknown';
+            }
+            
+            finalClassification.innerHTML = `<span class="${classificationClass}">${finalClassificationText}</span>`;
+
+            // Show results
+            loadingSection.style.display = 'none';
+            resultsSection.style.display = 'block';
+            document.getElementById('chatSection').style.display = 'block';
         }
 
-        function displayEnhancedFactsOpinions(facts, opinions, domain) {
-            const factsContainer = document.getElementById('factsContainer');
-            const opinionsContainer = document.getElementById('opinionsContainer');
-            
-            // Debug logging
-            console.log('DEBUG: displayEnhancedFactsOpinions called');
-            console.log('DEBUG: facts array:', facts);
-            console.log('DEBUG: opinions array:', opinions);
-            console.log('DEBUG: domain:', domain);
-            console.log('DEBUG: facts length:', facts ? facts.length : 'null');
-            console.log('DEBUG: opinions length:', opinions ? opinions.length : 'null');
-            
-            // Display facts with enhanced styling
-            if (facts && facts.length > 0) {
-                facts.forEach((fact, index) => {
-                    console.log('DEBUG: Processing fact', index + 1, ':', fact);
-                    const factElement = createEnhancedStatementElement(fact, 'fact', domain, index + 1);
-                    factsContainer.appendChild(factElement);
-                });
-            } else {
-                console.log('DEBUG: No facts to display');
-            }
-            
-            // Display opinions with enhanced styling
-            if (opinions && opinions.length > 0) {
-                opinions.forEach((opinion, index) => {
-                    console.log('DEBUG: Processing opinion', index + 1, ':', opinion);
-                    const opinionElement = createEnhancedStatementElement(opinion, 'opinion', domain, index + 1);
-                    opinionsContainer.appendChild(opinionElement);
-                });
-            } else {
-                console.log('DEBUG: No opinions to display');
-            }
-        }
-
-        function createEnhancedStatementElement(text, type, domain, number) {
+        function createStatementItem(item, type) {
             const div = document.createElement('div');
-            div.className = `enhanced-statement-item ${type === 'fact' ? 'fact-item' : 'opinion-item'}`;
+            div.className = `statement-item ${type === 'FACT' ? 'fact-item' : 'opinion-item'}`;
             
-            const icon = type === 'fact' ? 'fas fa-check-circle' : 'fas fa-comment-dots';
-            const typeLabel = type === 'fact' ? 'FACT' : 'OPINION';
-            const typeColor = type === 'fact' ? '#28a745' : '#fd7e14';
-            
-            div.innerHTML = `
-                <div class="statement-text">
-                    <i class="${icon}" style="color: ${typeColor}; margin-right: 8px;"></i>
-                    ${text}
-                </div>
-                <div class="statement-meta">
-                    <span class="consensus-info">${typeLabel} #${number}</span>
-                    <span class="confidence-badge confidence-high">${domain} Domain</span>
-                </div>
-            `;
-            
-            return div;
-        }
-
-        function parseAndDisplayResults(resultText) {
-            // This is a simplified parser - in a real implementation, you'd want more robust parsing
-            const lines = resultText.split('\n');
-            const factsContainer = document.getElementById('factsContainer');
-            const opinionsContainer = document.getElementById('opinionsContainer');
-            
-            factsContainer.innerHTML = '';
-            opinionsContainer.innerHTML = '';
-            
-            let currentSection = '';
-            let confidence = 0;
-            
-            for (let line of lines) {
-                if (line.includes('FACTS (Multi-Expert Verified)')) {
-                    currentSection = 'facts';
-                } else if (line.includes('OPINIONS (Multi-Expert Identified)')) {
-                    currentSection = 'opinions';
-                } else if (line.includes('Overall System Confidence:')) {
-                    const match = line.match(/(\d+\.\d+)/);
-                    if (match) {
-                        confidence = Math.round(parseFloat(match[1]) * 100);
-                        document.getElementById('confidenceScore').textContent = confidence + '%';
-                    }
-                } else if (line.match(/^\d+\.\s+\[.*?\]/)) {
-                    // This is a fact or opinion item
-                    const item = parseResultItem(line);
-                    if (item && currentSection) {
-                        const container = currentSection === 'facts' ? factsContainer : opinionsContainer;
-                        container.appendChild(createStatementElement(item, currentSection));
-                    }
-                }
+            let citationHTML = '';
+            if (item.citation && item.citation.url && item.citation.title) {
+                citationHTML = `<div class="citation-info" style="margin-top: 10px; font-size: 0.9em;">
+                                    <i class="fas fa-link"></i> 
+                                    <a href="${item.citation.url}" target="_blank">${item.citation.title}</a>
+                                </div>`;
             }
-        }
 
-        function parseResultItem(line) {
-            const match = line.match(/^\d+\.\s+\[(.*?)\]\[(.*?)\]\s+(.*)/);
-            if (match) {
-                return {
-                    confidence: match[1],
-                    consensus: match[2],
-                    text: match[3]
-                };
-            }
-            return null;
-        }
-
-        function createStatementElement(item, type) {
-            const div = document.createElement('div');
-            div.className = `statement-item ${type === 'facts' ? 'fact-item' : 'opinion-item'}`;
-            
-            const confidenceClass = item.confidence === 'HIGH' ? 'confidence-high' : 
-                                  item.confidence === 'MED' ? 'confidence-medium' : 'confidence-low';
-            
             div.innerHTML = `
-                <div class="statement-text">${item.text}</div>
-                <div class="statement-meta">
-                    <span class="consensus-info">${item.consensus} Consensus</span>
-                    <span class="confidence-badge ${confidenceClass}">${item.confidence} Confidence</span>
+                <div class="statement-text">${item.sentence}</div>
+                ${citationHTML}
+                <div class="statement-meta" style="margin-top: 10px;">
+                    <span class="consensus-info">${type}</span>
                 </div>
             `;
             
@@ -929,11 +888,9 @@ Add multiple URLs to analyze and compare facts vs opinions across sources..."></
                 return;
             }
             
-            // Add user message
             addChatMessage(question, 'user');
             document.getElementById('chatInput').value = '';
             
-            // Send question
             fetch('/chat', {
                 method: 'POST',
                 headers: {
@@ -966,7 +923,6 @@ Add multiple URLs to analyze and compare facts vs opinions across sources..."></
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        // Allow Enter key to submit
         document.getElementById('chatInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 askQuestion();
