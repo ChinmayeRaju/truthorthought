@@ -861,10 +861,38 @@ Add multiple URLs to analyze and compare facts vs opinions across sources..."></
             div.className = `statement-item ${type === 'FACT' ? 'fact-item' : 'opinion-item'}`;
             
             let citationHTML = '';
-            if (item.citation && item.citation.url && item.citation.title) {
-                citationHTML = `<div class="citation-info" style="margin-top: 10px; font-size: 0.9em;">
-                                    <i class="fas fa-link"></i> 
-                                    <a href="${item.citation.url}" target="_blank">${item.citation.title}</a>
+            
+            // Handle multiple citations for facts (especially for politics/conflict)
+            if (item.citations && item.citations.length > 0) {
+                // Multiple citations available
+                citationHTML = '<div class="citations-section" style="margin-top: 12px; background: #f8f9fa; padding: 10px; border-radius: 6px; border-left: 4px solid #007bff;">';
+                citationHTML += '<div style="font-weight: bold; margin-bottom: 8px; color: #495057;"><i class="fas fa-shield-alt"></i> Verified Sources:</div>';
+                
+                item.citations.forEach((citation, index) => {
+                    if (citation && citation.url && citation.title) {
+                        // Ensure URL has protocol
+                        let citationUrl = citation.url;
+                        if (!citationUrl.startsWith('http://') && !citationUrl.startsWith('https://')) {
+                            citationUrl = 'https://' + citationUrl;
+                        }
+                        
+                        citationHTML += `<div style="margin-bottom: 6px; font-size: 0.85em;">
+                                           <i class="fas fa-external-link-alt" style="color: #007bff; margin-right: 6px;"></i>
+                                           <a href="${citationUrl}" target="_blank" style="color: #007bff; text-decoration: none; font-weight: 500;">${citation.title}</a>
+                                         </div>`;
+                    }
+                });
+                citationHTML += '</div>';
+            } 
+            else if (item.citation && item.citation.url && item.citation.title) {
+                // Single citation fallback
+                let citationUrl = item.citation.url;
+                if (!citationUrl.startsWith('http://') && !citationUrl.startsWith('https://')) {
+                    citationUrl = 'https://' + citationUrl;
+                }
+                citationHTML = `<div class="citation-info" style="margin-top: 10px; font-size: 0.9em; background: #f8f9fa; padding: 8px; border-radius: 4px; border-left: 3px solid #007bff;">
+                                    <i class="fas fa-external-link-alt"></i> 
+                                    <strong>Source:</strong> <a href="${citationUrl}" target="_blank" style="color: #007bff; text-decoration: none;">${item.citation.title}</a>
                                 </div>`;
             }
 

@@ -136,7 +136,7 @@ def analyze_multiple():
                         'facts_count': len([r for r in analysis_data['results'] if r['final_classification'] == 'FACT']),
                         'opinions_count': len([r for r in analysis_data['results'] if r['final_classification'] == 'OPINION']),
                         'sentences_count': len(analysis_data['results']),
-                        'facts': [{'sentence': r['sentence'], 'citation': r['citation']} for r in analysis_data['results'] if r['final_classification'] == 'FACT'],
+                        'facts': [{'sentence': r['sentence'], 'citation': r['citation'], 'citations': r.get('citations', [])} for r in analysis_data['results'] if r['final_classification'] == 'FACT'],
                         'opinions': [{'sentence': r['sentence']} for r in analysis_data['results'] if r['final_classification'] == 'OPINION']
                     })
                     

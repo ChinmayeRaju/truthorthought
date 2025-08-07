@@ -267,7 +267,7 @@ class Agent:
         """Analyze content with web grounding"""
         prompt = f"""As a {self.role}, analyze this text and classify it as either FACT or OPINION.
 
-Use web search to verify any factual claims and provide citations when possible.
+Use web search to verify any factual claims and provide SPECIFIC, DIRECT source citations.
 
 Text: {content[:500]}
 
@@ -277,18 +277,32 @@ CLASSIFICATION RULES:
 
 IMPORTANT: You must choose either FACT or OPINION. Do not use MIXED. If a statement contains both, classify based on the primary intent.
 
+FOR FACTS: You MUST provide SPECIFIC, DIRECT source URLs that verify the factual claims. 
+
+SOURCE REQUIREMENTS:
+- Use COMPLETE, SPECIFIC URLs that link directly to the actual article/page (not just domain names)
+- For POLITICS, CONFLICT, WAR topics: Provide 3-4 different credible sources
+- For other topics: Provide 1-3 relevant sources
+- URLs must be real, specific links like: "https://www.bbc.co.uk/news/world-europe-67845123", "https://www.reuters.com/world/europe/ukraine-reports-russian-attacks-2024-01-15/", "https://edition.cnn.com/2024/01/15/politics/ukraine-aid-package/index.html"
+
+CREDIBLE SOURCES: BBC News, Reuters, Associated Press, CNN, Guardian, Washington Post, New York Times, Sky News, Al Jazeera, NPR, official government websites, academic institutions
+
 Respond with ONLY valid JSON. No other text before or after:
 
 {{
     "classification": "FACT",
     "confidence": 0.9,
-    "reasoning": "Brief explanation with web verification if applicable",
-    "evidence": ["key evidence with sources if available"],
+    "reasoning": "Brief explanation with web verification from multiple sources",
+    "evidence": ["key evidence verified across sources"],
     "key_phrases": ["important phrases from the text"],
-    "sources": [{{"title": "Source Name", "url": "https://example.com"}}]
+    "sources": [
+        {{"title": "BBC News - Full Specific Article Title", "url": "https://www.bbc.co.uk/news/world-europe-67845123"}}, 
+        {{"title": "Reuters - Complete Article Headline", "url": "https://www.reuters.com/world/europe/specific-story-2024-01-15/"}},
+        {{"title": "Associated Press - Detailed Coverage", "url": "https://apnews.com/article/specific-article-id-12345"}}
+    ]
 }}
 
-Make sure all strings are properly quoted and there are no trailing commas."""
+Make sure all strings are properly quoted and there are no trailing commas. For FACTS, sources array must contain COMPLETE, SPECIFIC URLs to actual articles."""
 
         try:
             response = self.client.generate_content(prompt)
@@ -591,12 +605,34 @@ class CleanAnalysisSystem:
         formatted_results = []
         for i, consensus in enumerate(consensus_results):
             sentence_text = sentences[i] if i < len(sentences) else f"Result {i+1}"
+            
+            # Extract citation information from sources if this is a FACT
+            citations = []
+            if hasattr(consensus, 'final_classification') and consensus.final_classification == 'FACT':
+                # Get sources from any agent results that contributed to this fact
+                all_sources = []
+                if hasattr(consensus, 'agent_results'):
+                    for result in consensus.agent_results:
+                        if hasattr(result, 'sources') and result.sources:
+                            all_sources.extend(result.sources)
+                
+                # For critical domains (POLITICS, CONFLICT), show multiple sources
+                # For other domains, show primary source but keep others available
+                critical_domains = ['POLITICS', 'CONFLICT', 'WAR', 'LEGAL']
+                if domain in critical_domains:
+                    # Show up to 4 sources for critical domains
+                    citations = all_sources[:4] if len(all_sources) >= 3 else all_sources
+                else:
+                    # Show primary source for other domains, but keep others for reference
+                    citations = all_sources[:2] if all_sources else []
+            
             # Create a result object that matches what the frontend expects
             formatted_result = {
                 'sentence': sentence_text,
                 'final_classification': consensus.final_classification if hasattr(consensus, 'final_classification') else 'MIXED',
                 'consensus_confidence': consensus.confidence if hasattr(consensus, 'confidence') else 0.5,
-                'citation': None,  # Can be added later when we have source tracking
+                'citation': citations[0] if citations else None,  # Primary citation for backward compatibility
+                'citations': citations,  # Multiple citations for enhanced display
                 'consensus_reasoning': consensus.consensus_reasoning if hasattr(consensus, 'consensus_reasoning') else 'Analysis completed'
             }
             formatted_results.append(formatted_result)
