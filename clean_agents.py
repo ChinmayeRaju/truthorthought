@@ -255,6 +255,155 @@ class CleanGeminiClient:
         except Exception as e:
             raise Exception(f"API Error: {e}")
 
+class CitationVerifier:
+    """Verify citation validity and relevance using LLM"""
+    
+    def __init__(self, client: CleanGeminiClient):
+        self.client = client
+    
+    def verify_citations(self, fact_text: str, citations: List[Dict[str, str]], domain: str = "GENERAL") -> List[Dict[str, str]]:
+        """Verify if citations are valid and relevant to the fact"""
+        if not citations:
+            return []
+        
+        verified_citations = []
+        
+        for citation in citations:
+            if self._verify_single_citation(fact_text, citation, domain):
+                verified_citations.append(citation)
+            else:
+                print(f"❌ Citation verification failed for: {citation.get('title', 'Unknown title')}")
+        
+        return verified_citations
+    
+    def _verify_single_citation(self, fact_text: str, citation: Dict[str, str], domain: str) -> bool:
+        """Verify a single citation using LLM and URL accessibility check"""
+        try:
+            title = citation.get('title', '')
+            url = citation.get('url', '')
+            
+            if not title or not url:
+                return False
+            
+            # First, check URL accessibility
+            if not self._check_url_accessibility(url):
+                print(f"❌ Citation rejected: {title} (Reason: URL_NOT_ACCESSIBLE)")
+                return False
+            
+            # Enhanced verification prompt with URL accessibility confirmation
+            prompt = f"""Verify if this citation is valid and relevant for the given fact claim.
+
+FACT CLAIM: {fact_text[:300]}
+
+CITATION TO VERIFY:
+Title: {title}
+URL: {url}
+
+VERIFICATION CRITERIA:
+1. URL VALIDITY: Does the URL look like a real, specific news article URL?
+   - Valid examples: "https://www.bbc.co.uk/news/world-europe-67845123", "https://www.reuters.com/world/europe/ukraine-reports-2024/"
+   - Invalid examples: "bbc.com", "example.com", generic domains without specific article paths
+   - NOTE: URL accessibility has been pre-verified
+
+2. TITLE RELEVANCE: Does the article title directly relate to the fact claim?
+   - The title should contain keywords or concepts that match the fact
+   - Should be about the same topic, event, or subject matter
+
+3. SOURCE CREDIBILITY: Is this from a credible news source?
+   - Credible: BBC, Reuters, CNN, Guardian, Associated Press, NPR, Washington Post, NYT, Sky News, Al Jazeera, official government sites
+   - Check if the domain matches known credible sources
+
+4. CONTEXT ALIGNMENT: For domain {domain}, does this source make sense?
+   - POLITICS/CONFLICT: Should be from major news outlets or government sources
+   - HEALTH: Should be from medical journals, health organizations, or health reporters
+   - TECHNOLOGY: Should be from tech publications or major news tech sections
+   - LIFESTYLE: Should be from lifestyle publications or major news lifestyle sections
+
+5. URL REALISM: Does the URL structure look realistic for the claimed source?
+   - Check if the domain matches the source name
+   - Verify the URL path looks like a real article path
+
+RESPOND WITH ONLY ONE WORD:
+- "VALID" if the citation passes all criteria
+- "INVALID" if it fails any criteria
+
+Response:"""
+
+            response = self.client.generate_content(prompt)
+            result = response.strip().upper()
+            
+            is_valid = result == "VALID"
+            
+            if is_valid:
+                print(f"✅ Citation verified: {title}")
+            else:
+                print(f"❌ Citation rejected: {title} (Reason: {result})")
+            
+            return is_valid
+            
+        except Exception as e:
+            print(f"❌ Citation verification error: {e}")
+            return False
+
+    def _check_url_accessibility(self, url: str) -> bool:
+        """Check if URL is accessible with both HEAD and GET requests"""
+        try:
+            import requests
+            from urllib.parse import urlparse
+            
+            # Basic URL format validation
+            parsed = urlparse(url)
+            if not parsed.scheme or not parsed.netloc:
+                print(f"🔍 URL format invalid: {url}")
+                return False
+            
+            # Try HEAD request first (faster)
+            try:
+                response = requests.head(url, timeout=10, allow_redirects=True)
+                # Only accept 200 as truly accessible for HEAD requests
+                if response.status_code == 200:
+                    return True
+                elif response.status_code == 405:  # Method not allowed, try GET
+                    pass  # Continue to GET request
+                else:
+                    print(f"🔍 URL check failed: {url} (HEAD Status: {response.status_code})")
+                    return False
+            except requests.RequestException:
+                pass  # Continue to GET request if HEAD fails
+            
+            # Try GET request as fallback or if HEAD returned 405
+            try:
+                response = requests.get(url, timeout=10, allow_redirects=True)
+                # Be more strict - only 200 is acceptable
+                if response.status_code == 200:
+                    # Additional check: ensure we got actual content, not just a redirect page
+                    if len(response.content) > 1000:  # Must have substantial content
+                        # Extra validation: check if it's not an error page
+                        content_text = response.text.lower()
+                        error_indicators = ['404', 'not found', 'page not found', 'error', 'access denied', 
+                                          'forbidden', 'unauthorized', 'temporarily unavailable',
+                                          'this page does not exist', 'page cannot be found']
+                        
+                        # If content contains error indicators, reject it
+                        if any(indicator in content_text for indicator in error_indicators):
+                            print(f"🔍 URL check failed: {url} (Content indicates error page)")
+                            return False
+                        
+                        return True
+                    else:
+                        print(f"🔍 URL check failed: {url} (Content too short, likely error page)")
+                        return False
+                else:
+                    print(f"🔍 URL check failed: {url} (GET Status: {response.status_code})")
+                    return False
+            except requests.RequestException as e:
+                print(f"🔍 URL accessibility check failed for {url}: {e}")
+                return False
+            
+        except Exception as e:
+            print(f"🔍 URL accessibility check failed for {url}: {e}")
+            return False  # If we can't check, assume it's not accessible
+
 class Agent:
     """Base agent class"""
     
@@ -494,6 +643,8 @@ class CleanAnalysisSystem:
         self.scraper = NewsContentScraper()
         # Pass the LLM client to the domain detector for intelligent detection
         self.domain_detector = DomainDetector(self.client)
+        # Add citation verifier for source validation
+        self.citation_verifier = CitationVerifier(self.client)
         self.last_analysis_data = None
         self.formatter = SimpleFormatter()
         self.current_domain = 'GENERAL'
@@ -616,15 +767,29 @@ class CleanAnalysisSystem:
                         if hasattr(result, 'sources') and result.sources:
                             all_sources.extend(result.sources)
                 
+                # VERIFY CITATIONS using LLM before including them
+                print(f"🔍 Verifying {len(all_sources)} citations for fact...")
+                verified_sources = self.citation_verifier.verify_citations(
+                    sentence_text, all_sources, domain
+                )
+                print(f"✅ Verified {len(verified_sources)} out of {len(all_sources)} citations")
+                
                 # For critical domains (POLITICS, CONFLICT), show multiple sources
                 # For other domains, show primary source but keep others available
                 critical_domains = ['POLITICS', 'CONFLICT', 'WAR', 'LEGAL']
                 if domain in critical_domains:
-                    # Show up to 4 sources for critical domains
-                    citations = all_sources[:4] if len(all_sources) >= 3 else all_sources
+                    # Show up to 4 verified sources for critical domains
+                    citations = verified_sources[:4] if len(verified_sources) >= 3 else verified_sources
                 else:
-                    # Show primary source for other domains, but keep others for reference
-                    citations = all_sources[:2] if all_sources else []
+                    # Show up to 2 verified sources for other domains
+                    citations = verified_sources[:2] if verified_sources else []
+                
+                # Only proceed if we have at least one verified citation for facts
+                if not citations:
+                    print(f"⚠️  No verified citations found for fact, marking as MIXED")
+                    # If no valid citations, downgrade from FACT to MIXED
+                    consensus.final_classification = 'MIXED'
+                    consensus.confidence = consensus.confidence * 0.5  # Reduce confidence
             
             # Create a result object that matches what the frontend expects
             formatted_result = {

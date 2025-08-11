@@ -18,6 +18,10 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
+# Global storage for analysis sessions (in-memory for demo purposes)
+# In production, you'd want to use a database or persistent storage
+analysis_sessions = {}
+
 # Global system instance
 analysis_system = None
 
@@ -34,6 +38,300 @@ def get_system():
 def index():
     """Main page"""
     return render_template('index.html')
+
+@app.route('/questionnaires')
+def questionnaires():
+    """Research questionnaires page"""
+    return render_template('questionnaires.html')
+
+@app.route('/bias_research')
+def bias_research():
+    """Bias research interface"""
+    return render_template('bias_research.html')
+
+@app.route('/get_analyzed_sessions', methods=['GET'])
+def get_analyzed_sessions():
+    """Get all previously analyzed sessions for bias research"""
+    try:
+        # Get all stored sessions with analysis data
+        analyzed_sessions_list = []
+        
+        for session_id, session_data in analysis_sessions.items():
+            if 'analysis_data' in session_data:
+                analysis_data = session_data['analysis_data']
+                
+                # Extract basic info for display
+                session_info = {
+                    'session_id': session_id,
+                    'timestamp': session_data.get('timestamp', ''),
+                    'title': analysis_data.get('title', 'Unknown Article'),
+                    'domain': analysis_data.get('domain', 'Unknown'),
+                    'total_facts': 0,
+                    'total_opinions': 0,
+                    'total_sentences': 0,
+                    'url': analysis_data.get('url', ''),
+                    'is_multiple': 'multiple_results' in analysis_data
+                }
+                
+                # Calculate metrics
+                if 'results' in analysis_data:
+                    results = analysis_data['results']
+                    session_info['total_facts'] = len([r for r in results if r.get('final_classification') == 'FACT'])
+                    session_info['total_opinions'] = len([r for r in results if r.get('final_classification') == 'OPINION'])
+                    session_info['total_sentences'] = len(results)
+                elif 'multiple_results' in analysis_data:
+                    # Handle multiple URL results
+                    total_facts = 0
+                    total_opinions = 0
+                    total_sentences = 0
+                    for result in analysis_data['multiple_results']:
+                        total_facts += result.get('facts_count', 0)
+                        total_opinions += result.get('opinions_count', 0)
+                        total_sentences += result.get('sentences_count', 0)
+                    session_info['total_facts'] = total_facts
+                    session_info['total_opinions'] = total_opinions
+                    session_info['total_sentences'] = total_sentences
+                    session_info['title'] = f"Multi-Source Analysis ({len(analysis_data['multiple_results'])} URLs)"
+                
+                analyzed_sessions_list.append(session_info)
+        
+        # Sort by timestamp (most recent first)
+        analyzed_sessions_list.sort(key=lambda x: x['timestamp'], reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'sessions': analyzed_sessions_list
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/load_session_for_bias/<session_id>', methods=['GET'])
+def load_session_for_bias(session_id):
+    """Load a specific session's data for bias research analysis"""
+    try:
+        if session_id not in analysis_sessions:
+            return jsonify({'error': 'Session not found'}), 404
+        
+        session_data = analysis_sessions[session_id]
+        if 'analysis_data' not in session_data:
+            return jsonify({'error': 'No analysis data in session'}), 404
+        
+        analysis_data = session_data['analysis_data']
+        
+        # Format for bias research display
+        response_data = {
+            'success': True,
+            'session_id': session_id,
+            'title': analysis_data.get('title', 'Unknown Article'),
+            'domain': analysis_data.get('domain', 'Unknown'),
+            'content': analysis_data.get('content', ''),
+            'url': analysis_data.get('url', ''),
+            'timestamp': session_data.get('timestamp', ''),
+            'facts': [],
+            'opinions': [],
+            'total_facts': 0,
+            'total_opinions': 0,
+            'specialists': []
+        }
+        
+        # Handle single URL analysis
+        if 'results' in analysis_data:
+            results = analysis_data['results']
+            
+            # Extract facts and opinions with detailed information
+            for result in results:
+                sentence_data = {
+                    'sentence': result.get('sentence', ''),
+                    'confidence': result.get('consensus_confidence', 0),
+                    'reasoning': result.get('consensus_reasoning', ''),
+                    'citations': result.get('citations', []),
+                    'citation': result.get('citation', {})
+                }
+                
+                if result.get('final_classification') == 'FACT':
+                    response_data['facts'].append(sentence_data)
+                elif result.get('final_classification') == 'OPINION':
+                    response_data['opinions'].append(sentence_data)
+            
+            response_data['total_facts'] = len(response_data['facts'])
+            response_data['total_opinions'] = len(response_data['opinions'])
+        
+        # Handle multiple URL analysis
+        elif 'multiple_results' in analysis_data:
+            response_data['is_multiple'] = True
+            response_data['multiple_results'] = analysis_data['multiple_results']
+            
+            # For bias research, we need the full article content from each URL
+            from scraper import NewsContentScraper
+            scraper = NewsContentScraper()
+            
+            # Fetch full content for each URL and enhance multiple_results
+            enhanced_results = []
+            for url_result in analysis_data['multiple_results']:
+                enhanced_result = url_result.copy()
+                
+                # Try to get full article content
+                if 'url' in url_result:
+                    try:
+                        scraped_data = scraper.scrape_url(url_result['url'])
+                        if scraped_data and scraped_data.get('content'):
+                            enhanced_result['full_content'] = scraped_data['content']
+                            enhanced_result['scraped_title'] = scraped_data.get('title', url_result.get('title', 'Unknown'))
+                        else:
+                            enhanced_result['full_content'] = url_result.get('summary', 'Content not available')
+                            enhanced_result['scraped_title'] = url_result.get('title', 'Unknown')
+                    except Exception as e:
+                        print(f"Error scraping content for {url_result['url']}: {e}")
+                        enhanced_result['full_content'] = url_result.get('summary', 'Content not available')
+                        enhanced_result['scraped_title'] = url_result.get('title', 'Unknown')
+                else:
+                    enhanced_result['full_content'] = url_result.get('summary', 'Content not available')
+                    enhanced_result['scraped_title'] = url_result.get('title', 'Unknown')
+                
+                enhanced_results.append(enhanced_result)
+            
+            response_data['multiple_results'] = enhanced_results
+            
+            # Aggregate facts and opinions from all sources
+            all_facts = []
+            all_opinions = []
+            
+            for url_result in enhanced_results:
+                if 'facts' in url_result:
+                    for fact in url_result['facts']:
+                        fact['source_url'] = url_result['url']
+                        fact['source_title'] = url_result['title']
+                        all_facts.append(fact)
+                
+                if 'opinions' in url_result:
+                    for opinion in url_result['opinions']:
+                        opinion['source_url'] = url_result['url']
+                        opinion['source_title'] = url_result['title']
+                        all_opinions.append(opinion)
+            
+            response_data['facts'] = all_facts
+            response_data['opinions'] = all_opinions
+            response_data['total_facts'] = len(all_facts)
+            response_data['total_opinions'] = len(all_opinions)
+        
+        return jsonify(response_data)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/analyze_for_bias', methods=['POST'])
+def analyze_for_bias():
+    """Enhanced analysis endpoint for bias research study"""
+    try:
+        data = request.get_json()
+        url = data.get('url')
+        participant_id = data.get('participant_id', '')
+        study_mode = data.get('study_mode', 'bias_analysis')
+        analysis_depth = data.get('analysis_depth', 10)
+        
+        if not url:
+            return jsonify({
+                'success': False,
+                'error': 'URL is required'
+            }), 400
+        
+        system = get_system()
+        
+        # Perform analysis with enhanced research features
+        result = system.analyze_url(url)
+        analysis_data = system.last_analysis_data
+        
+        if analysis_data:
+            # Create enhanced response for research
+            facts = [{'sentence': r['sentence'], 'citation': r['citation'], 'citations': r.get('citations', [])} 
+                    for r in analysis_data['results'] if r['final_classification'] == 'FACT']
+            opinions = [{'sentence': r['sentence']} 
+                       for r in analysis_data['results'] if r['final_classification'] == 'OPINION']
+            
+            # Calculate research metrics
+            total_statements = len(analysis_data['results'])
+            fact_count = len(facts)
+            opinion_count = len(opinions)
+            
+            confidence = 0
+            if analysis_data['results']:
+                total_confidence = sum(r['consensus_confidence'] for r in analysis_data['results'])
+                confidence = round((total_confidence / len(analysis_data['results'])) * 100)
+            
+            # Enhanced bias metrics for research
+            bias_metrics = {
+                'fact_percentage': round((fact_count / total_statements) * 100, 2) if total_statements > 0 else 0,
+                'opinion_percentage': round((opinion_count / total_statements) * 100, 2) if total_statements > 0 else 0,
+                'bias_level': 'Low' if (opinion_count / total_statements if total_statements > 0 else 0) < 0.3 else 'Medium' if (opinion_count / total_statements if total_statements > 0 else 0) < 0.6 else 'High',
+                'total_statements': total_statements,
+                'analysis_quality': 'High' if total_statements >= analysis_depth * 0.8 else 'Medium'
+            }
+            
+            return jsonify({
+                'success': True,
+                'facts': facts,
+                'opinions': opinions,
+                'domain': analysis_data['domain'],
+                'title': analysis_data['title'],
+                'content': analysis_data['content'],
+                'specialists': [agent.agent_name for agent in system.agents],
+                'confidence': confidence,
+                'bias_metrics': bias_metrics,
+                'session_id': f"research_{int(time.time())}_{participant_id}",
+                'study_mode': study_mode,
+                'analysis_depth': analysis_depth,
+                'participant_id': participant_id,
+                'analyzed_at': time.strftime('%Y-%m-%d %H:%M:%S'),
+                'url': url
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to analyze content'
+            }), 500
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/submit_research_data', methods=['POST'])
+def submit_research_data():
+    """Endpoint to receive and store research study data"""
+    try:
+        data = request.get_json()
+        session_id = data.get('sessionId')
+        
+        if not session_id:
+            return jsonify({
+                'success': False,
+                'error': 'Session ID is required'
+            }), 400
+        
+        # Store research data (in a real study, this would go to a database)
+        research_file = f"research_data_{session_id}.json"
+        
+        # Create research_data directory if it doesn't exist
+        import os
+        os.makedirs('research_data', exist_ok=True)
+        
+        # Save the complete research data
+        with open(f"research_data/{research_file}", 'w') as f:
+            json.dump(data, f, indent=2)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Research data submitted successfully',
+            'session_id': session_id
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Failed to submit research data: {str(e)}'
+        }), 500
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
@@ -59,7 +357,7 @@ def analyze():
         
         # Store in session for chat
         session_id = str(uuid.uuid4())
-        session[session_id] = {
+        analysis_sessions[session_id] = {
             'analysis_data': analysis_data,
             'timestamp': datetime.now().isoformat()
         }
@@ -179,12 +477,14 @@ def analyze_multiple():
             
             # Store combined session data
             session_id = str(uuid.uuid4())
-            session[session_id] = {
+            analysis_sessions[session_id] = {
                 'analysis_data': {
                     'content': combined_content,
                     'results': all_results,
                     'domain': 'MULTI-SOURCE',
-                    'title': 'Combined Multi-Source Analysis'
+                    'title': 'Combined Multi-Source Analysis',
+                    'multiple_results': individual_results,  # Store individual results for bias research
+                    'urls': urls  # Store the original URLs
                 },
                 'timestamp': datetime.now().isoformat()
             }
@@ -230,18 +530,20 @@ def analyze_multiple():
                 # Get the original analysis data for this URL
                 last_analysis = system.last_analysis_data
                 
-                session[session_id] = {
+                analysis_sessions[session_id] = {
                     'analysis_data': {
                         'content': last_analysis['content'] if last_analysis else first_result.get('title', ''),
                         'results': last_analysis['results'] if last_analysis else [],
                         'domain': last_analysis['domain'] if last_analysis else first_result.get('domain', 'UNKNOWN'),
-                        'title': last_analysis['title'] if last_analysis else first_result.get('title', 'Individual Analysis')
+                        'title': last_analysis['title'] if last_analysis else first_result.get('title', 'Individual Analysis'),
+                        'multiple_results': individual_results,  # Store for bias research access
+                        'urls': urls  # Store original URLs
                     },
                     'timestamp': datetime.now().isoformat()
                 }
             else:
                 # Fallback if no results
-                session[session_id] = {
+                analysis_sessions[session_id] = {
                     'analysis_data': {
                         'content': '',
                         'results': [],
@@ -298,7 +600,7 @@ def chat():
             return jsonify({'error': 'No question provided'}), 400
         
         # Get analysis data from session
-        analysis_data = session[session_id]['analysis_data']
+        analysis_data = analysis_sessions[session_id]['analysis_data']
         
         # Debug: Print session data info
         print(f"DEBUG: Session analysis data keys: {analysis_data.keys()}")

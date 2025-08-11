@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Questionnaires - Bias Analysis Study</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --dark-text: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .questionnaire-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .form-section {
+            padding: 40px;
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--secondary-color);
+        }
+
+        .section-header h3 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .question-group {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 3px solid #007bff;
+        }
+
+        .question-label {
+            font-weight: 600;
+            color: var(--dark-text);
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .likert-scale {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .likert-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 80px;
+        }
+
+        .likert-option input[type="radio"] {
+            margin-bottom: 5px;
+            transform: scale(1.2);
+        }
+
+        .likert-label {
+            font-size: 0.85rem;
+            text-align: center;
+            color: var(--dark-text);
+            font-weight: 500;
+        }
+
+        .likert-endpoints {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            padding: 12px;
+            font-size: 1rem;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #2980b9 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 12px 30px;
+            font-size: 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color) 0%, #2ecc71 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 12px 30px;
+            font-size: 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .progress-indicator {
+            background: white;
+            padding: 20px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        .thank-you-section {
+            text-align: center;
+            padding: 60px 40px;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        }
+
+        .thank-you-section h2 {
+            color: var(--success-color);
+            margin-bottom: 20px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            transform: scale(1.2);
+        }
+
+        .required-field {
+            color: var(--danger-color);
+        }
+
+        @media (max-width: 768px) {
+            .questionnaire-container {
+                margin: 10px;
+                max-width: calc(100% - 20px);
+            }
+            
+            .form-section {
+                padding: 20px;
+            }
+            
+            .likert-scale {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .likert-option {
+                flex-direction: row;
+                min-width: auto;
+                width: 100%;
+                justify-content: flex-start;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="questionnaire-container">
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-clipboard-list"></i> Research Questionnaires</h1>
+                <p>Bias Analysis Study - Media Perception Research</p>
+            </div>
+
+            <!-- Progress Indicator -->
+            <div class="progress-indicator">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>Progress</span>
+                    <span><span id="currentStep">1</span> of 3</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar" id="progressBar" style="width: 33%"></div>
+                </div>
+            </div>
+
+            <!-- Pre-Experiment Questionnaire -->
+            <div id="preExperiment" class="form-section">
+                <div class="section-header">
+                    <h3><i class="fas fa-user"></i> Pre-Experiment Questionnaire</h3>
+                    <p>Please provide some background information about yourself and your news consumption habits.</p>
+                </div>
+
+                <form id="preExperimentForm">
+                    <!-- Demographics -->
+                    <div class="question-group">
+                        <label class="question-label">
+                            1. What is your age group? <span class="required-field">*</span>
+                        </label>
+                        <select class="form-select" name="ageGroup" required>
+                            <option value="">Select your age group</option>
+                            <option value="18-24">18-24 years</option>
+                            <option value="25-34">25-34 years</option>
+                            <option value="35-44">35-44 years</option>
+                            <option value="45-54">45-54 years</option>
+                            <option value="55-64">55-64 years</option>
+                            <option value="65+">65+ years</option>
+                        </select>
+                    </div>
+
+                    <div class="question-group">
+                        <label class="question-label">
+                            2. What is your gender? <span class="required-field">*</span>
+                        </label>
+                        <select class="form-select" name="gender" required>
+                            <option value="">Select your gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="non-binary">Non-binary</option>
+                            <option value="prefer-not-to-say">Prefer not to say</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="question-group">
+                        <label class="question-label">
+                            3. What is your highest level of education? <span class="required-field">*</span>
+                        </label>
+                        <select class="form-select" name="education" required>
+                            <option value="">Select your education level</option>
+                            <option value="high-school">High School or equivalent</option>
+                            <option value="some-college">Some College/University</option>
+                            <option value="bachelors">Bachelor's Degree</option>
+                            <option value="masters">Master's Degree</option>
+                            <option value="doctorate">Doctorate/PhD</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="question-group">
+                        <label class="question-label">
+                            4. What is your current occupation/field? <span class="required-field">*</span>
+                        </label>
+                        <input type="text" class="form-control" name="occupation" 
+                               placeholder="e.g., Student, Teacher, Engineer, Healthcare, etc." required>
+                    </div>
+
+                    <!-- News Consumption Habits -->
+                    <div class="question-group">
+                        <label class="question-label">
+                            5. How often do you read or watch news? <span class="required-field">*</span>
+                        </label>
+                        <select class="form-select" name="newsFrequency" required>
+                            <option value="">Select frequency</option>
+                            <option value="multiple-daily">Multiple times per day</option>
+                            <option value="daily">Once per day</option>
+                            <option value="few-times-week">A few times per week</option>
+                            <option value="weekly">Once per week</option>
+                            <option value="rarely">Rarely</option>
+                            <option value="never">Never</option>
+                        </select>
+                    </div>
+
+                    <div class="question-group">
+                        <label class="question-label">
+                            6. Which news sources do you primarily use? (Select all that apply)
+                        </label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="newsSources" value="tv-news" id="tv-news">
+                                <label for="tv-news">Television News (BBC, CNN, Fox News, etc.)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="newsSources" value="online-news" id="online-news">
+                                <label for="online-news">Online News Websites</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="newsSources" value="social-media" id="social-media">
+                                <label for="social-media">Social Media (Twitter, Facebook, Instagram)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="newsSources" value="newspapers" id="newspapers">
+                                <label for="newspapers">Print/Digital Newspapers</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="newsSources" value="podcasts" id="podcasts">
+                                <label for="podcasts">News Podcasts</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="newsSources" value="other" id="other-sources">
+                                <label for="other-sources">Other</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Media Trust and Bias Perception -->
+                    <div class="question-group">
+                        <label class="question-label">
+                            7. How much do you trust mainstream news media? <span class="required-field">*</span>
+                        </label>
+                        <div class="likert-scale">
+                            <div class="likert-option">
+                                <input type="radio" name="mediaTrust" value="1" id="trust1" required>
+                                <label for="trust1" class="likert-label">1</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="mediaTrust" value="2" id="trust2" required>
+                                <label for="trust2" class="likert-label">2</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="mediaTrust" value="3" id="trust3" required>
+                                <label for="trust3" class="likert-label">3</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="mediaTrust" value="4" id="trust4" required>
+                                <label for="trust4" class="likert-label">4</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="mediaTrust" value="5" id="trust5" required>
+                                <label for="trust5" class="likert-label">5</label>
+                            </div>
+                        </div>
+                        <div class="likert-endpoints">
+                            <span>Strongly Distrust</span>
+                            <span>Strongly Trust</span>
+                        </div>
+                    </div>
+
+                    <div class="question-group">
+                        <label class="question-label">
+                            8. How much bias do you think exists in mainstream news media? <span class="required-field">*</span>
+                        </label>
+                        <div class="likert-scale">
+                            <div class="likert-option">
+                                <input type="radio" name="perceivedBias" value="1" id="bias1" required>
+                                <label for="bias1" class="likert-label">1</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="perceivedBias" value="2" id="bias2" required>
+                                <label for="bias2" class="likert-label">2</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="perceivedBias" value="3" id="bias3" required>
+                                <label for="bias3" class="likert-label">3</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="perceivedBias" value="4" id="bias4" required>
+                                <label for="bias4" class="likert-label">4</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="perceivedBias" value="5" id="bias5" required>
+                                <label for="bias5" class="likert-label">5</label>
+                            </div>
+                        </div>
+                        <div class="likert-endpoints">
+                            <span>No Bias</span>
+                            <span>Extremely Biased</span>
+                        </div>
+                    </div>
+
+                    <div class="question-group">
+                        <label class="question-label">
+                            9. How confident are you in identifying bias in news articles? <span class="required-field">*</span>
+                        </label>
+                        <div class="likert-scale">
+                            <div class="likert-option">
+                                <input type="radio" name="biasDetectionConfidence" value="1" id="detection1" required>
+                                <label for="detection1" class="likert-label">1</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="biasDetectionConfidence" value="2" id="detection2" required>
+                                <label for="detection2" class="likert-label">2</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="biasDetectionConfidence" value="3" id="detection3" required>
+                                <label for="detection3" class="likert-label">3</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="biasDetectionConfidence" value="4" id="detection4" required>
+                                <label for="detection4" class="likert-label">4</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="biasDetectionConfidence" value="5" id="detection5" required>
+                                <label for="detection5" class="likert-label">5</label>
+                            </div>
+                        </div>
+                        <div class="likert-endpoints">
+                            <span>Not Confident</span>
+                            <span>Very Confident</span>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button type="button" class="btn btn-primary" onclick="nextStep()">
+                            Continue to Experiment <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Experiment Instructions -->
+            <div id="experimentInstructions" class="form-section" style="display: none;">
+                <div class="section-header">
+                    <h3><i class="fas fa-info-circle"></i> Experiment Instructions</h3>
+                    <p>Please read these instructions carefully before proceeding.</p>
+                </div>
+
+                <div class="question-group">
+                    <h5>What you will do:</h5>
+                    <ul>
+                        <li>You will analyze a news article about politics, war, or current affairs</li>
+                        <li>The article will be displayed on the left side of your screen</li>
+                        <li>Our AI system will provide fact vs. opinion analysis on the right side</li>
+                        <li>Take your time to read both the original article and the analysis</li>
+                        <li>Your interactions with the interface will be logged for research purposes</li>
+                    </ul>
+                </div>
+
+                <div class="question-group">
+                    <h5>What we're studying:</h5>
+                    <ul>
+                        <li>How AI-assisted fact-checking affects bias perception</li>
+                        <li>The effectiveness of distinguishing facts from opinions</li>
+                        <li>User interaction patterns with bias analysis tools</li>
+                        <li>The impact on media literacy and critical thinking</li>
+                    </ul>
+                </div>
+
+                <div class="question-group">
+                    <h5>Privacy and Data:</h5>
+                    <ul>
+                        <li>All data collected is anonymous and for research purposes only</li>
+                        <li>No personal information will be shared or published</li>
+                        <li>You can withdraw from the study at any time</li>
+                        <li>Results will be used for academic research and improving AI systems</li>
+                    </ul>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="button" class="btn btn-success" onclick="startExperiment()">
+                        <i class="fas fa-play"></i> Start Experiment
+                    </button>
+                </div>
+            </div>
+
+            <!-- Post-Experiment Questionnaire -->
+            <div id="postExperiment" class="form-section" style="display: none;">
+                <div class="section-header">
+                    <h3><i class="fas fa-clipboard-check"></i> Post-Experiment Questionnaire</h3>
+                    <p>Please share your experience with the bias analysis tool.</p>
+                </div>
+
+                <form id="postExperimentForm">
+                    <!-- Tool Effectiveness -->
+                    <div class="question-group">
+                        <label class="question-label">
+                            1. How helpful was the AI bias analysis tool? <span class="required-field">*</span>
+                        </label>
+                        <div class="likert-scale">
+                            <div class="likert-option">
+                                <input type="radio" name="toolHelpfulness" value="1" id="helpful1" required>
+                                <label for="helpful1" class="likert-label">1</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="toolHelpfulness" value="2" id="helpful2" required>
+                                <label for="helpful2" class="likert-label">2</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="toolHelpfulness" value="3" id="helpful3" required>
+                                <label for="helpful3" class="likert-label">3</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="toolHelpfulness" value="4" id="helpful4" required>
+                                <label for="helpful4" class="likert-label">4</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="toolHelpfulness" value="5" id="helpful5" required>
+                                <label for="helpful5" class="likert-label">5</label>
+                            </div>
+                        </div>
+                        <div class="likert-endpoints">
+                            <span>Not Helpful</span>
+                            <span>Very Helpful</span>
+                        </div>
+                    </div>
+
+                    <div class="question-group">
+                        <label class="question-label">
+                            2. How accurate do you think the fact vs. opinion classification was? <span class="required-field">*</span>
+                        </label>
+                        <div class="likert-scale">
+                            <div class="likert-option">
+                                <input type="radio" name="accuracyPerception" value="1" id="accuracy1" required>
+                                <label for="accuracy1" class="likert-label">1</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="accuracyPerception" value="2" id="accuracy2" required>
+                                <label for="accuracy2" class="likert-label">2</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="accuracyPerception" value="3" id="accuracy3" required>
+                                <label for="accuracy3" class="likert-label">3</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="accuracyPerception" value="4" id="accuracy4" required>
+                                <label for="accuracy4" class="likert-label">4</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="accuracyPerception" value="5" id="accuracy5" required>
+                                <label for="accuracy5" class="likert-label">5</label>
+                            </div>
+                        </div>
+                        <div class="likert-endpoints">
+                            <span>Very Inaccurate</span>
+                            <span>Very Accurate</span>
+                        </div>
+                    </div>
+
+                    <div class="question-group">
+                        <label class="question-label">
+                            3. Did using this tool change your impression of the news article? <span class="required-field">*</span>
+                        </label>
+                        <select class="form-select" name="impressionChange" required>
+                            <option value="">Select your response</option>
+                            <option value="much-more-biased">Made me think it was much more biased</option>
+                            <option value="somewhat-more-biased">Made me think it was somewhat more biased</option>
+                            <option value="no-change">No change in my impression</option>
+                            <option value="somewhat-less-biased">Made me think it was somewhat less biased</option>
+                            <option value="much-less-biased">Made me think it was much less biased</option>
+                        </select>
+                    </div>
+
+                    <div class="question-group">
+                        <label class="question-label">
+                            4. How much time do you think this tool could save when analyzing news? <span class="required-field">*</span>
+                        </label>
+                        <select class="form-select" name="timeSaving" required>
+                            <option value="">Select your response</option>
+                            <option value="no-time">No time saved</option>
+                            <option value="little-time">A little time (1-5 minutes)</option>
+                            <option value="moderate-time">Moderate time (5-15 minutes)</option>
+                            <option value="significant-time">Significant time (15-30 minutes)</option>
+                            <option value="substantial-time">Substantial time (30+ minutes)</option>
+                        </select>
+                    </div>
+
+                    <!-- Mental Health and Well-being -->
+                    <div class="question-group">
+                        <label class="question-label">
+                            5. How did using this tool affect your mental state while reading news? <span class="required-field">*</span>
+                        </label>
+                        <div class="likert-scale">
+                            <div class="likert-option">
+                                <input type="radio" name="mentalHealthImpact" value="1" id="mental1" required>
+                                <label for="mental1" class="likert-label">1</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="mentalHealthImpact" value="2" id="mental2" required>
+                                <label for="mental2" class="likert-label">2</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="mentalHealthImpact" value="3" id="mental3" required>
+                                <label for="mental3" class="likert-label">3</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="mentalHealthImpact" value="4" id="mental4" required>
+                                <label for="mental4" class="likert-label">4</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="mentalHealthImpact" value="5" id="mental5" required>
+                                <label for="mental5" class="likert-label">5</label>
+                            </div>
+                        </div>
+                        <div class="likert-endpoints">
+                            <span>More Anxious/Stressed</span>
+                            <span>More Calm/Confident</span>
+                        </div>
+                    </div>
+
+                    <div class="question-group">
+                        <label class="question-label">
+                            6. Overall, how would you rate your experience with this bias analysis tool? <span class="required-field">*</span>
+                        </label>
+                        <div class="likert-scale">
+                            <div class="likert-option">
+                                <input type="radio" name="overallExperience" value="1" id="overall1" required>
+                                <label for="overall1" class="likert-label">1</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="overallExperience" value="2" id="overall2" required>
+                                <label for="overall2" class="likert-label">2</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="overallExperience" value="3" id="overall3" required>
+                                <label for="overall3" class="likert-label">3</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="overallExperience" value="4" id="overall4" required>
+                                <label for="overall4" class="likert-label">4</label>
+                            </div>
+                            <div class="likert-option">
+                                <input type="radio" name="overallExperience" value="5" id="overall5" required>
+                                <label for="overall5" class="likert-label">5</label>
+                            </div>
+                        </div>
+                        <div class="likert-endpoints">
+                            <span>Very Poor</span>
+                            <span>Excellent</span>
+                        </div>
+                    </div>
+
+                    <div class="question-group">
+                        <label class="question-label">
+                            7. Additional comments or feedback about the tool:
+                        </label>
+                        <textarea class="form-control" name="additionalComments" rows="4" 
+                                  placeholder="Please share any thoughts, suggestions, or issues you experienced..."></textarea>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button type="button" class="btn btn-success" onclick="submitQuestionnaires()">
+                            <i class="fas fa-check"></i> Submit Questionnaires
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Thank You Section -->
+            <div id="thankYou" class="thank-you-section" style="display: none;">
+                <h2><i class="fas fa-heart"></i> Thank You!</h2>
+                <p class="lead">Your participation in this research study is greatly appreciated.</p>
+                <p>Your responses will help improve AI-assisted fact-checking and bias detection tools.</p>
+                <div class="mt-4">
+                    <button class="btn btn-primary" onclick="downloadData()">
+                        <i class="fas fa-download"></i> Download Your Data
+                    </button>
+                    <button class="btn btn-success ms-3" onclick="startNewSession()">
+                        <i class="fas fa-refresh"></i> Start New Session
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentStep = 1;
+        let preExperimentData = {};
+        let postExperimentData = {};
+        let sessionId = generateSessionId();
+
+        function generateSessionId() {
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function updateProgress(step) {
+            currentStep = step;
+            document.getElementById('currentStep').textContent = step;
+            const progressPercentage = (step / 3) * 100;
+            document.getElementById('progressBar').style.width = progressPercentage + '%';
+        }
+
+        function nextStep() {
+            const form = document.getElementById('preExperimentForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Collect pre-experiment data
+            const formData = new FormData(form);
+            preExperimentData = {};
+            for (let [key, value] of formData.entries()) {
+                if (preExperimentData[key]) {
+                    if (Array.isArray(preExperimentData[key])) {
+                        preExperimentData[key].push(value);
+                    } else {
+                        preExperimentData[key] = [preExperimentData[key], value];
+                    }
+                } else {
+                    preExperimentData[key] = value;
+                }
+            }
+            preExperimentData.sessionId = sessionId;
+            preExperimentData.timestamp = new Date().toISOString();
+
+            // Move to instructions
+            document.getElementById('preExperiment').style.display = 'none';
+            document.getElementById('experimentInstructions').style.display = 'block';
+            updateProgress(2);
+        }
+
+        function startExperiment() {
+            // Redirect to the bias research interface
+            const params = new URLSearchParams({
+                sessionId: sessionId,
+                fromQuestionnaire: 'true'
+            });
+            
+            // Save pre-experiment data to localStorage
+            localStorage.setItem(`preExperiment_${sessionId}`, JSON.stringify(preExperimentData));
+            
+            window.location.href = `bias_research.html?${params.toString()}`;
+        }
+
+        function showPostExperiment() {
+            document.getElementById('experimentInstructions').style.display = 'none';
+            document.getElementById('postExperiment').style.display = 'block';
+            updateProgress(3);
+        }
+
+        function submitQuestionnaires() {
+            const form = document.getElementById('postExperimentForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Collect post-experiment data
+            const formData = new FormData(form);
+            postExperimentData = {};
+            for (let [key, value] of formData.entries()) {
+                postExperimentData[key] = value;
+            }
+            postExperimentData.sessionId = sessionId;
+            postExperimentData.timestamp = new Date().toISOString();
+
+            // Combine all research data
+            const completeResearchData = {
+                sessionId: sessionId,
+                preExperiment: preExperimentData,
+                postExperiment: postExperimentData,
+                experimentData: JSON.parse(localStorage.getItem(`research_${sessionId}`) || '[]'),
+                completedAt: new Date().toISOString()
+            };
+
+            // Save complete data
+            localStorage.setItem(`completeResearch_${sessionId}`, JSON.stringify(completeResearchData));
+
+            // Show thank you
+            document.getElementById('postExperiment').style.display = 'none';
+            document.getElementById('thankYou').style.display = 'block';
+
+            // Send data to server (if available)
+            fetch('/submit_research_data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(completeResearchData)
+            }).catch(error => {
+                console.log('Server submission failed, data saved locally:', error);
+            });
+        }
+
+        function downloadData() {
+            const completeData = localStorage.getItem(`completeResearch_${sessionId}`);
+            if (completeData) {
+                const blob = new Blob([completeData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `bias_research_data_${sessionId}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        function startNewSession() {
+            // Clear data and restart
+            localStorage.removeItem(`preExperiment_${sessionId}`);
+            localStorage.removeItem(`research_${sessionId}`);
+            localStorage.removeItem(`completeResearch_${sessionId}`);
+            location.reload();
+        }
+
+        // Check if returning from experiment
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const fromExperiment = urlParams.get('fromExperiment');
+            const sessionIdParam = urlParams.get('sessionId');
+
+            if (fromExperiment && sessionIdParam) {
+                sessionId = sessionIdParam;
+                
+                // Load pre-experiment data
+                const preData = localStorage.getItem(`preExperiment_${sessionId}`);
+                if (preData) {
+                    preExperimentData = JSON.parse(preData);
+                }
+
+                // Show post-experiment questionnaire
+                document.getElementById('preExperiment').style.display = 'none';
+                document.getElementById('experimentInstructions').style.display = 'none';
+                showPostExperiment();
+            }
+        });
+    </script>
+</body>
+</html>

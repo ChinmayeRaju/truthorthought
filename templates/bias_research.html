@@ -1,0 +1,1943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bias Analysis Research - Truth or Thought</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --dark-text: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .main-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 95%;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+
+        .input-section {
+            padding: 30px;
+            background: var(--light-bg);
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .split-container {
+            display: flex;
+            min-height: 80vh;
+        }
+
+        .original-article {
+            flex: 1;
+            padding: 30px;
+            border-right: 2px solid #dee2e6;
+            background: #fefefe;
+            overflow-y: auto;
+            max-height: 80vh;
+        }
+
+        .analysis-panel {
+            flex: 1;
+            padding: 30px;
+            background: #f8f9fa;
+            overflow-y: auto;
+            max-height: 80vh;
+        }
+
+        .article-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--secondary-color);
+        }
+
+        .analysis-header {
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--success-color);
+        }
+
+        .article-content {
+            line-height: 1.8;
+            font-size: 1.1rem;
+            color: var(--dark-text);
+        }
+
+        .article-content h2, .article-content h3 {
+            color: var(--primary-color);
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        .article-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .fact-item {
+            background: #d4edda;
+            border-left: 4px solid var(--success-color);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .opinion-item {
+            background: #fff3cd;
+            border-left: 4px solid var(--warning-color);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .mixed-item {
+            background: #f8d7da;
+            border-left: 4px solid var(--danger-color);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .statement-text {
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .statement-meta {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .confidence-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .confidence-high {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .confidence-medium {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .confidence-low {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .citation-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 123, 255, 0.1);
+            border-radius: 6px;
+            border-left: 3px solid #007bff;
+        }
+
+        .citation-info a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .citation-info a:hover {
+            text-decoration: underline;
+        }
+
+        .domain-info {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .metric-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        .metric-label {
+            color: var(--dark-text);
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .btn-analyze {
+            background: linear-gradient(135deg, var(--success-color) 0%, #2ecc71 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 12px 25px;
+            font-size: 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-analyze:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--secondary-color);
+        }
+
+        .spinner-border {
+            color: var(--secondary-color);
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .user-interaction-log {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.1);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            z-index: 1000;
+        }
+
+        /* Research-specific styles */
+        .research-controls {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .research-timer {
+            position: fixed;
+            top: 50px;
+            right: 10px;
+            background: rgba(0,123,255,0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 1000;
+        }
+
+        .url-input-group {
+            margin-bottom: 10px;
+        }
+
+        .url-input-group .input-group-text {
+            background: var(--secondary-color);
+            color: white;
+            font-weight: 600;
+            min-width: 40px;
+        }
+
+        .multiple-analysis-section {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .source-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .source-title {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .source-url {
+            font-size: 0.9rem;
+            color: #6c757d;
+            text-decoration: none;
+        }
+
+        .source-content {
+            padding: 20px;
+        }
+
+        .comparison-metrics {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .source-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .session-item {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .session-item:hover {
+            border-color: var(--secondary-color);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .session-item.selected {
+            border-color: var(--success-color);
+            background: rgba(39, 174, 96, 0.1);
+        }
+
+        .session-header {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .session-title {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .session-timestamp {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .session-details {
+            padding: 10px 15px;
+            background: #f8f9fa;
+        }
+
+        .session-metrics {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9rem;
+        }
+
+        .session-metric {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .session-metric i {
+            color: var(--secondary-color);
+        }
+
+        .load-session-btn {
+            background: linear-gradient(135deg, var(--success-color) 0%, #2ecc71 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .load-session-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+        }
+
+        .source-metric {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .source-metric-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        .source-metric-label {
+            font-size: 0.8rem;
+            color: var(--dark-text);
+            font-weight: 500;
+        }
+
+        @media (max-width: 1200px) {
+            .split-container {
+                flex-direction: column;
+            }
+            
+            .original-article {
+                border-right: none;
+                border-bottom: 2px solid #dee2e6;
+                max-height: 50vh;
+            }
+            
+            .analysis-panel {
+                max-height: 50vh;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 10px;
+                max-width: calc(100% - 20px);
+            }
+            
+            .input-section, .original-article, .analysis-panel {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Multiple Articles Display Styles */
+        .multiple-articles-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .article-section {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .article-section:hover {
+            border-color: #007bff;
+            box-shadow: 0 2px 8px rgba(0,123,255,0.15);
+        }
+
+        .article-section-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .article-section-header h4 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .article-meta {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .article-section-content {
+            padding: 20px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #333;
+            background: white;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .article-section-stats {
+            background: #f8f9fa;
+            padding: 12px 20px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .stat-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .facts-badge {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .opinions-badge {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        /* Responsive design for multiple articles */
+        @media (max-width: 768px) {
+            .article-section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .article-meta {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        /* Analysis Results Styles */
+        .analysis-summary {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .summary-stats {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 120px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+
+        .stat-card h6 {
+            margin: 0 0 8px 0;
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .facts-stat {
+            border-left: 4px solid #28a745;
+        }
+
+        .opinions-stat {
+            border-left: 4px solid #ffc107;
+        }
+
+        .sources-stat {
+            border-left: 4px solid #007bff;
+        }
+
+        .domain-stat {
+            border-left: 4px solid #6f42c1;
+        }
+
+        .domain-badge {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #6f42c1;
+        }
+
+        .sources-breakdown {
+            margin-top: 20px;
+        }
+
+        .source-analysis {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .source-analysis h6 {
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 1rem;
+        }
+
+        .source-stats {
+            margin-bottom: 15px;
+        }
+
+        .badge-facts {
+            background: #d4edda;
+            color: #155724;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-right: 8px;
+        }
+
+        .badge-opinions {
+            background: #fff3cd;
+            color: #856404;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .statements-container {
+            margin-top: 15px;
+        }
+
+        .facts-section, .opinions-section {
+            margin-bottom: 20px;
+        }
+
+        .facts-section h6, .opinions-section h6, 
+        .facts-section h7, .opinions-section h7 {
+            margin: 0 0 10px 0;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .facts-section h6, .facts-section h7 {
+            color: #28a745;
+        }
+
+        .opinions-section h6, .opinions-section h7 {
+            color: #ffc107;
+        }
+
+        .statements-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .statements-list li {
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .facts-list li {
+            background: #d4edda;
+            border-left: 3px solid #28a745;
+        }
+
+        .opinions-list li {
+            background: #fff3cd;
+            border-left: 3px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <!-- User Interaction Logging -->
+    <div class="user-interaction-log" id="interactionLog">
+        Session Active
+    </div>
+
+    <!-- Research Timer -->
+    <div class="research-timer" id="researchTimer" style="display: none;">
+        Time: <span id="timerDisplay">00:00</span>
+    </div>
+
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-balance-scale"></i> Bias Analysis Research</h1>
+                <p>Political, War & Current Affairs - Fact vs Opinion Analysis</p>
+            </div>
+
+            <!-- Input Section -->
+            <div class="input-section" id="inputSection">
+                <div class="research-controls">
+                    <h4><i class="fas fa-microscope"></i> Research Settings</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="participantId" class="form-label">Participant ID (Optional)</label>
+                            <input type="text" class="form-control" id="participantId" placeholder="Enter participant ID">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="studyMode" class="form-label">Study Mode</label>
+                            <select class="form-control" id="studyMode">
+                                <option value="bias_analysis">Bias Analysis Study</option>
+                                <option value="fact_checking">Fact Checking Study</option>
+                                <option value="media_literacy">Media Literacy Study</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="analysisMode" class="form-label">Analysis Mode</label>
+                        <select class="form-control" id="analysisMode" onchange="toggleUrlInputs()">
+                            <option value="single">Single Article Analysis</option>
+                            <option value="multiple">Multiple Articles Comparison</option>
+                            <option value="previous">Load Previous Analysis</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="analysisDepth" class="form-label">Analysis Depth</label>
+                        <select class="form-control" id="analysisDepth">
+                            <option value="5">Quick (5 sentences)</option>
+                            <option value="10" selected>Standard (10 sentences)</option>
+                            <option value="15">Deep (15 sentences)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Load Previous Analysis Section -->
+                <div id="previousAnalysisSection" style="display: none;">
+                    <div class="mt-3">
+                        <label class="form-label">Previously Analyzed Articles from Truth or Thought</label>
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-history"></i> Analysis History</span>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="loadAnalyzedSessions()">
+                                    <i class="fas fa-refresh"></i> Refresh
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div id="sessionsList">
+                                    <!-- Sessions will be loaded here -->
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-spinner fa-spin"></i> Loading previous analyses...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Single URL Input -->
+                <div id="singleUrlSection">
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label for="articleUrl" class="form-label">News Article URL (Politics/War/Current Affairs)</label>
+                            <input type="url" class="form-control" id="articleUrl" 
+                                   placeholder="https://www.bbc.co.uk/news/politics/article-example"
+                                   value="https://www.bbc.co.uk/news/articles/c0e9py7e28xo">
+                            <div class="form-text">
+                                <strong>Focus:</strong> Political articles, war coverage, and current affairs for bias analysis
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Multiple URLs Input -->
+                <div id="multipleUrlsSection" style="display: none;">
+                    <div class="mt-3">
+                        <label class="form-label">Multiple News Article URLs for Comparison</label>
+                        <div id="urlInputs">
+                            <div class="url-input-group mb-2">
+                                <div class="input-group">
+                                    <span class="input-group-text">1</span>
+                                    <input type="url" class="form-control url-input" 
+                                           placeholder="https://www.bbc.co.uk/news/politics/article-1">
+                                    <button type="button" class="btn btn-outline-danger" onclick="removeUrlInput(this)" disabled>
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="url-input-group mb-2">
+                                <div class="input-group">
+                                    <span class="input-group-text">2</span>
+                                    <input type="url" class="form-control url-input" 
+                                           placeholder="https://www.cnn.com/politics/article-2">
+                                    <button type="button" class="btn btn-outline-danger" onclick="removeUrlInput(this)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addUrlInput()" id="addUrlBtn">
+                            <i class="fas fa-plus"></i> Add Another URL
+                        </button>
+                        <div class="form-text mt-2">
+                            <strong>Compare bias across different sources:</strong> Add 2-5 URLs from different news outlets covering similar topics
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-3">
+                    <button class="btn btn-analyze" id="analyzeBtn" onclick="startBiasAnalysis()">
+                        <i class="fas fa-play"></i> Start Analysis Session
+                    </button>
+                </div>
+
+                <div id="errorMessage" class="error-message" style="display: none;"></div>
+            </div>
+
+            <!-- Loading Section -->
+            <div class="loading" id="loadingSection" style="display: none;">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Analyzing article for bias patterns...</p>
+            </div>
+
+            <!-- Split Screen Results -->
+            <div class="split-container" id="splitContainer" style="display: none;">
+                <!-- Original Article Panel -->
+                <div class="original-article">
+                    <div class="article-header">
+                        <h3><i class="fas fa-newspaper"></i> Original Article</h3>
+                        <div id="articleMeta">
+                            <strong>Source:</strong> <span id="articleSource"></span><br>
+                            <strong>Title:</strong> <span id="articleTitle"></span><br>
+                            <strong>Domain:</strong> <span id="articleDomain"></span>
+                        </div>
+                    </div>
+                    <div class="article-content" id="articleContent">
+                        <!-- Original article content will be displayed here -->
+                    </div>
+                </div>
+
+                <!-- Analysis Panel -->
+                <div class="analysis-panel">
+                    <div class="analysis-header">
+                        <h3><i class="fas fa-chart-line"></i> Fact vs Opinion Analysis</h3>
+                        <div id="analysisInfo">
+                            <!-- Analysis info will be populated here -->
+                        </div>
+                        <div id="analysisOverview">
+                            <!-- Analysis overview will be populated here -->
+                        </div>
+                    </div>
+
+                    <div class="domain-info" id="domainInfo">
+                        <div><i class="fas fa-layer-group"></i> <strong>Detected Domain:</strong> <span id="detectedDomain"></span></div>
+                        <div><i class="fas fa-users"></i> <strong>AI Specialists:</strong> <span id="aiSpecialists"></span></div>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div id="factPercentage" class="metric-number">0%</div>
+                            <div class="metric-label">Facts</div>
+                        </div>
+                        <div class="metric-card">
+                            <div id="opinionPercentage" class="metric-number">0%</div>
+                            <div class="metric-label">Opinions</div>
+                        </div>
+                        <div class="metric-card">
+                            <div id="overallConfidence" class="metric-number">0%</div>
+                            <div class="metric-label">Confidence</div>
+                        </div>
+                        <div class="metric-card">
+                            <div id="biasScore" class="metric-number">-</div>
+                            <div class="metric-label">Bias Score</div>
+                        </div>
+                    </div>
+
+                    <div id="statementsAnalysis">
+                        <!-- Individual statement analysis will be populated here -->
+                    </div>
+
+                    <!-- Research Controls -->
+                    <div class="research-controls mt-4">
+                        <h5><i class="fas fa-cogs"></i> Research Actions</h5>
+                        <div class="text-center">
+                            <button class="btn btn-primary me-2" onclick="exportResearchData()" 
+                                    style="display: none;" id="exportBtn">
+                                <i class="fas fa-download"></i> Export Data
+                            </button>
+                            <button class="btn btn-success" onclick="proceedToPostQuestionnaire()" 
+                                    style="display: none;" id="proceedBtn">
+                                <i class="fas fa-arrow-right"></i> Complete Study
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Research logging variables
+        let sessionStartTime = null;
+        let userInteractions = [];
+        let currentSessionId = null;
+        let timerInterval = null;
+
+        // Start session timer
+        function startTimer() {
+            sessionStartTime = new Date();
+            document.getElementById('researchTimer').style.display = 'block';
+            
+            timerInterval = setInterval(() => {
+                const elapsed = new Date() - sessionStartTime;
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                document.getElementById('timerDisplay').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        // Log user interactions
+        function logInteraction(type, data) {
+            const interaction = {
+                timestamp: new Date().toISOString(),
+                type: type,
+                data: data,
+                sessionTime: sessionStartTime ? new Date() - sessionStartTime : 0
+            };
+            userInteractions.push(interaction);
+            
+            // Update interaction display
+            document.getElementById('interactionLog').textContent = 
+                `Interactions: ${userInteractions.length}`;
+        }
+
+        // Add click tracking to the entire document
+        document.addEventListener('click', (e) => {
+            if (sessionStartTime) {
+                logInteraction('click', {
+                    element: e.target.tagName,
+                    className: e.target.className,
+                    text: e.target.textContent?.substring(0, 50) || ''
+                });
+            }
+        });
+
+        // Toggle between single and multiple URL inputs
+        function toggleUrlInputs() {
+            const mode = document.getElementById('analysisMode').value;
+            const singleSection = document.getElementById('singleUrlSection');
+            const multipleSection = document.getElementById('multipleUrlsSection');
+            const previousSection = document.getElementById('previousAnalysisSection');
+            
+            // Hide all sections first
+            singleSection.style.display = 'none';
+            multipleSection.style.display = 'none';
+            previousSection.style.display = 'none';
+            
+            if (mode === 'single') {
+                singleSection.style.display = 'block';
+            } else if (mode === 'multiple') {
+                multipleSection.style.display = 'block';
+            } else if (mode === 'previous') {
+                previousSection.style.display = 'block';
+                loadAnalyzedSessions(); // Automatically load sessions when selected
+            }
+            
+            logInteraction('mode_change', { analysisMode: mode });
+        }
+
+        // Add new URL input field
+        function addUrlInput() {
+            const urlInputs = document.getElementById('urlInputs');
+            const currentInputs = urlInputs.querySelectorAll('.url-input-group');
+            const newIndex = currentInputs.length + 1;
+            
+            if (newIndex > 5) {
+                alert('Maximum 5 URLs allowed for comparison');
+                return;
+            }
+            
+            const newInputGroup = document.createElement('div');
+            newInputGroup.className = 'url-input-group mb-2';
+            newInputGroup.innerHTML = `
+                <div class="input-group">
+                    <span class="input-group-text">${newIndex}</span>
+                    <input type="url" class="form-control url-input" 
+                           placeholder="https://example.com/news/article-${newIndex}">
+                    <button type="button" class="btn btn-outline-danger" onclick="removeUrlInput(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            urlInputs.appendChild(newInputGroup);
+            
+            // Hide add button if we reach 5 URLs
+            if (newIndex >= 5) {
+                document.getElementById('addUrlBtn').style.display = 'none';
+            }
+            
+            // Update numbering and enable/disable remove buttons
+            updateUrlInputs();
+            logInteraction('add_url_input', { totalInputs: newIndex });
+        }
+
+        // Remove URL input field
+        function removeUrlInput(button) {
+            const inputGroup = button.closest('.url-input-group');
+            inputGroup.remove();
+            updateUrlInputs();
+            
+            // Show add button if we're under 5 URLs
+            const currentInputs = document.querySelectorAll('.url-input-group').length;
+            if (currentInputs < 5) {
+                document.getElementById('addUrlBtn').style.display = 'inline-block';
+            }
+            
+            logInteraction('remove_url_input', { remainingInputs: currentInputs });
+        }
+
+        // Update URL input numbering and button states
+        function updateUrlInputs() {
+            const inputGroups = document.querySelectorAll('.url-input-group');
+            inputGroups.forEach((group, index) => {
+                const numberSpan = group.querySelector('.input-group-text');
+                const removeBtn = group.querySelector('.btn-outline-danger');
+                
+                numberSpan.textContent = index + 1;
+                
+                // Always allow removal if there are more than 2 inputs
+                removeBtn.disabled = inputGroups.length <= 2;
+            });
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            logInteraction('error', { message });
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingSection').style.display = show ? 'block' : 'none';
+            document.getElementById('analyzeBtn').disabled = show;
+        }
+
+        function startBiasAnalysis() {
+            const analysisMode = document.getElementById('analysisMode').value;
+            const participantId = document.getElementById('participantId').value.trim();
+            const studyMode = document.getElementById('studyMode').value;
+            const analysisDepth = document.getElementById('analysisDepth').value;
+            
+            let urls = [];
+            
+            if (analysisMode === 'single') {
+                const articleUrl = document.getElementById('articleUrl').value.trim();
+                if (!articleUrl) {
+                    showError('Please enter a news article URL');
+                    return;
+                }
+                urls = [articleUrl];
+            } else {
+                // Multiple URLs mode
+                const urlInputs = document.querySelectorAll('.url-input');
+                urls = Array.from(urlInputs)
+                    .map(input => input.value.trim())
+                    .filter(url => url.length > 0);
+                
+                if (urls.length < 2) {
+                    showError('Please enter at least 2 URLs for comparison');
+                    return;
+                }
+            }
+            
+            // Validate URL formats
+            const urlPattern = /^https?:\/\/.+/;
+            for (let url of urls) {
+                if (!urlPattern.test(url)) {
+                    showError('Please enter valid URLs starting with http:// or https://');
+                    return;
+                }
+            }
+
+            // Start research session
+            startTimer();
+            logInteraction('session_start', {
+                participantId,
+                studyMode,
+                analysisDepth,
+                analysisMode,
+                urls,
+                urlCount: urls.length
+            });
+
+            showLoading(true);
+            
+            if (analysisMode === 'single') {
+                // Single URL analysis
+                fetch('/analyze_for_bias', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url: urls[0],
+                        participant_id: participantId,
+                        study_mode: studyMode,
+                        analysis_depth: parseInt(analysisDepth)
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    showLoading(false);
+                    if (data.success) {
+                        displaySingleBiasAnalysis(data);
+                        currentSessionId = data.session_id;
+                        logInteraction('analysis_complete', {
+                            success: true,
+                            mode: 'single',
+                            domain: data.domain,
+                            factsCount: data.facts ? data.facts.length : 0,
+                            opinionsCount: data.opinions ? data.opinions.length : 0
+                        });
+                    } else {
+                        showError(data.error || 'Analysis failed');
+                        logInteraction('analysis_complete', {
+                            success: false,
+                            mode: 'single',
+                            error: data.error
+                        });
+                    }
+                })
+                .catch(error => {
+                    showLoading(false);
+                    showError('Network error: ' + error.message);
+                    logInteraction('analysis_complete', {
+                        success: false,
+                        mode: 'single',
+                        error: 'Network error: ' + error.message
+                    });
+                });
+            } else {
+                // Multiple URLs analysis
+                fetch('/analyze_multiple', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        urls: urls,
+                        max_sentences: parseInt(analysisDepth),
+                        analysis_mode: 'individual',
+                        participant_id: participantId,
+                        study_mode: studyMode
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    showLoading(false);
+                    if (data.success) {
+                        displayMultipleBiasAnalysis(data);
+                        currentSessionId = `research_${Date.now()}_${participantId}_multiple`;
+                        logInteraction('analysis_complete', {
+                            success: true,
+                            mode: 'multiple',
+                            urlsAnalyzed: data.urls_analyzed,
+                            totalFacts: data.total_facts,
+                            totalOpinions: data.total_opinions
+                        });
+                    } else {
+                        showError(data.error || 'Multiple URL analysis failed');
+                        logInteraction('analysis_complete', {
+                            success: false,
+                            mode: 'multiple',
+                            error: data.error
+                        });
+                    }
+                })
+                .catch(error => {
+                    showLoading(false);
+                    showError('Network error: ' + error.message);
+                    logInteraction('analysis_complete', {
+                        success: false,
+                        mode: 'multiple',
+                        error: 'Network error: ' + error.message
+                    });
+                });
+            }
+        }
+
+        function displaySingleBiasAnalysis(data) {
+            displayBiasAnalysis(data);
+        }
+
+        function displayMultipleBiasAnalysis(data) {
+            // Show split container
+            document.getElementById('splitContainer').style.display = 'flex';
+
+            // Clear previous content
+            const articleContent = document.getElementById('articleContent');
+            const analysisPanel = document.getElementById('statementsAnalysis');
+
+            // Display multiple articles comparison
+            articleContent.innerHTML = '<h4><i class="fas fa-layer-group"></i> Multiple Sources Comparison</h4>';
+            
+            if (data.results && data.results.length > 0) {
+                data.results.forEach((result, index) => {
+                    if (result.url && result.title && result.domain !== 'error') {
+                        const sourceDiv = document.createElement('div');
+                        sourceDiv.className = 'multiple-analysis-section';
+                        
+                        sourceDiv.innerHTML = `
+                            <div class="source-header">
+                                <div>
+                                    <h6 class="source-title">${result.title}</h6>
+                                    <small class="text-muted">${result.domain}</small>
+                                </div>
+                                <a href="${result.url}" target="_blank" class="source-url">
+                                    ${new URL(result.url).hostname}
+                                </a>
+                            </div>
+                            <div class="source-content">
+                                <div class="source-metrics">
+                                    <div class="source-metric">
+                                        <div class="source-metric-value">${result.facts_count || 0}</div>
+                                        <div class="source-metric-label">Facts</div>
+                                    </div>
+                                    <div class="source-metric">
+                                        <div class="source-metric-value">${result.opinions_count || 0}</div>
+                                        <div class="source-metric-label">Opinions</div>
+                                    </div>
+                                    <div class="source-metric">
+                                        <div class="source-metric-value">${Math.round((result.facts_count || 0) / (result.sentences_count || 1) * 100)}%</div>
+                                        <div class="source-metric-label">Fact Ratio</div>
+                                    </div>
+                                </div>
+                                <p><strong>Summary:</strong> ${result.summary || 'Analysis summary not available'}</p>
+                            </div>
+                        `;
+                        
+                        articleContent.appendChild(sourceDiv);
+                    }
+                });
+            }
+
+            // Display analysis overview
+            const analysisOverview = document.getElementById('analysisOverview');
+            analysisOverview.innerHTML = `
+                <strong>Multi-Source Analysis:</strong> ${data.urls_analyzed || 0} sources compared<br>
+                <strong>Total Statements:</strong> ${data.total_sentences || 0}<br>
+                <strong>Analysis Mode:</strong> Cross-Source Bias Comparison
+            `;
+
+            // Populate domain info for multiple analysis
+            document.getElementById('detectedDomain').textContent = data.domain || 'MULTI-SOURCE';
+            document.getElementById('aiSpecialists').textContent = 
+                data.specialists ? data.specialists.join(', ') : 'Cross-Domain Analysis Team';
+
+            // Calculate and display aggregate metrics
+            const totalFacts = data.total_facts || 0;
+            const totalOpinions = data.total_opinions || 0;
+            const totalStatements = data.total_sentences || 0;
+
+            const factPercentage = totalStatements > 0 ? Math.round((totalFacts / totalStatements) * 100) : 0;
+            const opinionPercentage = totalStatements > 0 ? Math.round((totalOpinions / totalStatements) * 100) : 0;
+            const confidence = data.confidence || 0;
+            
+            // Calculate aggregate bias score
+            let biasScore = 'Low';
+            if (opinionPercentage > 60) biasScore = 'High';
+            else if (opinionPercentage > 30) biasScore = 'Medium';
+
+            document.getElementById('factPercentage').textContent = `${factPercentage}%`;
+            document.getElementById('opinionPercentage').textContent = `${opinionPercentage}%`;
+            document.getElementById('overallConfidence').textContent = `${confidence}%`;
+            document.getElementById('biasScore').textContent = biasScore;
+
+            // Display comparison analysis
+            analysisPanel.innerHTML = '<h5><i class="fas fa-chart-bar"></i> Cross-Source Bias Analysis</h5>';
+            
+            // Add comparison metrics
+            const comparisonDiv = document.createElement('div');
+            comparisonDiv.className = 'comparison-metrics';
+            comparisonDiv.innerHTML = `
+                <h6><i class="fas fa-balance-scale"></i> Bias Comparison Across Sources</h6>
+                <p><strong>Aggregate Analysis:</strong> ${totalFacts} facts vs ${totalOpinions} opinions across ${data.urls_analyzed} sources</p>
+                <p><strong>Cross-Source Consistency:</strong> ${biasScore} bias variation detected</p>
+                <p><strong>Research Value:</strong> Multiple perspectives analyzed for comprehensive bias assessment</p>
+            `;
+            analysisPanel.appendChild(comparisonDiv);
+
+            // Display individual source analysis if available
+            if (data.facts && data.facts.length > 0) {
+                const factsSection = document.createElement('div');
+                factsSection.innerHTML = '<h6><i class="fas fa-check-circle"></i> Combined Facts from All Sources</h6>';
+                data.facts.slice(0, 5).forEach(fact => {
+                    factsSection.appendChild(createAnalysisItem(fact, 'FACT'));
+                });
+                analysisPanel.appendChild(factsSection);
+            }
+
+            if (data.opinions && data.opinions.length > 0) {
+                const opinionsSection = document.createElement('div');
+                opinionsSection.innerHTML = '<h6><i class="fas fa-comment"></i> Combined Opinions from All Sources</h6>';
+                data.opinions.slice(0, 5).forEach(opinion => {
+                    opinionsSection.appendChild(createAnalysisItem(opinion, 'OPINION'));
+                });
+                analysisPanel.appendChild(opinionsSection);
+            }
+
+            // Log successful display
+            logInteraction('display_complete', {
+                mode: 'multiple',
+                sourcesAnalyzed: data.urls_analyzed,
+                factPercentage,
+                opinionPercentage,
+                biasScore,
+                totalStatements
+            });
+
+            // Show research action buttons
+            document.getElementById('exportBtn').style.display = 'inline-block';
+            document.getElementById('proceedBtn').style.display = 'inline-block';
+        }
+
+        function displayBiasAnalysis(data) {
+            // Show split container
+            document.getElementById('splitContainer').style.display = 'flex';
+
+            // Populate article metadata
+            const analysisMode = document.getElementById('analysisMode').value;
+            const articleUrl = analysisMode === 'single' ? 
+                document.getElementById('articleUrl').value : 
+                'Multiple Sources';
+                
+            document.getElementById('articleSource').textContent = getSourceFromUrl(data.url || articleUrl);
+            document.getElementById('articleTitle').textContent = data.title || 'Article Title';
+            document.getElementById('articleDomain').textContent = data.domain || 'GENERAL';
+
+            // Display original article content
+            const articleContent = document.getElementById('articleContent');
+            if (data.content) {
+                // Format the content into readable paragraphs
+                const paragraphs = data.content.split(/\n+/).filter(p => p.trim().length > 50);
+                articleContent.innerHTML = paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
+            } else {
+                articleContent.innerHTML = '<p>Article content not available</p>';
+            }
+
+            // Populate domain info
+            document.getElementById('detectedDomain').textContent = data.domain || 'GENERAL';
+            document.getElementById('aiSpecialists').textContent = 
+                data.specialists ? data.specialists.join(', ') : 'General Analysis Team';
+
+            // Calculate and display metrics
+            const totalFacts = data.facts ? data.facts.length : 0;
+            const totalOpinions = data.opinions ? data.opinions.length : 0;
+            const totalStatements = totalFacts + totalOpinions;
+
+            const factPercentage = totalStatements > 0 ? Math.round((totalFacts / totalStatements) * 100) : 0;
+            const opinionPercentage = totalStatements > 0 ? Math.round((totalOpinions / totalStatements) * 100) : 0;
+            const confidence = data.confidence ? Math.round(data.confidence) : 0;
+            
+            // Calculate bias score (higher opinion percentage = higher bias)
+            let biasScore = 'Low';
+            if (opinionPercentage > 60) biasScore = 'High';
+            else if (opinionPercentage > 30) biasScore = 'Medium';
+
+            document.getElementById('factPercentage').textContent = `${factPercentage}%`;
+            document.getElementById('opinionPercentage').textContent = `${opinionPercentage}%`;
+            document.getElementById('overallConfidence').textContent = `${confidence}%`;
+            document.getElementById('biasScore').textContent = biasScore;
+
+            // Display statement analysis
+            const statementsAnalysis = document.getElementById('statementsAnalysis');
+            statementsAnalysis.innerHTML = '<h5><i class="fas fa-list"></i> Statement Analysis</h5>';
+
+            // Combine and display facts
+            if (data.facts && data.facts.length > 0) {
+                data.facts.forEach(fact => {
+                    statementsAnalysis.appendChild(createAnalysisItem(fact, 'FACT'));
+                });
+            }
+
+            // Combine and display opinions
+            if (data.opinions && data.opinions.length > 0) {
+                data.opinions.forEach(opinion => {
+                    statementsAnalysis.appendChild(createAnalysisItem(opinion, 'OPINION'));
+                });
+            }
+
+            // Log successful display
+            logInteraction('display_complete', {
+                mode: 'single',
+                factPercentage,
+                opinionPercentage,
+                biasScore,
+                totalStatements
+            });
+
+            // Show research action buttons
+            document.getElementById('exportBtn').style.display = 'inline-block';
+            document.getElementById('proceedBtn').style.display = 'inline-block';
+        }
+
+        function createAnalysisItem(item, type) {
+            const div = document.createElement('div');
+            div.className = type === 'FACT' ? 'fact-item' : 
+                           type === 'OPINION' ? 'opinion-item' : 'mixed-item';
+            
+            let citationHTML = '';
+            if (item.citations && item.citations.length > 0) {
+                citationHTML = '<div class="citation-info">';
+                citationHTML += '<i class="fas fa-external-link-alt"></i> <strong>Sources:</strong><br>';
+                item.citations.forEach(citation => {
+                    if (citation && citation.url && citation.title) {
+                        let citationUrl = citation.url;
+                        if (!citationUrl.startsWith('http://') && !citationUrl.startsWith('https://')) {
+                            citationUrl = 'https://' + citationUrl;
+                        }
+                        citationHTML += `<a href="${citationUrl}" target="_blank">${citation.title}</a><br>`;
+                    }
+                });
+                citationHTML += '</div>';
+            }
+
+            div.innerHTML = `
+                <div class="statement-text">${item.sentence}</div>
+                ${citationHTML}
+                <div class="statement-meta">
+                    <span><strong>Classification:</strong> ${type}</span>
+                    <span class="confidence-badge confidence-high">Verified</span>
+                </div>
+            `;
+            
+            // Add click tracking for research
+            div.addEventListener('click', () => {
+                logInteraction('statement_click', {
+                    type: type,
+                    text: item.sentence.substring(0, 100)
+                });
+            });
+            
+            return div;
+        }
+
+        function getSourceFromUrl(url) {
+            try {
+                const domain = new URL(url).hostname;
+                return domain.replace('www.', '').toUpperCase();
+            } catch {
+                return 'Unknown Source';
+            }
+        }
+
+        // Export research data function (for research purposes)
+        function exportResearchData() {
+            const analysisMode = document.getElementById('analysisMode').value;
+            let articleUrls = [];
+            
+            if (analysisMode === 'single') {
+                articleUrls = [document.getElementById('articleUrl').value];
+            } else {
+                const urlInputs = document.querySelectorAll('.url-input');
+                articleUrls = Array.from(urlInputs)
+                    .map(input => input.value.trim())
+                    .filter(url => url.length > 0);
+            }
+            
+            const researchData = {
+                sessionId: currentSessionId,
+                participantId: document.getElementById('participantId').value,
+                studyMode: document.getElementById('studyMode').value,
+                analysisMode: analysisMode,
+                startTime: sessionStartTime?.toISOString(),
+                endTime: new Date().toISOString(),
+                totalDuration: sessionStartTime ? new Date() - sessionStartTime : 0,
+                interactions: userInteractions,
+                articleUrls: articleUrls,
+                urlCount: articleUrls.length
+            };
+
+            // Download as JSON file
+            const blob = new Blob([JSON.stringify(researchData, null, 2)], 
+                                { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bias_research_${analysisMode}_${currentSessionId || 'session'}_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            logInteraction('data_export', { 
+                recordCount: userInteractions.length,
+                analysisMode: analysisMode,
+                urlCount: articleUrls.length
+            });
+        }
+
+        // Function to proceed to post-experiment questionnaire
+        function proceedToPostQuestionnaire() {
+            if (currentSessionId) {
+                // Save current session data
+                localStorage.setItem(`research_${currentSessionId}`, 
+                                   JSON.stringify(userInteractions));
+                
+                // Redirect to questionnaires with session info
+                const params = new URLSearchParams({
+                    fromExperiment: 'true',
+                    sessionId: currentSessionId
+                });
+                
+                window.location.href = `questionnaires?${params.toString()}`;
+            } else {
+                alert('Please complete an analysis first before proceeding to the questionnaire.');
+            }
+        }
+
+        // Keyboard shortcut for exporting data (Ctrl+E)
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'e' && currentSessionId) {
+                e.preventDefault();
+                exportResearchData();
+            }
+        });
+
+        // Auto-save interactions periodically
+        setInterval(() => {
+            if (currentSessionId && userInteractions.length > 0) {
+                // Save to localStorage as backup
+                localStorage.setItem(`research_${currentSessionId}`, 
+                                   JSON.stringify(userInteractions));
+            }
+        }, 30000); // Every 30 seconds
+
+        // Load previously analyzed sessions from Truth or Thought
+        function loadAnalyzedSessions() {
+            const sessionsList = document.getElementById('sessionsList');
+            sessionsList.innerHTML = '<div class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> Loading previous analyses...</div>';
+
+            fetch('/get_analyzed_sessions')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayAnalyzedSessions(data.sessions);
+                    } else {
+                        sessionsList.innerHTML = '<div class="text-center text-muted"><i class="fas fa-exclamation-triangle"></i> Error loading sessions</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading sessions:', error);
+                    sessionsList.innerHTML = '<div class="text-center text-muted"><i class="fas fa-exclamation-triangle"></i> Error loading sessions</div>';
+                });
+        }
+
+        // Display the list of analyzed sessions
+        function displayAnalyzedSessions(sessions) {
+            const sessionsList = document.getElementById('sessionsList');
+            
+            if (!sessions || sessions.length === 0) {
+                sessionsList.innerHTML = `
+                    <div class="text-center text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        <p>No previous analyses found.</p>
+                        <p>Analyze articles on the <a href="/" target="_blank">Truth or Thought page</a> first, then return here for bias research.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let sessionsHtml = '';
+            sessions.forEach(session => {
+                const timestamp = new Date(session.timestamp).toLocaleString();
+                const isMultiple = session.is_multiple;
+                
+                sessionsHtml += `
+                    <div class="session-item" onclick="selectSession('${session.session_id}')">
+                        <div class="session-header">
+                            <div>
+                                <h6 class="session-title">
+                                    <i class="fas ${isMultiple ? 'fa-layer-group' : 'fa-file-alt'}"></i>
+                                    ${session.title}
+                                </h6>
+                                <div class="session-timestamp">${timestamp}</div>
+                            </div>
+                            <button type="button" class="load-session-btn" onclick="event.stopPropagation(); loadSessionForBias('${session.session_id}')">
+                                <i class="fas fa-play"></i> Load
+                            </button>
+                        </div>
+                        <div class="session-details">
+                            <div class="session-metrics">
+                                <div class="session-metric">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>${session.total_facts} Facts</span>
+                                </div>
+                                <div class="session-metric">
+                                    <i class="fas fa-comment-dots"></i>
+                                    <span>${session.total_opinions} Opinions</span>
+                                </div>
+                                <div class="session-metric">
+                                    <i class="fas fa-list"></i>
+                                    <span>${session.total_sentences} Total</span>
+                                </div>
+                                <div class="session-metric">
+                                    <i class="fas fa-tag"></i>
+                                    <span>${session.domain}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            sessionsList.innerHTML = sessionsHtml;
+        }
+
+        // Select a session (visual feedback)
+        function selectSession(sessionId) {
+            // Remove previous selection
+            document.querySelectorAll('.session-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Add selection to clicked item
+            event.currentTarget.classList.add('selected');
+        }
+
+        // Load a specific session for bias analysis
+        function loadSessionForBias(sessionId) {
+            document.getElementById('loadingSection').style.display = 'block';
+            
+            fetch(`/load_session_for_bias/${sessionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loadingSection').style.display = 'none';
+                    
+                    if (data.success) {
+                        // Display the loaded analysis in the bias research interface
+                        displayLoadedAnalysis(data);
+                        
+                        // Start the research session
+                        startBiasAnalysis(true, data);
+                        
+                        logInteraction('previous_analysis_loaded', {
+                            sessionId: sessionId,
+                            title: data.title,
+                            totalFacts: data.total_facts,
+                            totalOpinions: data.total_opinions,
+                            isMultiple: data.is_multiple
+                        });
+                    } else {
+                        showError('Failed to load session: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('loadingSection').style.display = 'none';
+                    showError('Network error: ' + error.message);
+                });
+        }
+
+        // Display loaded analysis data
+        function displayLoadedAnalysis(data) {
+            // Update analysis header
+            const analysisInfo = document.getElementById('analysisInfo');
+            analysisInfo.innerHTML = `
+                <div class="loaded-session-info">
+                    <h5><i class="fas fa-history"></i> Loaded from Previous Analysis</h5>
+                    <p><strong>Title:</strong> ${data.title}</p>
+                    <p><strong>Domain:</strong> ${data.domain}</p>
+                    <p><strong>Original Analysis:</strong> ${new Date(data.timestamp).toLocaleString()}</p>
+                    ${data.url ? `<p><strong>Source:</strong> <a href="${data.url}" target="_blank">${data.url}</a></p>` : ''}
+                </div>
+            `;
+
+            // Handle multiple URL display
+            if (data.is_multiple && data.multiple_results) {
+                displayMultipleArticles(data);
+                // Set domain info for multiple sources
+                document.getElementById('articleSource').textContent = 'Multiple Sources';
+                document.getElementById('articleDomain').textContent = data.domain || 'MULTI-SOURCE';
+            } else {
+                // Single article display
+                if (data.content) {
+                    document.getElementById('articleTitle').textContent = data.title;
+                    document.getElementById('articleContent').innerHTML = data.content.replace(/\n/g, '<br>');
+                }
+                // Set source and domain info for single source
+                document.getElementById('articleSource').textContent = getSourceFromUrl(data.url) || 'Unknown Source';
+                document.getElementById('articleDomain').textContent = data.domain || 'GENERAL';
+            }
+
+            // Show the bias analysis interface
+            document.getElementById('inputSection').style.display = 'none';
+            document.getElementById('splitContainer').style.display = 'flex';
+
+            // Enable research controls
+            document.getElementById('exportBtn').style.display = 'inline-block';
+            document.getElementById('proceedBtn').style.display = 'inline-block';
+
+            // Display facts and opinions
+            displayBiasAnalysisResults({
+                facts: data.facts || [],
+                opinions: data.opinions || [],
+                total_facts: data.total_facts || 0,
+                total_opinions: data.total_opinions || 0,
+                domain: data.domain,
+                title: data.title,
+                is_multiple: data.is_multiple,
+                multiple_results: data.multiple_results || []
+            });
+        }
+
+        // Display multiple articles side by side
+        function displayMultipleArticles(data) {
+            const articleContent = document.getElementById('articleContent');
+            const articleTitle = document.getElementById('articleTitle');
+            
+            // Update title
+            articleTitle.textContent = `Multiple Sources Analysis (${data.multiple_results.length} articles)`;
+            
+            // Create multi-article view
+            let articlesHtml = '<div class="multiple-articles-container">';
+            
+            data.multiple_results.forEach((result, index) => {
+                const fullContent = result.full_content || result.summary || 'Content not available';
+                const title = result.scraped_title || result.title || 'Unknown Title';
+                const url = result.url || '#';
+                
+                articlesHtml += `
+                    <div class="article-section" id="article-${index}">
+                        <div class="article-section-header">
+                            <h4>
+                                <i class="fas fa-newspaper"></i> 
+                                Article ${index + 1}: ${title}
+                            </h4>
+                            <div class="article-meta">
+                                <span class="badge bg-primary">${result.domain || 'Unknown Domain'}</span>
+                                <a href="${url}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-external-link-alt"></i> View Original
+                                </a>
+                            </div>
+                        </div>
+                        <div class="article-section-content">
+                            ${fullContent.replace(/\n/g, '<br>')}
+                        </div>
+                        <div class="article-section-stats">
+                            <span class="stat-badge facts-badge">
+                                <i class="fas fa-check-circle"></i> ${result.facts_count || 0} Facts
+                            </span>
+                            <span class="stat-badge opinions-badge">
+                                <i class="fas fa-comment-dots"></i> ${result.opinions_count || 0} Opinions
+                            </span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            articlesHtml += '</div>';
+            articleContent.innerHTML = articlesHtml;
+        }
+
+        // Display bias analysis results in the right panel
+        function displayBiasAnalysisResults(data) {
+            const analysisPanel = document.getElementById('statementsAnalysis');
+            
+            if (data.is_multiple && data.multiple_results) {
+                // Multiple URL analysis display
+                let analysisHtml = '<h5><i class="fas fa-chart-bar"></i> Multi-Source Bias Analysis</h5>';
+                
+                // Summary statistics
+                let totalFacts = 0;
+                let totalOpinions = 0;
+                data.multiple_results.forEach(result => {
+                    totalFacts += result.facts_count || 0;
+                    totalOpinions += result.opinions_count || 0;
+                });
+                
+                analysisHtml += `
+                    <div class="analysis-summary">
+                        <div class="summary-stats">
+                            <div class="stat-card facts-stat">
+                                <h6><i class="fas fa-check-circle"></i> Total Facts</h6>
+                                <span class="stat-number">${totalFacts}</span>
+                            </div>
+                            <div class="stat-card opinions-stat">
+                                <h6><i class="fas fa-comment-dots"></i> Total Opinions</h6>
+                                <span class="stat-number">${totalOpinions}</span>
+                            </div>
+                            <div class="stat-card sources-stat">
+                                <h6><i class="fas fa-newspaper"></i> Sources</h6>
+                                <span class="stat-number">${data.multiple_results.length}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Individual source breakdown
+                analysisHtml += '<div class="sources-breakdown">';
+                data.multiple_results.forEach((result, index) => {
+                    analysisHtml += `
+                        <div class="source-analysis">
+                            <h6><i class="fas fa-newspaper"></i> Source ${index + 1}: ${result.domain || 'Unknown'}</h6>
+                            <div class="source-stats">
+                                <span class="badge badge-facts">${result.facts_count || 0} Facts</span>
+                                <span class="badge badge-opinions">${result.opinions_count || 0} Opinions</span>
+                            </div>
+                            
+                            <div class="statements-container">
+                                <div class="facts-section">
+                                    <h7><i class="fas fa-check-circle"></i> Facts</h7>
+                                    <ul class="statements-list facts-list">
+                                        ${(result.facts || []).map(fact => `<li>${fact}</li>`).join('')}
+                                    </ul>
+                                </div>
+                                
+                                <div class="opinions-section">
+                                    <h7><i class="fas fa-comment-dots"></i> Opinions</h7>
+                                    <ul class="statements-list opinions-list">
+                                        ${(result.opinions || []).map(opinion => `<li>${opinion}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                analysisHtml += '</div>';
+                
+                analysisPanel.innerHTML = analysisHtml;
+            } else {
+                // Single URL analysis display
+                let analysisHtml = `
+                    <h5><i class="fas fa-chart-bar"></i> Bias Analysis Results</h5>
+                    <div class="analysis-summary">
+                        <div class="summary-stats">
+                            <div class="stat-card facts-stat">
+                                <h6><i class="fas fa-check-circle"></i> Facts</h6>
+                                <span class="stat-number">${data.total_facts || 0}</span>
+                            </div>
+                            <div class="stat-card opinions-stat">
+                                <h6><i class="fas fa-comment-dots"></i> Opinions</h6>
+                                <span class="stat-number">${data.total_opinions || 0}</span>
+                            </div>
+                            <div class="stat-card domain-stat">
+                                <h6><i class="fas fa-globe"></i> Domain</h6>
+                                <span class="domain-badge">${data.domain || 'Unknown'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="statements-container">
+                        <div class="facts-section">
+                            <h6><i class="fas fa-check-circle"></i> Facts</h6>
+                            <ul class="statements-list facts-list">
+                                ${(data.facts || []).map(fact => `<li>${fact}</li>`).join('')}
+                            </ul>
+                        </div>
+                        
+                        <div class="opinions-section">
+                            <h6><i class="fas fa-comment-dots"></i> Opinions</h6>
+                            <ul class="statements-list opinions-list">
+                                ${(data.opinions || []).map(opinion => `<li>${opinion}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                
+                analysisPanel.innerHTML = analysisHtml;
+            }
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if we have URL parameters for questionnaire flow
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('sessionId');
+            const fromQuestionnaire = urlParams.get('fromQuestionnaire');
+
+            if (fromQuestionnaire && sessionId) {
+                currentSessionId = sessionId;
+                startTimer();
+            }
+        });
+    </script>
+</body>
+</html>
