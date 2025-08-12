@@ -620,19 +620,8 @@ class SimpleFormatter:
     """Simple formatter for clean analysis results"""
     
     def format_results(self, results, title="", domain=""):
-        """Format results in a simple way"""
-        if not results:
-            return "No results to format"
-        
-        output = []
-        output.append(f"Analysis Results for: {title}")
-        output.append(f"Domain: {domain}")
-        output.append(f"Total items: {len(results)}")
-        
-        for i, result in enumerate(results, 1):
-            output.append(f"{i}. {str(result)[:100]}...")
-        
-        return "\n".join(output)
+        """Format results in a simple way - DISABLED for bias research interface"""
+        return ""
 
 class CleanAnalysisSystem:
     """Main analysis system with domain-specific agents"""
@@ -733,6 +722,60 @@ class CleanAnalysisSystem:
             return response.strip()
         except Exception as e:
             return f"Summary generation failed: {str(e)}"
+    
+    def format_content_to_markdown(self, content: str, title: str) -> str:
+        """Format article content to clean, readable markdown"""
+        try:
+            prompt = f"""
+            Convert the following article content into clean, well-formatted markdown.
+            Follow these guidelines STRICTLY:
+            1. COMPLETELY REMOVE any photo/image/video descriptions, captions, or credits
+            2. REMOVE any lines mentioning "Photograph:", "Image:", "Video:", "Getty Images", "AFP", "Reuters", etc.
+            3. REMOVE navigation text, social media links, footer content, ads, or promotional material
+            4. REMOVE any audio/video/multimedia references
+            5. Keep ONLY the main article text content that contains actual news information
+            6. Format with proper markdown headers, paragraphs, and structure
+            7. Make it easy to read and well-organized
+            8. Remove promotional language and keep factual information
+            
+            Title: {title}
+            
+            Raw Content:
+            {content}
+            
+            Clean Markdown Version (NO IMAGE/VIDEO/PHOTO references):
+            """
+            
+            response = self.client.generate_content(prompt)
+            formatted_content = response.strip()
+            
+            # Additional post-processing to ensure no media references
+            lines = formatted_content.split('\n')
+            clean_lines = []
+            
+            for line in lines:
+                line_lower = line.lower()
+                # Skip lines that contain media references
+                if any(word in line_lower for word in [
+                    'photograph:', 'image:', 'video:', 'getty images', 'afp', 'reuters',
+                    'view image', 'fullscreen', 'screenshot', 'photo by', 'credit:',
+                    'shutterstock', 'associated press', 'ap photo', 'picture:'
+                ]):
+                    continue
+                # Skip very short lines that might be captions
+                if len(line.strip()) < 20 and any(word in line_lower for word in ['photo', 'image', 'video']):
+                    continue
+                clean_lines.append(line)
+            
+            formatted_content = '\n'.join(clean_lines)
+            
+            # Ensure we have a proper title
+            if not formatted_content.startswith('#'):
+                formatted_content = f"# {title}\n\n{formatted_content}"
+            
+            return formatted_content
+        except Exception as e:
+            return f"# {title}\n\n{content[:1000]}...\n\n*Error formatting content: {str(e)}*"
     
     def _analyze_content(self, data: Dict, domain: str = 'GENERAL') -> str:
         """Analyze content and store data for later access"""
@@ -840,63 +883,69 @@ class CleanAnalysisSystem:
         return sources
     
     def _split_sentences(self, text: str) -> List[str]:
-        """Split text into sentences"""
+        """Split text into sentences and filter out media references and metadata"""
         sentences = re.split(r'[.!?]+', text)
-        sentences = [s.strip() for s in sentences if s.strip() and len(s.strip()) > 5]  # Reduced from 15 to 5
-        print(f"Debug: Split sentences: {sentences}")  # Debug output
-        return sentences
+        
+        # Filter sentences
+        filtered_sentences = []
+        for s in sentences:
+            s = s.strip()
+            if len(s) <= 10:  # Too short
+                continue
+                
+            s_lower = s.lower()
+            
+            # Skip sentences with media references
+            if any(word in s_lower for word in [
+                'photograph:', 'image:', 'video:', 'getty images', 'afp', 'reuters',
+                'view image', 'fullscreen', 'screenshot', 'photo by', 'credit:',
+                'shutterstock', 'associated press', 'ap photo', 'picture:',
+                'images/view image', 'photograph', 'photo credit'
+            ]):
+                print(f"🚫 Filtered media reference: {s[:100]}...")
+                continue
+            
+            # Skip timestamp and metadata sentences
+            if any(pattern in s_lower for pattern in [
+                'bst', 'gmt', 'published on', 'last modified', 'first published',
+                'updated on', 'posted on', 'edited on', ':30', ':45', ':00', ':15',
+                'am', 'pm', 'sharelikecomment', 'share', 'like', 'comment',
+                'follow us', 'subscribe', 'newsletter', 'email alerts'
+            ]):
+                print(f"🚫 Filtered timestamp/metadata: {s[:100]}...")
+                continue
+                
+            # Skip sentences that are mostly numbers/dates/times
+            if re.match(r'^[\d\s:/-]+$', s) or len(re.findall(r'\d', s)) > len(s) * 0.5:
+                print(f"🚫 Filtered numeric/date content: {s[:100]}...")
+                continue
+                
+            # Skip very short sentences that might be captions or metadata
+            if len(s) < 30 and any(word in s_lower for word in [
+                'photo', 'image', 'video', 'source:', 'by:', 'via:', 'read more',
+                'click here', 'see also', 'related:', 'tags:', 'category:'
+            ]):
+                print(f"🚫 Filtered short metadata: {s}")
+                continue
+                
+            # Skip navigation and social media text
+            if any(phrase in s_lower for phrase in [
+                'explore more', 'reuse this content', 'share on', 'follow on',
+                'sign up', 'log in', 'register', 'terms of service', 'privacy policy'
+            ]):
+                print(f"🚫 Filtered navigation/social: {s[:100]}...")
+                continue
+                
+            filtered_sentences.append(s)
+        
+        print(f"Debug: Original sentences: {len(sentences)}, Filtered: {len(filtered_sentences)}")
+        print(f"Debug: First 3 filtered sentences: {filtered_sentences[:3] if filtered_sentences else 'None'}")
+        return filtered_sentences
     
     def _format_results(self, consensus_results: List[ConsensusResult], title: str = "", domain: str = "GENERAL") -> str:
-        """Format analysis results with domain information"""
-        output = []
-        
-        # Header with domain information
-        output.append("=" * 80)
-        output.append(f"DOMAIN-SPECIFIC FACT-CHECKING ANALYSIS")
-        output.append(f"Domain: {domain}")
-        if title:
-            output.append(f"Title: {title}")
-        output.append(f"Specialists: {[agent.agent_name for agent in self.agents]}")
-        output.append("=" * 80)
-        
-        # Separate facts and opinions - these are ConsensusResult objects
-        facts = [r for r in consensus_results if r.final_classification == 'FACT']
-        opinions = [r for r in consensus_results if r.final_classification == 'OPINION']
-        mixed = [r for r in consensus_results if r.final_classification == 'MIXED']
-        
-        # Metrics
-        total_sentences = len(consensus_results)
-        output.append(f"ANALYSIS METRICS:")
-        output.append(f"   Total Sentences: {total_sentences} | Facts: {len(facts)} | Opinions: {len(opinions)} | Mixed: {len(mixed)}")
-        output.append("")
-        
-        # Show actual content for debugging
-        for i, result in enumerate(consensus_results):
-            output.append(f"   Sentence {i+1}: {result.final_classification} (confidence: {result.confidence:.2f})")
-        output.append("")
-        
-        # Column headers
-        output.append(f"{'FACTS':<38} | {'OPINIONS':<38}")
-        output.append("-" * 39 + "|" + "-" * 39)
-        
-        # Format items
-        fact_lines = self._format_items(facts)
-        opinion_lines = self._format_items(opinions)
-        
-        # Balance columns
-        max_lines = max(len(fact_lines), len(opinion_lines))
-        while len(fact_lines) < max_lines:
-            fact_lines.append("")
-        while len(opinion_lines) < max_lines:
-            opinion_lines.append("")
-        
-        # Combine columns
-        for fact_line, opinion_line in zip(fact_lines, opinion_lines):
-            fact_part = fact_line[:38].ljust(38)
-            opinion_part = opinion_line[:38].ljust(38)
-            output.append(f"{fact_part} | {opinion_part}")
-        
-        output.append("=" * 80)
+        """Format analysis results - return empty for bias research to avoid cluttering interface"""
+        # Return empty string to completely remove consensus summary from display
+        return ""
         
         return "\n".join(output)
     

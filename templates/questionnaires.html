@@ -474,10 +474,11 @@
                 <div class="question-group">
                     <h5>What you will do:</h5>
                     <ul>
-                        <li>You will analyze a news article about politics, war, or current affairs</li>
-                        <li>The article will be displayed on the left side of your screen</li>
-                        <li>Our AI system will provide fact vs. opinion analysis on the right side</li>
-                        <li>Take your time to read both the original article and the analysis</li>
+                        <li>You will analyze news articles about politics, war, or current affairs using our Truth or Thought model</li>
+                        <li>The articles will be displayed on the left side of your screen</li>
+                        <li>Our Truth or Thought model will provide fact vs. opinion analysis on the right side</li>
+                        <li>After the initial analysis, you will proceed to a bias research interface for deeper analysis</li>
+                        <li>Take your time to read both the original articles and the analysis</li>
                         <li>Your interactions with the interface will be logged for research purposes</li>
                     </ul>
                 </div>
@@ -489,6 +490,7 @@
                         <li>The effectiveness of distinguishing facts from opinions</li>
                         <li>User interaction patterns with bias analysis tools</li>
                         <li>The impact on media literacy and critical thinking</li>
+                        <li>Multi-source news analysis and comparison</li>
                     </ul>
                 </div>
 
@@ -498,7 +500,7 @@
                         <li>All data collected is anonymous and for research purposes only</li>
                         <li>No personal information will be shared or published</li>
                         <li>You can withdraw from the study at any time</li>
-                        <li>Results will be used for academic research and improving AI systems</li>
+                        <li>Results will be used for academic research and improving Truth or Thought systems</li>
                     </ul>
                 </div>
 
@@ -757,7 +759,7 @@
         }
 
         function startExperiment() {
-            // Redirect to the bias research interface
+            // Redirect to the Truth or Thought main page to begin the analysis
             const params = new URLSearchParams({
                 sessionId: sessionId,
                 fromQuestionnaire: 'true'
@@ -766,7 +768,8 @@
             // Save pre-experiment data to localStorage
             localStorage.setItem(`preExperiment_${sessionId}`, JSON.stringify(preExperimentData));
             
-            window.location.href = `bias_research.html?${params.toString()}`;
+            // Redirect to the main Truth or Thought page
+            window.location.href = `/?${params.toString()}`;
         }
 
         function showPostExperiment() {
@@ -844,9 +847,10 @@
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             const fromExperiment = urlParams.get('fromExperiment');
+            const showPost = urlParams.get('showPost');
             const sessionIdParam = urlParams.get('sessionId');
 
-            if (fromExperiment && sessionIdParam) {
+            if ((fromExperiment || showPost) && sessionIdParam) {
                 sessionId = sessionIdParam;
                 
                 // Load pre-experiment data

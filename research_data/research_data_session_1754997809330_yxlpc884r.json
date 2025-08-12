@@ -1,0 +1,32 @@
+{
+  "sessionId": "session_1754997809330_yxlpc884r",
+  "preExperiment": {
+    "ageGroup": "18-24",
+    "gender": "female",
+    "education": "bachelors",
+    "occupation": "Student",
+    "newsFrequency": "daily",
+    "newsSources": [
+      "tv-news",
+      "social-media"
+    ],
+    "mediaTrust": "3",
+    "perceivedBias": "4",
+    "biasDetectionConfidence": "4",
+    "sessionId": "session_1754997809330_yxlpc884r",
+    "timestamp": "2025-08-12T11:24:24.176Z"
+  },
+  "postExperiment": {
+    "toolHelpfulness": "4",
+    "accuracyPerception": "3",
+    "impressionChange": "much-more-biased",
+    "timeSaving": "little-time",
+    "mentalHealthImpact": "4",
+    "overallExperience": "4",
+    "additionalComments": "",
+    "sessionId": "session_1754997809330_yxlpc884r",
+    "timestamp": "2025-08-12T11:28:04.267Z"
+  },
+  "experimentData": [],
+  "completedAt": "2025-08-12T11:28:04.267Z"
+}

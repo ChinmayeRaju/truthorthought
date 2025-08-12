@@ -669,6 +669,43 @@ Add multiple URLs to analyze and compare facts vs opinions across sources..."></
             }, 5000);
         }
 
+        function showNotification(message, type = 'info') {
+            // Create notification element if it doesn't exist
+            let notificationDiv = document.getElementById('notificationMessage');
+            if (!notificationDiv) {
+                notificationDiv = document.createElement('div');
+                notificationDiv.id = 'notificationMessage';
+                notificationDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 15px 20px;
+                    border-radius: 5px;
+                    color: white;
+                    font-weight: bold;
+                    z-index: 9999;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    display: none;
+                `;
+                document.body.appendChild(notificationDiv);
+            }
+            
+            // Set background color based on type
+            const colors = {
+                'success': '#28a745',
+                'info': '#007bff',
+                'warning': '#ffc107',
+                'error': '#dc3545'
+            };
+            notificationDiv.style.backgroundColor = colors[type] || colors.info;
+            notificationDiv.textContent = message;
+            notificationDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                notificationDiv.style.display = 'none';
+            }, 6000);
+        }
+
         function showLoading(show) {
             document.getElementById('loadingSection').style.display = show ? 'block' : 'none';
             document.getElementById('analyzeBtn').disabled = show;
@@ -863,6 +900,21 @@ Add multiple URLs to analyze and compare facts vs opinions across sources..."></
             loadingSection.style.display = 'none';
             resultsSection.style.display = 'block';
             document.getElementById('chatSection').style.display = 'block';
+            
+            // Check if user came from questionnaire - if so, redirect to bias research after a delay
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('fromQuestionnaire') === 'true') {
+                // Show a notification that they'll be redirected to the next part
+                showNotification('Analysis complete! Redirecting to bias research in 5 seconds...', 'success');
+                
+                setTimeout(() => {
+                    const params = new URLSearchParams({
+                        sessionId: urlParams.get('sessionId'),
+                        fromAnalysis: 'true'
+                    });
+                    window.location.href = `/bias_research?${params.toString()}`;
+                }, 5000);
+            }
         }
 
         function createStatementItem(item, type) {

@@ -22,6 +22,16 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px 0;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .container-fluid {
+            height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .main-container {
@@ -29,8 +39,12 @@
             border-radius: 15px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             overflow: hidden;
+            height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
             max-width: 95%;
             margin: 0 auto;
+            width: 100%;
         }
 
         .header {
@@ -60,7 +74,9 @@
 
         .split-container {
             display: flex;
-            min-height: 80vh;
+            flex: 1;
+            min-height: calc(100vh - 100px); /* Ensure adequate height */
+            height: auto; /* Allow natural height */
         }
 
         .original-article {
@@ -69,7 +85,11 @@
             border-right: 2px solid #dee2e6;
             background: #fefefe;
             overflow-y: auto;
-            max-height: 80vh;
+            height: auto; /* Changed from 100% to auto */
+            min-height: calc(100vh - 100px); /* Ensure minimum height but allow growth */
+            max-height: none; /* Remove max-height constraint */
+            display: flex;
+            flex-direction: column;
         }
 
         .analysis-panel {
@@ -77,7 +97,7 @@
             padding: 30px;
             background: #f8f9fa;
             overflow-y: auto;
-            max-height: 80vh;
+            height: 100%;
         }
 
         .article-header {
@@ -481,17 +501,24 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
-            max-height: calc(100vh - 200px);
-            overflow-y: auto;
+            max-height: none; /* Remove height limitation */
+            overflow: visible; /* Ensure everything is visible */
+            min-height: auto; /* Let it size naturally */
         }
 
+        /* Ensure each article section is fully visible */
         .article-section {
             border: 1px solid #e0e0e0;
             border-radius: 8px;
             background: #fafafa;
-            overflow: hidden;
+            overflow: visible; /* Don't hide content */
             transition: all 0.3s ease;
+            margin-bottom: 20px; /* Ensure spacing between articles */
+            min-height: 200px; /* Ensure minimum height */
+            flex-shrink: 0; /* Prevent shrinking */
         }
+
+        /* Removed duplicate .article-section definition that was causing overflow issues */
 
         .article-section:hover {
             border-color: #007bff;
@@ -531,7 +558,7 @@
             line-height: 1.6;
             color: #333;
             background: white;
-            max-height: 400px;
+            flex: 1;
             overflow-y: auto;
         }
 
@@ -639,6 +666,577 @@
             color: #6f42c1;
         }
 
+        /* Enhanced Metrics Styling */
+        .enhanced-analysis-summary {
+            margin-bottom: 25px;
+        }
+
+        .summary-metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metric-tile {
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .metric-tile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .metric-tile .metric-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+
+        .metric-tile .metric-content {
+            text-align: center;
+        }
+
+        .metric-tile .metric-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .metric-tile .metric-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .facts-tile {
+            border-color: #28a745;
+        }
+
+        .facts-tile .metric-icon {
+            color: #28a745;
+        }
+
+        .facts-tile .metric-value {
+            color: #28a745;
+        }
+
+        .opinions-tile {
+            border-color: #ffc107;
+        }
+
+        .opinions-tile .metric-icon {
+            color: #ffc107;
+        }
+
+        .opinions-tile .metric-value {
+            color: #ffc107;
+        }
+
+        .confidence-tile {
+            border-color: #17a2b8;
+        }
+
+        .confidence-tile .metric-icon {
+            color: #17a2b8;
+        }
+
+        .confidence-tile .metric-value {
+            color: #17a2b8;
+        }
+
+        .bias-tile {
+            border-color: #6f42c1;
+        }
+
+        .bias-tile .metric-icon {
+            color: #6f42c1;
+        }
+
+        .bias-tile .metric-value {
+            color: #6f42c1;
+        }
+
+        /* Bias Score Bar */
+        .overall-bias-indicator {
+            margin-top: 20px;
+        }
+
+        .bias-score-bar {
+            width: 100%;
+            height: 12px;
+            background: #e9ecef;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .bias-score-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.8s ease;
+        }
+
+        .bias-success {
+            background: linear-gradient(90deg, #28a745, #20c997);
+        }
+
+        .bias-info {
+            background: linear-gradient(90deg, #17a2b8, #6f42c1);
+        }
+
+        .bias-warning {
+            background: linear-gradient(90deg, #ffc107, #fd7e14);
+        }
+
+        .bias-orange {
+            background: linear-gradient(90deg, #fd7e14, #dc3545);
+        }
+
+        .bias-danger {
+            background: linear-gradient(90deg, #dc3545, #6f42c1);
+        }
+
+        /* Markdown Content Styling */
+        .markdown-content {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.7;
+            color: #333;
+        }
+
+        .markdown-content h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+
+        .markdown-content h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #34495e;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        .markdown-content h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #34495e;
+            margin-top: 20px;
+            margin-bottom: 12px;
+        }
+
+        .markdown-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .markdown-content strong {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .markdown-content em {
+            font-style: italic;
+            color: #6c757d;
+        }
+
+        .markdown-content code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #e74c3c;
+        }
+
+        .markdown-content pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+            color: #333;
+        }
+
+        .markdown-content a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .markdown-content a:hover {
+            text-decoration: underline;
+        }
+
+        .bias-level-badge {
+            text-align: center;
+        }
+
+        .badge-lg {
+            font-size: 1rem;
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+
+        /* Enhanced Article Display */
+        .single-article {
+            margin-bottom: 20px;
+        }
+
+        .article-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .article-header h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+
+        .article-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .article-content {
+            line-height: 1.7;
+            font-size: 1rem;
+            color: #495057;
+            flex: 1; /* Allow it to expand */
+            overflow-y: auto; /* Enable scrolling */
+            min-height: 500px; /* Ensure minimum height for content */
+        }
+
+        .article-content-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            height: 100%;
+        }
+
+        /* Custom scrollbar for article content */
+        .article-content-wrapper::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .article-content-wrapper::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .article-content-wrapper::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .article-content-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* Make article content div fill the space */
+        #articleContent {
+            flex: 1;
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        /* Multiple Articles Enhanced */
+        .multiple-articles-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Custom scrollbar for better UX */
+        .multiple-articles-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .multiple-articles-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .multiple-articles-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .multiple-articles-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        .multi-source-header {
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+            padding-bottom: 10px;
+        }
+
+        .article-separator {
+            display: flex;
+            align-items: center;
+            margin: 30px 0 20px 0;
+        }
+
+        .separator-line {
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #dee2e6, transparent);
+        }
+
+        .source-indicator {
+            padding: 0 15px;
+            color: #6c757d;
+            font-weight: 600;
+            background: white;
+        }
+
+        .article-section {
+            margin-bottom: 40px;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .article-header-enhanced {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .article-title-row {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .article-title {
+            margin: 0;
+            flex: 1;
+            min-width: 250px;
+            color: #495057;
+        }
+
+        .article-source-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .domain-badge {
+            font-size: 0.9rem;
+            padding: 6px 12px;
+            border-radius: 15px;
+        }
+
+        .source-link {
+            color: #007bff;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .source-link:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+
+        .article-metrics {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .metric-card {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            min-width: 70px;
+        }
+
+        .metric-icon {
+            font-size: 1.2rem;
+        }
+
+        .facts-metric .metric-icon {
+            color: #28a745;
+        }
+
+        .opinions-metric .metric-icon {
+            color: #ffc107;
+        }
+
+        .bias-metric .metric-icon {
+            color: #6f42c1;
+        }
+
+        .metric-info {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin: 0;
+        }
+
+        .bias-indicator {
+            margin-left: auto;
+        }
+
+        .article-content-enhanced {
+            padding: 25px;
+            line-height: 1.7;
+            font-size: 1rem;
+            color: #495057;
+        }
+
+        /* Source Comparison */
+        .sources-comparison {
+            margin-top: 25px;
+        }
+
+        .source-comparison-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #dee2e6;
+        }
+
+        .source-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .source-bias-score {
+            font-weight: bold;
+            color: #6f42c1;
+        }
+
+        .source-metrics {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .mini-metric {
+            padding: 4px 8px;
+            background: white;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            border: 1px solid #dee2e6;
+        }
+
+        .facts-mini {
+            color: #28a745;
+        }
+
+        .opinions-mini {
+            color: #ffc107;
+        }
+
+        .source-bias-bar {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .source-bias-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #17a2b8);
+            border-radius: 3px;
+            transition: width 0.6s ease;
+        }
+
+        /* Enhanced Statement Lists */
+        .statements-detailed {
+            margin-top: 25px;
+        }
+
+        .facts-section-enhanced, .opinions-section-enhanced {
+            margin-bottom: 25px;
+        }
+
+        .statements-list-enhanced {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .statement-item {
+            background: #f8f9fa;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #dee2e6;
+        }
+
+        .fact-item {
+            border-left-color: #28a745;
+            background: #f8fff9;
+        }
+
+        .opinion-item {
+            border-left-color: #ffc107;
+            background: #fffbf0;
+        }
+
+        .statement-content {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .statement-confidence {
+            text-align: right;
+        }
+
+        .confidence-badge {
+            background: #e9ecef;
+            color: #495057;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
         .sources-breakdown {
             margin-top: 20px;
         }
@@ -724,6 +1322,26 @@
             background: #fff3cd;
             border-left: 3px solid #ffc107;
         }
+
+        /* Legacy Content Styles */
+        .combined-content-notice {
+            margin-bottom: 20px;
+        }
+
+        .combined-content-notice .alert {
+            padding: 12px 15px;
+            border-radius: 6px;
+            border: 1px solid #bee5eb;
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .article-text {
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
     </style>
 </head>
 <body>
@@ -746,7 +1364,7 @@
             </div>
 
             <!-- Input Section -->
-            <div class="input-section" id="inputSection">
+            <div class="input-section" id="inputSection" style="display: none;">
                 <div class="research-controls">
                     <h4><i class="fas fa-microscope"></i> Research Settings</h4>
                     <div class="row">
@@ -769,9 +1387,9 @@
                     <div class="col-md-6">
                         <label for="analysisMode" class="form-label">Analysis Mode</label>
                         <select class="form-control" id="analysisMode" onchange="toggleUrlInputs()">
-                            <option value="single">Single Article Analysis</option>
-                            <option value="multiple">Multiple Articles Comparison</option>
-                            <option value="previous">Load Previous Analysis</option>
+                            <option value="previous" selected>📚 Load Previous Analysis</option>
+                            <option value="single">📰 Single Article Analysis</option>
+                            <option value="multiple">📊 Multiple Articles Comparison</option>
                         </select>
                     </div>
                     <div class="col-md-6">
@@ -785,7 +1403,7 @@
                 </div>
 
                 <!-- Load Previous Analysis Section -->
-                <div id="previousAnalysisSection" style="display: none;">
+                <div id="previousAnalysisSection">
                     <div class="mt-3">
                         <label class="form-label">Previously Analyzed Articles from Truth or Thought</label>
                         <div class="card">
@@ -808,7 +1426,7 @@
                 </div>
 
                 <!-- Single URL Input -->
-                <div id="singleUrlSection">
+                <div id="singleUrlSection" style="display: none;">
                     <div class="row mt-3">
                         <div class="col-md-12">
                             <label for="articleUrl" class="form-label">News Article URL (Politics/War/Current Affairs)</label>
@@ -871,11 +1489,11 @@
                 <div class="spinner-border" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
-                <p class="mt-3">Analyzing article for bias patterns...</p>
+                <p class="mt-3">Loading latest bias analysis session...</p>
             </div>
 
             <!-- Split Screen Results -->
-            <div class="split-container" id="splitContainer" style="display: none;">
+            <div class="split-container" id="splitContainer" style="display: flex;">
                 <!-- Original Article Panel -->
                 <div class="original-article">
                     <div class="article-header">
@@ -906,25 +1524,6 @@
                     <div class="domain-info" id="domainInfo">
                         <div><i class="fas fa-layer-group"></i> <strong>Detected Domain:</strong> <span id="detectedDomain"></span></div>
                         <div><i class="fas fa-users"></i> <strong>AI Specialists:</strong> <span id="aiSpecialists"></span></div>
-                    </div>
-
-                    <div class="metrics-grid">
-                        <div class="metric-card">
-                            <div id="factPercentage" class="metric-number">0%</div>
-                            <div class="metric-label">Facts</div>
-                        </div>
-                        <div class="metric-card">
-                            <div id="opinionPercentage" class="metric-number">0%</div>
-                            <div class="metric-label">Opinions</div>
-                        </div>
-                        <div class="metric-card">
-                            <div id="overallConfidence" class="metric-number">0%</div>
-                            <div class="metric-label">Confidence</div>
-                        </div>
-                        <div class="metric-card">
-                            <div id="biasScore" class="metric-number">-</div>
-                            <div class="metric-label">Bias Score</div>
-                        </div>
                     </div>
 
                     <div id="statementsAnalysis">
@@ -970,6 +1569,90 @@
                 document.getElementById('timerDisplay').textContent = 
                     `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }, 1000);
+        }
+
+
+        // On page load, try to load analysis data
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, initializing bias research...');
+            
+            // Initially hide everything except loading
+            document.getElementById('loadingSection').style.display = 'block';
+            document.getElementById('inputSection').style.display = 'none';
+            document.getElementById('splitContainer').style.display = 'none';
+            
+            // Try to load the most recent session automatically
+            fetch('/get_analyzed_sessions')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Sessions response:', data);
+                    if (data.success && data.sessions && data.sessions.length > 0) {
+                        // Find the most recent multi-source session or any session
+                        const session = data.sessions.find(s => s.domain === 'MULTI-SOURCE') || data.sessions[0];
+                        console.log('Found session to load:', session.session_id);
+                        
+                        // Load the session data
+                        return fetch(`/load_session_for_bias/${session.session_id}`);
+                    } else {
+                        throw new Error('No sessions found');
+                    }
+                })
+                .then(response => response.json())
+                .then(sessionData => {
+                    console.log('Session data received:', sessionData);
+                    if (sessionData.success) {
+                        console.log('Session loaded successfully, displaying analysis...');
+                        
+                        // Hide loading and show analysis
+                        document.getElementById('loadingSection').style.display = 'none';
+                        document.getElementById('splitContainer').style.display = 'flex';
+                        
+                        displayLoadedAnalysis(sessionData);
+                    } else {
+                        throw new Error('Failed to load session data');
+                    }
+                })
+                .catch(error => {
+                    console.log('No analysis data available:', error);
+                    document.getElementById('loadingSection').style.display = 'none';
+                    showNoAnalysisMessage();
+                });
+        });
+        
+        // Show message when no analysis is available
+        function showNoAnalysisMessage() {
+            // Show the interface with placeholder content
+            document.getElementById('splitContainer').style.display = 'flex';
+            
+            document.getElementById('articleTitle').textContent = 'No Analysis Available';
+            document.getElementById('articleContent').innerHTML = `
+                <div class="alert alert-info mt-4">
+                    <h5><i class="fas fa-info-circle"></i> No Previous Analysis Found</h5>
+                    <p>No bias analysis sessions are available yet. Please analyze articles on the Truth or Thought page first.</p>
+                    <div class="mt-3">
+                        <a href="/" class="btn btn-primary">
+                            <i class="fas fa-arrow-left"></i> Go to Truth or Thought
+                        </a>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('statementsAnalysis').innerHTML = `
+                <div class="alert alert-secondary">
+                    <h6><i class="fas fa-chart-bar"></i> Analysis Results</h6>
+                    <p class="mb-0">Analysis results will appear here once you analyze articles.</p>
+                </div>
+            `;
+            
+            // Set default meta info
+            document.getElementById('articleSource').textContent = 'No Source';
+            document.getElementById('articleDomain').textContent = 'No Domain';
+        }
+
+        // Show message when no sessions are found
+        function showNoSessionsMessage() {
+            document.getElementById('inputSection').style.display = 'block';
+            showError('No analysis sessions found. Please analyze articles on the Truth or Thought page first, then return here for bias research.');
         }
 
         // Log user interactions
@@ -1258,47 +1941,122 @@
             const articleContent = document.getElementById('articleContent');
             const analysisPanel = document.getElementById('statementsAnalysis');
 
-            // Display multiple articles comparison
-            articleContent.innerHTML = '<h4><i class="fas fa-layer-group"></i> Multiple Sources Comparison</h4>';
+            console.log('DEBUG: displayMultipleBiasAnalysis called with:', data);
+            console.log('DEBUG: data.multiple_results:', data.multiple_results);
+            console.log('DEBUG: data.individual_results:', data.individual_results);
+            console.log('DEBUG: data.results:', data.results);
+
+            // Handle the case where data comes from session or direct analysis
+            let sourceResults = [];
             
-            if (data.results && data.results.length > 0) {
-                data.results.forEach((result, index) => {
-                    if (result.url && result.title && result.domain !== 'error') {
+            // Check multiple possible data structures
+            if (data.multiple_results && Array.isArray(data.multiple_results)) {
+                sourceResults = data.multiple_results;
+                console.log('DEBUG: Using data.multiple_results:', sourceResults.length, 'sources');
+            } else if (data.results && Array.isArray(data.results)) {
+                sourceResults = data.results;
+                console.log('DEBUG: Using data.results:', sourceResults.length, 'sources');
+            } else if (data.individual_results && Array.isArray(data.individual_results)) {
+                sourceResults = data.individual_results;
+                console.log('DEBUG: Using data.individual_results:', sourceResults.length, 'sources');
+            } else {
+                console.log('DEBUG: No multiple results found in data structure');
+                console.log('DEBUG: Available keys:', Object.keys(data));
+            }
+
+            // Display multiple articles comparison
+            articleContent.innerHTML = `
+                <h4><i class="fas fa-layer-group"></i> Multiple Sources Analysis</h4>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Analyzing ${sourceResults.length} sources for bias comparison
+                </div>
+            `;
+            
+            if (sourceResults && sourceResults.length > 0) {
+                console.log('DEBUG: Processing', sourceResults.length, 'sources for display');
+                
+                sourceResults.forEach((result, index) => {
+                    console.log(`DEBUG: Processing source ${index + 1}:`, {
+                        title: result.title || 'No title',
+                        url: result.url || 'No URL',
+                        domain: result.domain || 'No domain',
+                        hasTitle: !!result.title,
+                        hasUrl: !!result.url,
+                        domainNotError: result.domain !== 'error',
+                        fullResult: result
+                    });
+                    
+                    // Show all sources as long as they have a URL - don't filter by title
+                    if (result.url) {
                         const sourceDiv = document.createElement('div');
                         sourceDiv.className = 'multiple-analysis-section';
+                        
+                        // Calculate metrics safely
+                        const factsCount = result.facts_count || (result.facts ? result.facts.length : 0) || 0;
+                        const opinionsCount = result.opinions_count || (result.opinions ? result.opinions.length : 0) || 0;
+                        const totalStatements = result.sentences_count || (factsCount + opinionsCount) || 1;
+                        const factRatio = Math.round((factsCount / totalStatements) * 100);
                         
                         sourceDiv.innerHTML = `
                             <div class="source-header">
                                 <div>
-                                    <h6 class="source-title">${result.title}</h6>
-                                    <small class="text-muted">${result.domain}</small>
+                                    <h6 class="source-title">
+                                        <i class="fas fa-newspaper"></i> ${result.title || result.scraped_title || `Source ${index + 1}`}
+                                    </h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-globe"></i> ${result.domain || 'Unknown Domain'}
+                                    </small>
                                 </div>
-                                <a href="${result.url}" target="_blank" class="source-url">
-                                    ${new URL(result.url).hostname}
+                                <a href="${result.url}" target="_blank" class="source-url btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-external-link-alt"></i> ${new URL(result.url).hostname}
                                 </a>
                             </div>
                             <div class="source-content">
-                                <div class="source-metrics">
-                                    <div class="source-metric">
-                                        <div class="source-metric-value">${result.facts_count || 0}</div>
-                                        <div class="source-metric-label">Facts</div>
+                                <div class="source-metrics row">
+                                    <div class="col-md-3">
+                                        <div class="source-metric">
+                                            <div class="source-metric-value text-success">${factsCount}</div>
+                                            <div class="source-metric-label">Facts</div>
+                                        </div>
                                     </div>
-                                    <div class="source-metric">
-                                        <div class="source-metric-value">${result.opinions_count || 0}</div>
-                                        <div class="source-metric-label">Opinions</div>
+                                    <div class="col-md-3">
+                                        <div class="source-metric">
+                                            <div class="source-metric-value text-warning">${opinionsCount}</div>
+                                            <div class="source-metric-label">Opinions</div>
+                                        </div>
                                     </div>
-                                    <div class="source-metric">
-                                        <div class="source-metric-value">${Math.round((result.facts_count || 0) / (result.sentences_count || 1) * 100)}%</div>
-                                        <div class="source-metric-label">Fact Ratio</div>
+                                    <div class="col-md-3">
+                                        <div class="source-metric">
+                                            <div class="source-metric-value text-info">${factRatio}%</div>
+                                            <div class="source-metric-label">Fact Ratio</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="source-metric">
+                                            <div class="source-metric-value text-secondary">${totalStatements}</div>
+                                            <div class="source-metric-label">Statements</div>
+                                        </div>
                                     </div>
                                 </div>
-                                <p><strong>Summary:</strong> ${result.summary || 'Analysis summary not available'}</p>
+                                ${result.summary ? `<p><strong><i class="fas fa-file-alt"></i> Summary:</strong> ${result.summary}</p>` : ''}
                             </div>
                         `;
                         
                         articleContent.appendChild(sourceDiv);
+                    } else {
+                        console.log(`DEBUG: Skipping source ${index + 1} - missing URL:`, {
+                            url: result.url,
+                            title: result.title,
+                            domain: result.domain,
+                            result: result
+                        });
                     }
                 });
+                
+                console.log('DEBUG: Finished processing all sources for bias analysis');
+            } else {
+                articleContent.innerHTML += '<div class="alert alert-warning">No sources available for analysis</div>';
+                console.log('DEBUG: No sources to display');
             }
 
             // Display analysis overview
@@ -1683,21 +2441,56 @@
             event.currentTarget.classList.add('selected');
         }
 
+        // Convert markdown to HTML
+        function convertMarkdownToHTML(markdown) {
+            if (!markdown) return '';
+            
+            let html = markdown
+                // Headers
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                // Bold
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                // Italic
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                // Code blocks
+                .replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>')
+                // Inline code
+                .replace(/`(.*?)`/g, '<code>$1</code>')
+                // Links
+                .replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+                // Line breaks
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>');
+            
+            // Wrap in paragraphs if not already wrapped
+            if (!html.startsWith('<')) {
+                html = '<p>' + html + '</p>';
+            }
+            
+            return html;
+        }
+
         // Load a specific session for bias analysis
         function loadSessionForBias(sessionId) {
-            document.getElementById('loadingSection').style.display = 'block';
+            console.log('Loading session:', sessionId);
             
             fetch(`/load_session_for_bias/${sessionId}`)
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Session load response:', response);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Session data received:', data);
                     document.getElementById('loadingSection').style.display = 'none';
                     
                     if (data.success) {
                         // Display the loaded analysis in the bias research interface
                         displayLoadedAnalysis(data);
                         
-                        // Start the research session
-                        startBiasAnalysis(true, data);
+                        // Start research timer for this loaded session
+                        startTimer();
                         
                         logInteraction('previous_analysis_loaded', {
                             sessionId: sessionId,
@@ -1707,176 +2500,573 @@
                             isMultiple: data.is_multiple
                         });
                     } else {
-                        showError('Failed to load session: ' + data.error);
+                        console.error('Session load failed:', data.error);
+                        showError('Error loading session: ' + (data.error || 'Unknown error'));
+                        showNoSessionsMessage();
                     }
                 })
                 .catch(error => {
+                    console.error('Error loading session:', error);
                     document.getElementById('loadingSection').style.display = 'none';
-                    showError('Network error: ' + error.message);
+                    showError('Error loading session: ' + error.message);
+                    showNoSessionsMessage();
                 });
         }
 
         // Display loaded analysis data
         function displayLoadedAnalysis(data) {
+            console.log('displayLoadedAnalysis called with:', data);
+            
             // Update analysis header
             const analysisInfo = document.getElementById('analysisInfo');
-            analysisInfo.innerHTML = `
-                <div class="loaded-session-info">
-                    <h5><i class="fas fa-history"></i> Loaded from Previous Analysis</h5>
-                    <p><strong>Title:</strong> ${data.title}</p>
-                    <p><strong>Domain:</strong> ${data.domain}</p>
-                    <p><strong>Original Analysis:</strong> ${new Date(data.timestamp).toLocaleString()}</p>
-                    ${data.url ? `<p><strong>Source:</strong> <a href="${data.url}" target="_blank">${data.url}</a></p>` : ''}
-                </div>
-            `;
-
-            // Handle multiple URL display
-            if (data.is_multiple && data.multiple_results) {
-                displayMultipleArticles(data);
-                // Set domain info for multiple sources
-                document.getElementById('articleSource').textContent = 'Multiple Sources';
-                document.getElementById('articleDomain').textContent = data.domain || 'MULTI-SOURCE';
-            } else {
-                // Single article display
-                if (data.content) {
-                    document.getElementById('articleTitle').textContent = data.title;
-                    document.getElementById('articleContent').innerHTML = data.content.replace(/\n/g, '<br>');
-                }
-                // Set source and domain info for single source
-                document.getElementById('articleSource').textContent = getSourceFromUrl(data.url) || 'Unknown Source';
-                document.getElementById('articleDomain').textContent = data.domain || 'GENERAL';
+            if (analysisInfo) {
+                analysisInfo.innerHTML = `
+                    <div class="loaded-session-info">
+                        <h5><i class="fas fa-history"></i> Previous Analysis Loaded</h5>
+                        <p><strong>Title:</strong> ${data.title || 'Unknown Title'}</p>
+                        <p><strong>Domain:</strong> ${data.domain || 'Unknown Domain'}</p>
+                        <p><strong>Timestamp:</strong> ${data.timestamp ? new Date(data.timestamp).toLocaleString() : 'Unknown'}</p>
+                    </div>
+                `;
             }
 
-            // Show the bias analysis interface
-            document.getElementById('inputSection').style.display = 'none';
-            document.getElementById('splitContainer').style.display = 'flex';
+            // Set meta information
+            const articleSource = document.getElementById('articleSource');
+            const articleDomain = document.getElementById('articleDomain');
+            const articleTitle = document.getElementById('articleTitle');
+            
+            // Check if this is a multiple source analysis
+            const hasMultipleResults = data.multiple_results && data.multiple_results.length > 1;
+            const isMultiSourceAnalysis = (data.is_multiple && data.multiple_results) || 
+                                        (data.domain === 'MULTI-SOURCE' && data.multiple_results) ||
+                                        (data.analysis_mode === 'individual' && hasMultipleResults);
+            
+            if (isMultiSourceAnalysis) {
+                // Multiple articles - display them separately
+                displayMultipleArticles(data);
+                if (articleSource) articleSource.textContent = `${data.multiple_results.length} Sources`;
+                if (articleDomain) articleDomain.textContent = 'MULTI-SOURCE';
+                if (articleTitle) articleTitle.textContent = 'Multi-Source Analysis';
+            } else if (data.domain === 'MULTI-SOURCE' && !data.multiple_results && data.content) {
+                // Legacy multi-source content (combined text)
+                displayLegacyMultiSourceContent(data);
+                if (articleSource) articleSource.textContent = 'Multiple Sources (Combined)';
+                if (articleDomain) articleDomain.textContent = 'MULTI-SOURCE';
+                if (articleTitle) articleTitle.textContent = 'Multi-Source Analysis';
+            } else {
+                // Single article
+                if (articleSource) articleSource.textContent = 'Single Source';
+                if (articleDomain) articleDomain.textContent = data.domain || 'Unknown';
+                if (articleTitle) articleTitle.textContent = data.title || 'Analysis Results';
 
-            // Enable research controls
-            document.getElementById('exportBtn').style.display = 'inline-block';
-            document.getElementById('proceedBtn').style.display = 'inline-block';
+                // Display single article content
+                const articleContent = document.getElementById('articleContent');
+                if (articleContent && data.content) {
+                    // Clean and format the content properly
+                    let formattedContent = data.content
+                        .replace(/\n\n+/g, '</p><p>')  // Convert double newlines to paragraph breaks
+                        .replace(/\n/g, '<br>')        // Convert single newlines to line breaks
+                        .trim();
+                    
+                    // Ensure content starts and ends with paragraph tags
+                    if (!formattedContent.startsWith('<p>')) {
+                        formattedContent = '<p>' + formattedContent;
+                    }
+                    if (!formattedContent.endsWith('</p>')) {
+                        formattedContent = formattedContent + '</p>';
+                    }
+                    
+                    articleContent.innerHTML = `
+                        <div class="single-article">
+                            <div class="article-header">
+                                <h4><i class="fas fa-newspaper"></i> ${data.title || 'Article Analysis'}</h4>
+                                <div class="article-meta">
+                                    <span class="badge badge-primary">${data.domain || 'Unknown Domain'}</span>
+                                    ${data.url ? `<a href="${data.url}" target="_blank" class="text-muted"><i class="fas fa-external-link-alt"></i> Source</a>` : ''}
+                                </div>
+                            </div>
+                            <div class="article-content-wrapper">
+                                <div class="article-content">
+                                    ${formattedContent}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (articleContent) {
+                    articleContent.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> No article content available
+                        </div>
+                    `;
+                }
+            }
 
-            // Display facts and opinions
-            displayBiasAnalysisResults({
-                facts: data.facts || [],
-                opinions: data.opinions || [],
-                total_facts: data.total_facts || 0,
-                total_opinions: data.total_opinions || 0,
-                domain: data.domain,
-                title: data.title,
-                is_multiple: data.is_multiple,
-                multiple_results: data.multiple_results || []
-            });
+            // Display analysis results with enhanced metrics
+            displayBiasAnalysisResults(data);
+
+            // Show research controls
+            const exportBtn = document.getElementById('exportBtn');
+            const proceedBtn = document.getElementById('proceedBtn');
+            if (exportBtn) exportBtn.style.display = 'inline-block';
+            if (proceedBtn) proceedBtn.style.display = 'inline-block';
+
+            // Check if user came from analysis as part of study flow
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('fromAnalysis') === 'true' || urlParams.get('fromQuestionnaire') === 'true') {
+                // Add a completion message for study participants
+                const completionMessage = document.createElement('div');
+                completionMessage.className = 'alert alert-success mt-3';
+                completionMessage.innerHTML = `
+                    <h5><i class="fas fa-check-circle"></i> Bias Analysis Complete!</h5>
+                    <p>You have successfully completed the Truth or Thought analysis. You can now proceed to the final questionnaire.</p>
+                    <button class="btn btn-success" onclick="completeStudy()">
+                        <i class="fas fa-arrow-right"></i> Complete Study & Final Questionnaire
+                    </button>
+                `;
+                
+                // Insert the message after the analysis results
+                const analysisPanel = document.getElementById('statementsAnalysis');
+                if (analysisPanel && analysisPanel.parentNode) {
+                    analysisPanel.parentNode.appendChild(completionMessage);
+                }
+            }
+
+            console.log('Analysis display completed');
         }
 
-        // Display multiple articles side by side
-        function displayMultipleArticles(data) {
+        // Display legacy multi-source content (combined articles)
+        function displayLegacyMultiSourceContent(data) {
             const articleContent = document.getElementById('articleContent');
             const articleTitle = document.getElementById('articleTitle');
             
             // Update title
-            articleTitle.textContent = `Multiple Sources Analysis (${data.multiple_results.length} articles)`;
+            articleTitle.textContent = 'Multi-Source Analysis';
             
-            // Create multi-article view
-            let articlesHtml = '<div class="multiple-articles-container">';
+            // Split content into sections - try multiple separation patterns
+            let content = data.content || '';
             
-            data.multiple_results.forEach((result, index) => {
-                const fullContent = result.full_content || result.summary || 'Content not available';
-                const title = result.scraped_title || result.title || 'Unknown Title';
-                const url = result.url || '#';
-                
-                articlesHtml += `
-                    <div class="article-section" id="article-${index}">
-                        <div class="article-section-header">
-                            <h4>
-                                <i class="fas fa-newspaper"></i> 
-                                Article ${index + 1}: ${title}
-                            </h4>
-                            <div class="article-meta">
-                                <span class="badge bg-primary">${result.domain || 'Unknown Domain'}</span>
-                                <a href="${url}" target="_blank" class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-external-link-alt"></i> View Original
-                                </a>
-                            </div>
-                        </div>
-                        <div class="article-section-content">
-                            ${fullContent.replace(/\n/g, '<br>')}
-                        </div>
-                        <div class="article-section-stats">
-                            <span class="stat-badge facts-badge">
-                                <i class="fas fa-check-circle"></i> ${result.facts_count || 0} Facts
-                            </span>
-                            <span class="stat-badge opinions-badge">
-                                <i class="fas fa-comment-dots"></i> ${result.opinions_count || 0} Opinions
-                            </span>
+            // Try to detect article boundaries using various patterns
+            let articleSections = [];
+            
+            // Method 1: Split by duplicate content patterns (articles often repeat)
+            const duplicatePattern = /(.{200,}?)\1+/g;
+            if (duplicatePattern.test(content)) {
+                // If we find duplicated content, split there
+                articleSections = content.split(/(?=.{200,}?(?=\1))/);
+            } else {
+                // Method 2: Split by publication patterns or news headers
+                articleSections = content.split(/(?=\n\n.{0,100}(?:Published|BBC|Reuters|CNN|Associated Press|AP|Breaking|BREAKING))/);
+            }
+            
+            // If no clear separation found, try to split roughly in half
+            if (articleSections.length <= 1) {
+                const midPoint = Math.floor(content.length / 2);
+                const splitIndex = content.indexOf('\n\n', midPoint);
+                if (splitIndex > 0) {
+                    articleSections = [
+                        content.substring(0, splitIndex),
+                        content.substring(splitIndex)
+                    ];
+                } else {
+                    articleSections = [content];
+                }
+            }
+            
+            // Clean and display articles
+            let articlesHtml = `
+                <div class="multiple-articles-container">
+                    <div class="multi-source-header">
+                        <div class="alert alert-info">
+                            <i class="fas fa-newspaper"></i> <strong>Multi-Source Analysis</strong>
+                            <p class="mb-0">Content from multiple sources (${articleSections.length} sections detected).</p>
                         </div>
                     </div>
-                `;
+            `;
+            
+            articleSections.forEach((section, index) => {
+                const cleanSection = section.trim();
+                if (cleanSection && cleanSection.length > 50) { // Only show substantial content
+                    // Try to extract a title from the first line
+                    const lines = cleanSection.split('\n');
+                    let sectionTitle = `Source ${index + 1}`;
+                    let sectionContent = cleanSection;
+                    
+                    // Look for title patterns in first few lines
+                    for (let i = 0; i < Math.min(3, lines.length); i++) {
+                        const line = lines[i].trim();
+                        if (line.length > 10 && line.length < 150 && !line.includes('http')) {
+                            sectionTitle = line;
+                            sectionContent = lines.slice(i + 1).join('\n').trim();
+                            break;
+                        }
+                    }
+                    
+                    articlesHtml += `
+                        <div class="article-separator">
+                            <div class="separator-line"></div>
+                            <div class="source-indicator">
+                                <i class="fas fa-circle"></i> Source ${index + 1}
+                            </div>
+                        </div>
+                        
+                        <div class="article-section" id="article-${index}">
+                            <div class="article-header-enhanced">
+                                <div class="article-title-row">
+                                    <h3 class="article-title">
+                                        <i class="fas fa-newspaper"></i> ${sectionTitle}
+                                    </h3>
+                                    <div class="article-source-info">
+                                        <span class="domain-badge badge badge-secondary">Multi-Source</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="article-content-enhanced">
+                                ${sectionContent.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}
+                            </div>
+                        </div>
+                    `;
+                }
             });
             
             articlesHtml += '</div>';
             articleContent.innerHTML = articlesHtml;
         }
 
+        // Display multiple articles clearly separated
+        function displayMultipleArticles(data) {
+            const articleContent = document.getElementById('articleContent');
+            const articleTitle = document.getElementById('articleTitle');
+            
+            console.log('🔍 DEBUG: displayMultipleArticles called with data:', data);
+            console.log('🔍 DEBUG: data.multiple_results length:', data.multiple_results ? data.multiple_results.length : 'undefined');
+            
+            if (!data.multiple_results || data.multiple_results.length === 0) {
+                console.error('❌ No multiple_results found in data');
+                return;
+            }
+            
+            // Update title
+            articleTitle.textContent = `Multi-Source Analysis (${data.multiple_results.length} Sources)`;
+            
+            // Create clearly separated multi-article view
+            let articlesHtml = `
+                <div class="multiple-articles-container">
+                    <div class="multi-source-header">
+                        <div class="alert alert-info">
+                            <i class="fas fa-newspaper"></i> <strong>Multi-Source Analysis</strong>
+                            <p class="mb-0">Compare articles from ${data.multiple_results.length} different sources on the same topic.</p>
+                            <p class="mb-0"><small><strong>Debug:</strong> ${data.multiple_results.map((r, i) => `Source ${i+1}: ${(r.title || 'No title').substring(0, 30)}...`).join(' | ')}</small></p>
+                        </div>
+                    </div>
+            `;
+            
+            console.log('DEBUG: Multiple results data:', data.multiple_results);
+            console.log('DEBUG: Number of results:', data.multiple_results.length);
+            console.log('DEBUG: Full data object:', data);
+            
+            // Enhanced debugging for each result
+            data.multiple_results.forEach((result, index) => {
+                console.log(`DEBUG: Result ${index + 1} details:`, {
+                    title: result.title,
+                    url: result.url,
+                    domain: result.domain,
+                    facts_count: result.facts_count,
+                    opinions_count: result.opinions_count,
+                    hasContent: !!result.formatted_content || !!result.full_content || !!result.summary
+                });
+            });
+            
+            data.multiple_results.forEach((result, index) => {
+                console.log(`🔍 DEBUG: Processing article ${index + 1}:`, {
+                    title: result.title || 'No title',
+                    url: result.url || 'No URL',
+                    domain: result.domain || 'No domain',
+                    facts_count: result.facts_count || 0,
+                    opinions_count: result.opinions_count || 0,
+                    has_formatted_content: !!result.formatted_content,
+                    has_full_content: !!result.full_content,
+                    has_summary: !!result.summary,
+                    content_length: (result.formatted_content || result.full_content || result.summary || '').length
+                });
+                
+                // Use formatted markdown content if available, fallback to summary or raw content
+                const formattedContent = result.formatted_content || result.full_content || result.summary || 'Content not available';
+                const title = result.scraped_title || result.title || `Source ${index + 1}`;
+                const url = result.url || '#';
+                const domain = result.domain || 'Unknown';
+                
+                console.log(`🔍 DEBUG: Article ${index + 1} will use content of length:`, formattedContent.length);
+                console.log(`🔍 DEBUG: Article ${index + 1} content preview:`, formattedContent.substring(0, 100) + '...');
+                
+                // Calculate bias score for this article
+                const factsCount = result.facts_count || 0;
+                const opinionsCount = result.opinions_count || 0;
+                const totalStatements = factsCount + opinionsCount;
+                const biasScore = totalStatements > 0 ? Math.round((factsCount / totalStatements) * 100) : 0;
+                
+                let biasLevel = 'Neutral';
+                let biasColor = 'secondary';
+                if (biasScore >= 80) {
+                    biasLevel = 'Highly Factual';
+                    biasColor = 'success';
+                } else if (biasScore >= 60) {
+                    biasLevel = 'Mostly Factual';
+                    biasColor = 'info';
+                } else if (biasScore >= 40) {
+                    biasLevel = 'Balanced';
+                    biasColor = 'warning';
+                } else if (biasScore >= 20) {
+                    biasLevel = 'Opinion-Heavy';
+                    biasColor = 'orange';
+                } else {
+                    biasLevel = 'Highly Opinionated';
+                    biasColor = 'danger';
+                }
+
+                console.log(`DEBUG: About to add HTML for article ${index + 1}: ${title}`);
+                console.log(`DEBUG: Article ${index + 1} - URL: ${url}, Domain: ${domain}`);
+                console.log(`DEBUG: Article ${index + 1} - Facts: ${factsCount}, Opinions: ${opinionsCount}`);
+
+                articlesHtml += `
+                    <div class="article-separator">
+                        <div class="separator-line"></div>
+                        <div class="source-indicator">
+                            <i class="fas fa-circle"></i> Source ${index + 1}
+                        </div>
+                    </div>
+                    
+                    <div class="article-section" id="article-${index}">
+                        <div class="article-header-enhanced">
+                            <div class="article-title-row">
+                                <h3 class="article-title">
+                                    <i class="fas fa-newspaper"></i> ${title}
+                                </h3>
+                                <div class="article-source-info">
+                                    <span class="domain-badge badge badge-${biasColor}">${domain}</span>
+                                    <a href="${url}" target="_blank" class="source-link">
+                                        <i class="fas fa-external-link-alt"></i> View Original
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="article-metrics">
+                                <div class="metric-card facts-metric">
+                                    <div class="metric-icon">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <div class="metric-value">${factsCount}</div>
+                                        <div class="metric-label">Facts</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="metric-card opinions-metric">
+                                    <div class="metric-icon">
+                                        <i class="fas fa-comment-dots"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <div class="metric-value">${opinionsCount}</div>
+                                        <div class="metric-label">Opinions</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="metric-card bias-metric">
+                                    <div class="metric-icon">
+                                        <i class="fas fa-balance-scale"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <div class="metric-value">${biasScore}%</div>
+                                        <div class="metric-label">Factual</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bias-indicator">
+                                    <span class="bias-level badge badge-${biasColor}">${biasLevel}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="article-content-enhanced markdown-content">
+                            <div id="markdown-content-${index}"></div>
+                        </div>
+                    </div>
+                `;
+                
+                // After adding to HTML, render the markdown content
+                setTimeout(() => {
+                    const contentDiv = document.getElementById(`markdown-content-${index}`);
+                    if (contentDiv) {
+                        // Simple markdown to HTML conversion
+                        const htmlContent = convertMarkdownToHTML(formattedContent);
+                        contentDiv.innerHTML = htmlContent;
+                    }
+                }, 100);
+            });
+            
+            console.log(`DEBUG: Finished processing all articles. Total HTML length: ${articlesHtml.length}`);
+            console.log(`DEBUG: Final articlesHtml contains Source indicators:`, (articlesHtml.match(/Source \d+/g) || []).length);
+            
+            articlesHtml += '</div>';
+            articleContent.innerHTML = articlesHtml;
+            
+            // Debug: Check how many articles are actually in the DOM
+            console.log(`DEBUG: Articles in DOM after innerHTML set:`, articleContent.querySelectorAll('.article-section').length);
+            console.log(`DEBUG: Source indicators in DOM:`, articleContent.querySelectorAll('.source-indicator').length);
+            
+            // Force scroll to top to ensure all articles are visible
+            articleContent.scrollTop = 0;
+            
+            // Add a temporary visual indicator at the top showing article count
+            const debugIndicator = document.createElement('div');
+            debugIndicator.id = 'debug-article-count';
+            debugIndicator.style.cssText = `
+                position: sticky;
+                top: 0;
+                background: #ffeb3b;
+                padding: 10px;
+                text-align: center;
+                font-weight: bold;
+                z-index: 1000;
+                border: 2px solid #f57c00;
+            `;
+            debugIndicator.innerHTML = `🔍 DEBUG: ${articleContent.querySelectorAll('.article-section').length} articles in DOM (Expected: ${data.multiple_results.length})`;
+            articleContent.insertBefore(debugIndicator, articleContent.firstChild);
+        }
+
         // Display bias analysis results in the right panel
         function displayBiasAnalysisResults(data) {
+            console.log('displayBiasAnalysisResults called with:', data);
+            
             const analysisPanel = document.getElementById('statementsAnalysis');
+            
+            if (!analysisPanel) {
+                console.error('statementsAnalysis element not found!');
+                return;
+            }
             
             if (data.is_multiple && data.multiple_results) {
                 // Multiple URL analysis display
-                let analysisHtml = '<h5><i class="fas fa-chart-bar"></i> Multi-Source Bias Analysis</h5>';
+                let analysisHtml = '<h4><i class="fas fa-chart-bar"></i> Multi-Source Bias Analysis</h4>';
                 
-                // Summary statistics
+                // Calculate overall statistics
                 let totalFacts = 0;
                 let totalOpinions = 0;
+                let totalConfidence = 0;
+                let validConfidenceCount = 0;
+                
                 data.multiple_results.forEach(result => {
                     totalFacts += result.facts_count || 0;
                     totalOpinions += result.opinions_count || 0;
+                    if (result.confidence) {
+                        totalConfidence += result.confidence;
+                        validConfidenceCount++;
+                    }
                 });
                 
+                const totalStatements = totalFacts + totalOpinions;
+                const overallBiasScore = totalStatements > 0 ? Math.round((totalFacts / totalStatements) * 100) : 0;
+                const avgConfidence = validConfidenceCount > 0 ? Math.round(totalConfidence / validConfidenceCount) : 0;
+                
+                // Determine overall bias level
+                let biasLevel = 'Neutral';
+                let biasColor = 'secondary';
+                if (overallBiasScore >= 80) {
+                    biasLevel = 'Highly Factual';
+                    biasColor = 'success';
+                } else if (overallBiasScore >= 60) {
+                    biasLevel = 'Mostly Factual';
+                    biasColor = 'info';
+                } else if (overallBiasScore >= 40) {
+                    biasLevel = 'Balanced';
+                    biasColor = 'warning';
+                } else if (overallBiasScore >= 20) {
+                    biasLevel = 'Opinion-Heavy';
+                    biasColor = 'orange';
+                } else {
+                    biasLevel = 'Highly Opinionated';
+                    biasColor = 'danger';
+                }
+
                 analysisHtml += `
-                    <div class="analysis-summary">
-                        <div class="summary-stats">
-                            <div class="stat-card facts-stat">
-                                <h6><i class="fas fa-check-circle"></i> Total Facts</h6>
-                                <span class="stat-number">${totalFacts}</span>
+                    <div class="enhanced-analysis-summary">
+                        <div class="summary-metrics-grid">
+                            <div class="metric-tile facts-tile">
+                                <div class="metric-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <div class="metric-value">${totalFacts}</div>
+                                    <div class="metric-label">Total Facts</div>
+                                </div>
                             </div>
-                            <div class="stat-card opinions-stat">
-                                <h6><i class="fas fa-comment-dots"></i> Total Opinions</h6>
-                                <span class="stat-number">${totalOpinions}</span>
+                            
+                            <div class="metric-tile opinions-tile">
+                                <div class="metric-icon">
+                                    <i class="fas fa-comment-dots"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <div class="metric-value">${totalOpinions}</div>
+                                    <div class="metric-label">Total Opinions</div>
+                                </div>
                             </div>
-                            <div class="stat-card sources-stat">
-                                <h6><i class="fas fa-newspaper"></i> Sources</h6>
-                                <span class="stat-number">${data.multiple_results.length}</span>
+                            
+                            <div class="metric-tile confidence-tile">
+                                <div class="metric-icon">
+                                    <i class="fas fa-thumbs-up"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <div class="metric-value">${avgConfidence}%</div>
+                                    <div class="metric-label">Avg Confidence</div>
+                                </div>
+                            </div>
+                            
+                            <div class="metric-tile bias-tile">
+                                <div class="metric-icon">
+                                    <i class="fas fa-balance-scale"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <div class="metric-value">${overallBiasScore}%</div>
+                                    <div class="metric-label">Factual Score</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="overall-bias-indicator">
+                            <div class="bias-score-bar">
+                                <div class="bias-score-fill bias-${biasColor}" style="width: ${overallBiasScore}%"></div>
+                            </div>
+                            <div class="bias-level-badge">
+                                <span class="badge badge-${biasColor} badge-lg">${biasLevel}</span>
                             </div>
                         </div>
                     </div>
                 `;
                 
-                // Individual source breakdown
-                analysisHtml += '<div class="sources-breakdown">';
+                // Individual source comparison
+                analysisHtml += '<div class="sources-comparison"><h5>Source Comparison</h5>';
                 data.multiple_results.forEach((result, index) => {
+                    const factsCount = result.facts_count || 0;
+                    const opinionsCount = result.opinions_count || 0;
+                    const sourceTotal = factsCount + opinionsCount;
+                    const sourceBiasScore = sourceTotal > 0 ? Math.round((factsCount / sourceTotal) * 100) : 0;
+                    
                     analysisHtml += `
-                        <div class="source-analysis">
-                            <h6><i class="fas fa-newspaper"></i> Source ${index + 1}: ${result.domain || 'Unknown'}</h6>
-                            <div class="source-stats">
-                                <span class="badge badge-facts">${result.facts_count || 0} Facts</span>
-                                <span class="badge badge-opinions">${result.opinions_count || 0} Opinions</span>
+                        <div class="source-comparison-card">
+                            <div class="source-header">
+                                <h6><i class="fas fa-newspaper"></i> ${result.domain || `Source ${index + 1}`}</h6>
+                                <span class="source-bias-score">${sourceBiasScore}% Factual</span>
                             </div>
-                            
-                            <div class="statements-container">
-                                <div class="facts-section">
-                                    <h7><i class="fas fa-check-circle"></i> Facts</h7>
-                                    <ul class="statements-list facts-list">
-                                        ${(result.facts || []).map(fact => `<li>${fact}</li>`).join('')}
-                                    </ul>
+                            <div class="source-metrics">
+                                <div class="mini-metric facts-mini">
+                                    <i class="fas fa-check-circle"></i> ${factsCount}
                                 </div>
-                                
-                                <div class="opinions-section">
-                                    <h7><i class="fas fa-comment-dots"></i> Opinions</h7>
-                                    <ul class="statements-list opinions-list">
-                                        ${(result.opinions || []).map(opinion => `<li>${opinion}</li>`).join('')}
-                                    </ul>
+                                <div class="mini-metric opinions-mini">
+                                    <i class="fas fa-comment-dots"></i> ${opinionsCount}
                                 </div>
+                            </div>
+                            <div class="source-bias-bar">
+                                <div class="source-bias-fill" style="width: ${sourceBiasScore}%"></div>
                             </div>
                         </div>
                     `;
@@ -1885,39 +3075,132 @@
                 
                 analysisPanel.innerHTML = analysisHtml;
             } else {
-                // Single URL analysis display
+                // Single URL analysis display with enhanced metrics
+                const totalStatements = (data.total_facts || 0) + (data.total_opinions || 0);
+                const biasScore = totalStatements > 0 ? Math.round(((data.total_facts || 0) / totalStatements) * 100) : 0;
+                
+                // Calculate average confidence from facts
+                let avgConfidence = 0;
+                if (data.facts && data.facts.length > 0) {
+                    const confidenceSum = data.facts.reduce((sum, fact) => {
+                        return sum + (fact.confidence || 0);
+                    }, 0);
+                    avgConfidence = Math.round(confidenceSum / data.facts.length * 100);
+                }
+                
+                let biasLevel = 'Neutral';
+                let biasColor = 'secondary';
+                if (biasScore >= 80) {
+                    biasLevel = 'Highly Factual';
+                    biasColor = 'success';
+                } else if (biasScore >= 60) {
+                    biasLevel = 'Mostly Factual';
+                    biasColor = 'info';
+                } else if (biasScore >= 40) {
+                    biasLevel = 'Balanced';
+                    biasColor = 'warning';
+                } else if (biasScore >= 20) {
+                    biasLevel = 'Opinion-Heavy';
+                    biasColor = 'orange';
+                } else {
+                    biasLevel = 'Highly Opinionated';
+                    biasColor = 'danger';
+                }
+
                 let analysisHtml = `
-                    <h5><i class="fas fa-chart-bar"></i> Bias Analysis Results</h5>
-                    <div class="analysis-summary">
-                        <div class="summary-stats">
-                            <div class="stat-card facts-stat">
-                                <h6><i class="fas fa-check-circle"></i> Facts</h6>
-                                <span class="stat-number">${data.total_facts || 0}</span>
+                    <h4><i class="fas fa-chart-bar"></i> Bias Analysis Results</h4>
+                    <div class="enhanced-analysis-summary">
+                        <div class="summary-metrics-grid">
+                            <div class="metric-tile facts-tile">
+                                <div class="metric-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <div class="metric-value">${data.total_facts || 0}</div>
+                                    <div class="metric-label">Facts</div>
+                                </div>
                             </div>
-                            <div class="stat-card opinions-stat">
-                                <h6><i class="fas fa-comment-dots"></i> Opinions</h6>
-                                <span class="stat-number">${data.total_opinions || 0}</span>
+                            
+                            <div class="metric-tile opinions-tile">
+                                <div class="metric-icon">
+                                    <i class="fas fa-comment-dots"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <div class="metric-value">${data.total_opinions || 0}</div>
+                                    <div class="metric-label">Opinions</div>
+                                </div>
                             </div>
-                            <div class="stat-card domain-stat">
-                                <h6><i class="fas fa-globe"></i> Domain</h6>
-                                <span class="domain-badge">${data.domain || 'Unknown'}</span>
+                            
+                            <div class="metric-tile confidence-tile">
+                                <div class="metric-icon">
+                                    <i class="fas fa-thumbs-up"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <div class="metric-value">${avgConfidence}%</div>
+                                    <div class="metric-label">Confidence</div>
+                                </div>
+                            </div>
+                            
+                            <div class="metric-tile bias-tile">
+                                <div class="metric-icon">
+                                    <i class="fas fa-balance-scale"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <div class="metric-value">${biasScore}%</div>
+                                    <div class="metric-label">Factual Score</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="overall-bias-indicator">
+                            <div class="bias-score-bar">
+                                <div class="bias-score-fill bias-${biasColor}" style="width: ${biasScore}%"></div>
+                            </div>
+                            <div class="bias-level-badge">
+                                <span class="badge badge-${biasColor} badge-lg">${biasLevel}</span>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="statements-container">
-                        <div class="facts-section">
-                            <h6><i class="fas fa-check-circle"></i> Facts</h6>
-                            <ul class="statements-list facts-list">
-                                ${(data.facts || []).map(fact => `<li>${fact}</li>`).join('')}
-                            </ul>
+                    <div class="statements-detailed">
+                        <div class="facts-section-enhanced">
+                            <h5><i class="fas fa-check-circle text-success"></i> Facts (${data.total_facts || 0})</h5>
+                            <div class="statements-list facts-list-enhanced">
+                                ${(data.facts || []).map((fact, index) => {
+                                    const text = typeof fact === 'string' ? fact : 
+                                                fact.sentence || fact.text || 
+                                                JSON.stringify(fact);
+                                    const confidence = fact.confidence ? Math.round(fact.confidence * 100) : 0;
+                                    return `
+                                        <div class="statement-item fact-item">
+                                            <div class="statement-content">${text}</div>
+                                            ${confidence > 0 ? `<div class="statement-confidence">
+                                                <span class="confidence-badge">${confidence}% confident</span>
+                                            </div>` : ''}
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
                         </div>
                         
-                        <div class="opinions-section">
-                            <h6><i class="fas fa-comment-dots"></i> Opinions</h6>
-                            <ul class="statements-list opinions-list">
-                                ${(data.opinions || []).map(opinion => `<li>${opinion}</li>`).join('')}
-                            </ul>
+                        <div class="opinions-section-enhanced">
+                            <h5><i class="fas fa-comment-dots text-warning"></i> Opinions (${data.total_opinions || 0})</h5>
+                            <div class="statements-list opinions-list-enhanced">
+                                ${(data.opinions || []).map((opinion, index) => {
+                                    const text = typeof opinion === 'string' ? opinion : 
+                                                opinion.sentence || opinion.text || 
+                                                JSON.stringify(opinion);
+                                    const confidence = opinion.confidence ? Math.round(opinion.confidence * 100) : 0;
+                                    return `
+                                        <div class="statement-item opinion-item">
+                                            <div class="statement-content">${text}</div>
+                                            ${confidence > 0 ? `<div class="statement-confidence">
+                                                <span class="confidence-badge">${confidence}% confident</span>
+                                            </div>` : ''}
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -1938,6 +3221,24 @@
                 startTimer();
             }
         });
+
+        // Function to complete the study and redirect to post-questionnaire
+        function completeStudy() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('sessionId');
+            
+            if (sessionId) {
+                // Redirect to questionnaire page with session info for post-questionnaire
+                const params = new URLSearchParams({
+                    sessionId: sessionId,
+                    showPost: 'true'
+                });
+                window.location.href = `/questionnaires?${params.toString()}`;
+            } else {
+                // Fallback if no session ID
+                window.location.href = '/questionnaires';
+            }
+        }
     </script>
 </body>
 </html>

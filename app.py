@@ -36,8 +36,17 @@ def get_system():
 
 @app.route('/')
 def index():
-    """Main page"""
-    return render_template('index.html')
+    """Main page - redirect to questionnaires for study flow"""
+    # Check if coming from questionnaire with session data
+    session_id = request.args.get('sessionId')
+    from_questionnaire = request.args.get('fromQuestionnaire')
+    
+    if session_id and from_questionnaire:
+        # Coming from pre-questionnaire, show Truth or Thought analysis
+        return render_template('index.html')
+    else:
+        # Default: redirect to pre-questionnaire to start study
+        return render_template('questionnaires.html')
 
 @app.route('/questionnaires')
 def questionnaires():
@@ -159,6 +168,9 @@ def load_session_for_bias(session_id):
         
         # Handle multiple URL analysis
         elif 'multiple_results' in analysis_data:
+            print(f"DEBUG: Loading multiple results session")
+            print(f"DEBUG: Found {len(analysis_data['multiple_results'])} results in session")
+            
             response_data['is_multiple'] = True
             response_data['multiple_results'] = analysis_data['multiple_results']
             
@@ -168,7 +180,8 @@ def load_session_for_bias(session_id):
             
             # Fetch full content for each URL and enhance multiple_results
             enhanced_results = []
-            for url_result in analysis_data['multiple_results']:
+            for i, url_result in enumerate(analysis_data['multiple_results']):
+                print(f"DEBUG: Processing result {i+1}: {url_result.get('title', 'No title')} - {url_result.get('url', 'No URL')}")
                 enhanced_result = url_result.copy()
                 
                 # Try to get full article content
@@ -394,6 +407,10 @@ def analyze_multiple():
         max_sentences = data.get('max_sentences', 15)
         analysis_mode = data.get('analysis_mode', 'combined')
         
+        print(f"\n🔍 DEBUG: Received {len(urls)} URLs for analysis:")
+        for i, url in enumerate(urls):
+            print(f"   {i+1}. {url}")
+        
         if not urls:
             return jsonify({'error': 'No URLs provided'}), 400
         
@@ -414,15 +431,25 @@ def analyze_multiple():
         for i, url in enumerate(urls):
             try:
                 # Analyze individual URL with max sentences limit
-                print(f"\n🔍 Starting analysis for: {url}", flush=True)
+                print(f"\n🔍 Starting analysis for URL {i+1}/{len(urls)}: {url}", flush=True)
                 print(f"📊 Analysis mode: {analysis_mode}", flush=True)
                 result = system.analyze_url(url)
                 analysis_data = system.last_analysis_data
-                print(f"✅ Analysis completed for: {url}", flush=True)
+                print(f"✅ Analysis completed for URL {i+1}: {url}", flush=True)
+                print(f"📋 Analysis data available: {analysis_data is not None}", flush=True)
                 
                 if analysis_data:
+                    print(f"📄 Title: {analysis_data.get('title', 'No title')}", flush=True)
+                    print(f"🌐 Domain: {analysis_data.get('domain', 'No domain')}", flush=True)
+                    print(f"📊 Results count: {len(analysis_data.get('results', []))}", flush=True)
                     # Generate summary for this article
                     summary = system.generate_summary(analysis_data['content'], analysis_data['title'])
+                    
+                    # Format content to clean markdown
+                    formatted_content = system.format_content_to_markdown(analysis_data['content'], analysis_data['title'])
+                    
+                    print(f"🔍 DEBUG: Formatted content for URL {i+1} (first 200 chars): {formatted_content[:200]}...")
+                    print(f"📏 DEBUG: Formatted content length for URL {i+1}: {len(formatted_content)} characters")
                     
                     individual_results.append({
                         'url': url,
@@ -431,6 +458,8 @@ def analyze_multiple():
                         'specialists': [agent.agent_name for agent in system.agents],
                         'summary': summary,
                         'analysis': result,
+                        'formatted_content': formatted_content,  # Add formatted markdown content
+                        'raw_content': analysis_data['content'],  # Keep raw content for backup
                         'facts_count': len([r for r in analysis_data['results'] if r['final_classification'] == 'FACT']),
                         'opinions_count': len([r for r in analysis_data['results'] if r['final_classification'] == 'OPINION']),
                         'sentences_count': len(analysis_data['results']),
@@ -466,14 +495,25 @@ def analyze_multiple():
                     'analysis': f'Failed to analyze: {str(e)}',
                     'facts_count': 0,
                     'opinions_count': 0,
-                    'sentences_count': 0
+                    'sentences_count': 0,
+                    'formatted_content': f'# Error\n\nFailed to analyze URL: {url}\n\nError: {str(e)}',
+                    'raw_content': ''
                 })
+        
+        print(f"DEBUG: Total individual results: {len(individual_results)}")
+        for i, result in enumerate(individual_results):
+            print(f"DEBUG: Result {i+1}: Title='{result.get('title', 'No Title')}' URL='{result.get('url', 'No URL')}' Domain='{result.get('domain', 'No Domain')}'")
+            print(f"  Facts: {result.get('facts_count', 0)}, Opinions: {result.get('opinions_count', 0)}")
+        
+        print(f"DEBUG: individual_results structure before response:")
+        for i, result in enumerate(individual_results):
+            print(f"  Result {i+1} keys: {list(result.keys()) if isinstance(result, dict) else 'Not a dict'}")
         
         # Prepare response based on analysis mode
         if analysis_mode == 'combined' and all_results:
             # Create combined analysis
             combined_content = '\n\n'.join(all_content)
-            combined_result = system.formatter.format_results(all_results, 'Combined Multi-Source Analysis', 'MULTI-SOURCE')
+            combined_result = system.formatter.format_results(all_results, 'Multi-Source Analysis', 'MULTI-SOURCE')
             
             # Store combined session data
             session_id = str(uuid.uuid4())
@@ -482,7 +522,7 @@ def analyze_multiple():
                     'content': combined_content,
                     'results': all_results,
                     'domain': 'MULTI-SOURCE',
-                    'title': 'Combined Multi-Source Analysis',
+                    'title': 'Multi-Source Analysis',
                     'multiple_results': individual_results,  # Store individual results for bias research
                     'urls': urls  # Store the original URLs
                 },
@@ -510,6 +550,7 @@ def analyze_multiple():
                 'analysis_mode': 'combined',
                 'urls_analyzed': len(urls),
                 'results': combined_result,
+                'individual_results': individual_results,  # Add individual results for bias analysis
                 'final_classification': overall_classification,
                 'total_facts': total_facts,
                 'total_opinions': total_opinions,
@@ -571,7 +612,9 @@ def analyze_multiple():
                 'success': True,
                 'analysis_mode': 'individual',
                 'urls_analyzed': len(urls),
-                'results': individual_results,
+                'results': individual_results,  # Keep for backward compatibility
+                'individual_results': individual_results,  # Add this for frontend
+                'multiple_results': individual_results,  # Also add this for frontend compatibility
                 'facts': all_facts,  # Add facts array for frontend
                 'opinions': all_opinions,  # Add opinions array for frontend
                 'total_facts': total_facts,
