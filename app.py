@@ -458,6 +458,7 @@ def analyze_multiple():
                         'specialists': [agent.agent_name for agent in system.agents],
                         'summary': summary,
                         'analysis': result,
+                        'results': analysis_data['results'],
                         'formatted_content': formatted_content,  # Add formatted markdown content
                         'raw_content': analysis_data['content'],  # Keep raw content for backup
                         'facts_count': len([r for r in analysis_data['results'] if r['final_classification'] == 'FACT']),
@@ -556,44 +557,54 @@ def analyze_multiple():
                 'total_opinions': total_opinions,
                 'total_sentences': total_sentences,
                 'confidence': confidence,
-                'facts': [{'sentence': r['sentence'], 'citation': r['citation']} for r in all_results if r['final_classification'] == 'FACT'],
+                'facts': [{'sentence': r['sentence'], 'citation': r['citation'], 'citations': r.get('citations', [])} for r in all_results if r['final_classification'] == 'FACT'],
                 'opinions': [{'sentence': r['sentence']} for r in all_results if r['final_classification'] == 'OPINION'],
                 'domain': 'MULTI-SOURCE',
                 'specialists': ['Cross-Domain Analyst', 'Multi-Source Verifier', 'Consensus Expert'],
                 'session_id': session_id
             })
         else:
-            # Individual analysis mode - use the actual analysis data from the single URL
+            # Individual analysis mode - aggregate results from all successful analyses
             session_id = str(uuid.uuid4())
-            if individual_results:
-                # Use the analysis data from the first (and only) result
-                first_result = individual_results[0]
-                # Get the original analysis data for this URL
-                last_analysis = system.last_analysis_data
-                
-                analysis_sessions[session_id] = {
-                    'analysis_data': {
-                        'content': last_analysis['content'] if last_analysis else first_result.get('title', ''),
-                        'results': last_analysis['results'] if last_analysis else [],
-                        'domain': last_analysis['domain'] if last_analysis else first_result.get('domain', 'UNKNOWN'),
-                        'title': last_analysis['title'] if last_analysis else first_result.get('title', 'Individual Analysis'),
-                        'multiple_results': individual_results,  # Store for bias research access
-                        'urls': urls  # Store original URLs
-                    },
-                    'timestamp': datetime.now().isoformat()
-                }
-            else:
-                # Fallback if no results
-                analysis_sessions[session_id] = {
-                    'analysis_data': {
-                        'content': '',
-                        'results': [],
-                        'domain': 'UNKNOWN',
-                        'title': 'Individual Analysis'
-                    },
-                    'timestamp': datetime.now().isoformat()
-                }
             
+            # Use the analysis data from all successful results
+            if individual_results:
+                # Filter out errored results
+                successful_results = [r for r in individual_results if r.get('domain') != 'error']
+                
+                if successful_results:
+                    # Combine content and results from all successful analyses
+                    combined_content = "\n\n---\n\n".join([res.get('raw_content', '') for res in successful_results])
+                    combined_raw_results = []
+                    for res in successful_results:
+                        # The 'results' key holds the detailed results objects
+                        if 'results' in res:
+                            combined_raw_results.extend(res['results'])
+
+                    analysis_sessions[session_id] = {
+                        'analysis_data': {
+                            'content': combined_content,
+                            'results': combined_raw_results,
+                            'domain': 'MULTI-SOURCE-INDIVIDUAL',
+                            'title': f'Individual Analysis of {len(successful_results)} Sources',
+                            'multiple_results': individual_results,
+                            'urls': urls
+                        },
+                        'timestamp': datetime.now().isoformat()
+                    }
+                else:
+                    # Handle case where all URLs failed
+                    analysis_sessions[session_id] = {
+                        'analysis_data': { 'multiple_results': individual_results, 'urls': urls },
+                        'timestamp': datetime.now().isoformat()
+                    }
+            else:
+                # Fallback if no results at all
+                analysis_sessions[session_id] = {
+                    'analysis_data': { 'urls': urls },
+                    'timestamp': datetime.now().isoformat()
+                }
+
             # Get the domain and specialists from the first successful result
             first_successful_result = next((r for r in individual_results if r.get('domain') != 'error'), None)
             detected_domain = first_successful_result.get('domain', 'GENERAL') if first_successful_result else 'GENERAL'
@@ -612,11 +623,11 @@ def analyze_multiple():
                 'success': True,
                 'analysis_mode': 'individual',
                 'urls_analyzed': len(urls),
-                'results': individual_results,  # Keep for backward compatibility
-                'individual_results': individual_results,  # Add this for frontend
-                'multiple_results': individual_results,  # Also add this for frontend compatibility
-                'facts': all_facts,  # Add facts array for frontend
-                'opinions': all_opinions,  # Add opinions array for frontend
+                'results': individual_results,
+                'individual_results': individual_results,
+                'multiple_results': individual_results,
+                'facts': all_facts,
+                'opinions': all_opinions,
                 'total_facts': total_facts,
                 'total_opinions': total_opinions,
                 'total_sentences': total_sentences,

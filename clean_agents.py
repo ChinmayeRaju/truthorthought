@@ -1,6 +1,6 @@
 """
 Clean Fact vs Opinion Analysis System using Google Generative AI SDK
-Simple 4-agent system without unnecessary complexity
+Simple 4-agent system with Gemini-based citation verification
 """
 
 import os
@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 import google.generativeai as genai
 from scraper import NewsContentScraper
+from gemini_citation_service import GeminiCitationService, VerifiedCitation
 
 # Load environment variables
 load_dotenv()
@@ -424,9 +425,11 @@ CLASSIFICATION RULES:
 - FACT: Verifiable information that can be confirmed through web search, documented data, or objective evidence. Examples: dates, names, locations, statistics, documented events, scientific measurements.
 - OPINION: Subjective statements, personal views, interpretations, predictions, evaluations, or value judgments. Examples: "good", "bad", "should", "might", personal beliefs, preferences.
 
+CRITICAL RULE: If you cannot find right/verifiable citations for a claim, it should AUTOMATICALLY be classified as OPINION, regardless of how factual it appears.
+
 IMPORTANT: You must choose either FACT or OPINION. Do not use MIXED. If a statement contains both, classify based on the primary intent.
 
-FOR FACTS: You MUST provide SPECIFIC, DIRECT source URLs that verify the factual claims. 
+FOR FACTS: You MUST provide SPECIFIC, DIRECT source URLs that verify the factual claims. If you cannot find proper citations, classify as OPINION instead. 
 
 SOURCE REQUIREMENTS:
 - Use COMPLETE, SPECIFIC URLs that link directly to the actual article/page (not just domain names)
@@ -632,8 +635,8 @@ class CleanAnalysisSystem:
         self.scraper = NewsContentScraper()
         # Pass the LLM client to the domain detector for intelligent detection
         self.domain_detector = DomainDetector(self.client)
-        # Add citation verifier for source validation
-        self.citation_verifier = CitationVerifier(self.client)
+        # Add Gemini citation service with Google Search grounding
+        self.citation_service = GeminiCitationService()
         self.last_analysis_data = None
         self.formatter = SimpleFormatter()
         self.current_domain = 'GENERAL'
@@ -803,36 +806,44 @@ class CleanAnalysisSystem:
             # Extract citation information from sources if this is a FACT
             citations = []
             if hasattr(consensus, 'final_classification') and consensus.final_classification == 'FACT':
-                # Get sources from any agent results that contributed to this fact
-                all_sources = []
-                if hasattr(consensus, 'agent_results'):
-                    for result in consensus.agent_results:
-                        if hasattr(result, 'sources') and result.sources:
-                            all_sources.extend(result.sources)
+                print(f"🔍 Getting verified citations for FACT using Gemini with Google Search...")
                 
-                # VERIFY CITATIONS using LLM before including them
-                print(f"🔍 Verifying {len(all_sources)} citations for fact...")
-                verified_sources = self.citation_verifier.verify_citations(
-                    sentence_text, all_sources, domain
+                # Use Gemini citation service to find and verify citations
+                verified_citations = self.citation_service.get_citations_for_sentence(
+                    sentence_text, domain
                 )
-                print(f"✅ Verified {len(verified_sources)} out of {len(all_sources)} citations")
                 
-                # For critical domains (POLITICS, CONFLICT), show multiple sources
-                # For other domains, show primary source but keep others available
-                critical_domains = ['POLITICS', 'CONFLICT', 'WAR', 'LEGAL']
-                if domain in critical_domains:
-                    # Show up to 4 verified sources for critical domains
-                    citations = verified_sources[:4] if len(verified_sources) >= 3 else verified_sources
+                if verified_citations:
+                    print(f"✅ Found {len(verified_citations)} verified citations with Google Search")
+                    
+                    # Convert VerifiedCitation objects to dictionary format for compatibility
+                    citations = []
+                    for vc in verified_citations:
+                        citations.append({
+                            'url': vc.url,
+                            'title': vc.title,
+                            'snippet': vc.snippet,
+                            'domain': vc.domain,
+                            'verification_score': vc.verification_score,
+                            'reasoning': vc.reasoning
+                        })
+                    
+                    # For critical domains (POLITICS, CONFLICT), show multiple sources
+                    # For other domains, show primary source but keep others available
+                    critical_domains = ['POLITICS', 'CONFLICT', 'WAR', 'LEGAL']
+                    if domain in critical_domains:
+                        # Show up to 4 verified sources for critical domains
+                        citations = citations[:4]
+                    else:
+                        # Show up to 2 verified sources for other domains
+                        citations = citations[:2]
+                        
                 else:
-                    # Show up to 2 verified sources for other domains
-                    citations = verified_sources[:2] if verified_sources else []
-                
-                # Only proceed if we have at least one verified citation for facts
-                if not citations:
-                    print(f"⚠️  No verified citations found for fact, marking as MIXED")
-                    # If no valid citations, downgrade from FACT to MIXED
-                    consensus.final_classification = 'MIXED'
-                    consensus.confidence = consensus.confidence * 0.5  # Reduce confidence
+                    print(f"⚠️  No verified citations found for fact using Gemini, automatically reclassifying as OPINION")
+                    # If no valid citations, automatically classify as OPINION instead of FACT
+                    consensus.final_classification = 'OPINION'
+                    consensus.confidence = min(consensus.confidence * 0.8, 0.9)  # Slightly reduce confidence but keep reasonable
+                    consensus.consensus_reasoning = f"{consensus.consensus_reasoning} However, no verifiable citations were found using Google Search grounding, so this is reclassified as OPINION per verification standards."
             
             # Create a result object that matches what the frontend expects
             formatted_result = {
