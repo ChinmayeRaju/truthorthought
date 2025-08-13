@@ -1384,20 +1384,12 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <label for="analysisMode" class="form-label">Analysis Mode</label>
                         <select class="form-control" id="analysisMode" onchange="toggleUrlInputs()">
                             <option value="previous" selected>📚 Load Previous Analysis</option>
                             <option value="single">📰 Single Article Analysis</option>
                             <option value="multiple">📊 Multiple Articles Comparison</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="analysisDepth" class="form-label">Analysis Depth</label>
-                        <select class="form-control" id="analysisDepth">
-                            <option value="5">Quick (5 sentences)</option>
-                            <option value="10" selected>Standard (10 sentences)</option>
-                            <option value="15">Deep (15 sentences)</option>
                         </select>
                     </div>
                 </div>
@@ -1789,7 +1781,7 @@
             const analysisMode = document.getElementById('analysisMode').value;
             const participantId = document.getElementById('participantId').value.trim();
             const studyMode = document.getElementById('studyMode').value;
-            const analysisDepth = document.getElementById('analysisDepth').value;
+            const analysisDepth = 15; // Fixed to 15 sentences (balanced)
             
             let urls = [];
             
@@ -2320,13 +2312,15 @@
                 localStorage.setItem(`research_${currentSessionId}`, 
                                    JSON.stringify(userInteractions));
                 
-                // Redirect to questionnaires with session info
+                // Redirect to React frontend questionnaires with session info
                 const params = new URLSearchParams({
                     fromExperiment: 'true',
                     sessionId: currentSessionId
                 });
                 
-                window.location.href = `questionnaires?${params.toString()}`;
+                // Check if React frontend is running on a different port
+                const reactUrl = 'http://localhost:5174/questionnaires';
+                window.location.href = `${reactUrl}?${params.toString()}`;
             } else {
                 alert('Please complete an analysis first before proceeding to the questionnaire.');
             }

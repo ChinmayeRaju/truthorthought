@@ -543,24 +543,6 @@ Add multiple URLs to analyze and compare facts vs opinions across sources..."></
                     </div>
                 </div>
 
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="maxSentences" class="form-label">Max sentences per article</label>
-                        <select class="form-control" id="maxSentences">
-                            <option value="10">10 sentences (Fast)</option>
-                            <option value="15" selected>15 sentences (Balanced)</option>
-                            <option value="20">20 sentences (Comprehensive)</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="analysisMode" class="form-label">Analysis Mode</label>
-                        <select class="form-control" id="analysisMode">
-                            <option value="individual">Analyze Each URL Separately</option>
-                            <option value="combined" selected>Combined Cross-Source Analysis</option>
-                        </select>
-                    </div>
-                </div>
-
                 <div class="text-center">
                     <button class="btn btn-analyze" id="analyzeBtn" onclick="analyzeMultipleUrls()">
                         <i class="fas fa-cogs"></i> Analyze Multiple Sources
@@ -713,8 +695,8 @@ Add multiple URLs to analyze and compare facts vs opinions across sources..."></
 
         function analyzeMultipleUrls() {
             const urlListText = document.getElementById('urlList').value.trim();
-            const maxSentences = document.getElementById('maxSentences').value;
-            const analysisMode = document.getElementById('analysisMode').value;
+            const maxSentences = 15; // Fixed to 15 sentences (balanced)
+            const analysisMode = 'combined'; // Always use combined cross-source analysis
             
             if (!urlListText) {
                 showError('Please enter at least one URL');
