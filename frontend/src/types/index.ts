@@ -93,6 +93,96 @@ export interface BiasAnalysisSession {
   multiple_results?: IndividualResult[];
 }
 
+export interface KeyPersonnel {
+  name: string;
+  title: string;
+  organization: string;
+  role_in_story: string;
+  quotes: string[];
+  relevance_score: number;
+}
+
+export interface ImportantQuote {
+  quote: string;
+  speaker: string;
+  speaker_title: string;
+  context: string;
+  significance: string;
+  impact_score: number;
+}
+
+export interface KeyInsight {
+  insight: string;
+  category: string;
+  supporting_evidence: string;
+  importance_score: number;
+}
+
+export interface ContentSummary {
+  key_personnel: KeyPersonnel[];
+  important_quotes: ImportantQuote[];
+  key_insights: KeyInsight[];
+  main_themes: string[];
+  executive_summary: string;
+  content_type: string;
+  credibility_indicators: string[];
+}
+
+export interface MultiSourceSummary {
+  individual_summaries: {
+    url: string;
+    title: string;
+    key_personnel: KeyPersonnel[];
+    important_quotes: ImportantQuote[];
+    key_insights: KeyInsight[];
+    main_themes: string[];
+    executive_summary: string;
+    content_type: string;
+  }[];
+  cross_source_analysis: {
+    consistency_analysis: string;
+    conflicting_information: any[];
+    corroborating_evidence: any[];
+    source_reliability_comparison: any[];
+  };
+  aggregated_data: {
+    total_personnel: number;
+    total_quotes: number;
+    total_insights: number;
+    common_themes: string[];
+    top_personnel: KeyPersonnel[];
+    most_impactful_quotes: ImportantQuote[];
+    key_insights_summary: KeyInsight[];
+  };
+}
+
+export interface SummaryResponse {
+  success: boolean;
+  session_id?: string;
+  summary_type?: 'single_source' | 'multi_source';
+  summary: ContentSummary | MultiSourceSummary;
+}
+
+export interface KeyFigure {
+  full_name: string;
+  title?: string;
+  organization?: string;
+  role_in_story?: string;
+  significance?: string;
+  category?: string;
+  source_url?: string;
+}
+
+export interface KeyFiguresData {
+  total_figures: number;
+  categories?: {
+    primary_actors?: { figures: KeyFigure[] };
+    secondary_participants?: { figures: KeyFigure[] };
+    quoted_sources?: { figures: KeyFigure[] };
+    other?: { figures: KeyFigure[] };
+  };
+}
+
 export interface ChatMessage {
   id: string;
   text: string;

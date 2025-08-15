@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AnalysisResult, SessionInfo, BiasAnalysisSession } from '../types';
+import type { AnalysisResult, SessionInfo, BiasAnalysisSession, SummaryResponse } from '../types';
 
 const API_BASE_URL = '/api';
 
@@ -70,6 +70,22 @@ export const apiService = {
       session_id: sessionId,
       question,
     });
+    return response.data;
+  },
+
+  // Summarize content directly
+  summarizeContent: async (content: string, title: string = '', domain: string = 'GENERAL'): Promise<SummaryResponse> => {
+    const response = await api.post('/summarize_content', {
+      content,
+      title,
+      domain,
+    });
+    return response.data;
+  },
+
+  // Summarize content from an existing session
+  summarizeSession: async (sessionId: string): Promise<SummaryResponse> => {
+    const response = await api.post(`/summarize_session/${sessionId}`);
     return response.data;
   },
 

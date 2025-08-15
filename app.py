@@ -9,6 +9,7 @@ import json
 import time
 from datetime import datetime
 from clean_agents import CleanAnalysisSystem
+from content_summarizer import ContentSummarizer
 import uuid
 from dotenv import load_dotenv
 
@@ -22,8 +23,9 @@ app.secret_key = os.urandom(24)
 # In production, you'd want to use a database or persistent storage
 analysis_sessions = {}
 
-# Global system instance
+# Global system instances
 analysis_system = None
+content_summarizer = None
 
 def get_system():
     """Get or create analysis system instance"""
@@ -33,6 +35,13 @@ def get_system():
         pass
         analysis_system = CleanAnalysisSystem()
     return analysis_system
+
+def get_summarizer():
+    """Get or create content summarizer instance"""
+    global content_summarizer
+    if content_summarizer is None:
+        content_summarizer = ContentSummarizer()
+    return content_summarizer
 
 @app.route('/')
 def index():
@@ -680,6 +689,164 @@ def chat():
             'answer': answer
         })
         
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/summarize_content', methods=['POST'])
+def summarize_content():
+    """Summarize content to extract key personnel, quotes, and insights"""
+    try:
+        data = request.get_json()
+        content = data.get('content', '')
+        title = data.get('title', '')
+        domain = data.get('domain', 'GENERAL')
+        
+        if not content:
+            return jsonify({'error': 'Content is required'}), 400
+        
+        summarizer = get_summarizer()
+        summary = summarizer.summarize_content(content, title, domain)
+        
+        # Convert dataclass objects to dictionaries for JSON serialization
+        summary_dict = {
+            'key_personnel': [
+                {
+                    'name': p.name,
+                    'title': p.title,
+                    'organization': p.organization,
+                    'role_in_story': p.role_in_story,
+                    'quotes': p.quotes,
+                    'relevance_score': p.relevance_score
+                } for p in summary.key_personnel
+            ],
+            'important_quotes': [
+                {
+                    'quote': q.quote,
+                    'speaker': q.speaker,
+                    'speaker_title': q.speaker_title,
+                    'context': q.context,
+                    'significance': q.significance,
+                    'impact_score': q.impact_score
+                } for q in summary.important_quotes
+            ],
+            'key_insights': [
+                {
+                    'insight': i.insight,
+                    'category': i.category,
+                    'supporting_evidence': i.supporting_evidence,
+                    'importance_score': i.importance_score
+                } for i in summary.key_insights
+            ],
+            'main_themes': summary.main_themes,
+            'executive_summary': summary.executive_summary,
+            'content_type': summary.content_type,
+            'credibility_indicators': summary.credibility_indicators
+        }
+        
+        return jsonify({
+            'success': True,
+            'summary': summary_dict
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/summarize_session/<session_id>', methods=['POST'])
+def summarize_session(session_id):
+    """Summarize content from an existing analysis session"""
+    try:
+        if session_id not in analysis_sessions:
+            return jsonify({'error': 'Session not found'}), 404
+        
+        session_data = analysis_sessions[session_id]
+        if 'analysis_data' not in session_data:
+            return jsonify({'error': 'No analysis data in session'}), 404
+        
+        analysis_data = session_data['analysis_data']
+        summarizer = get_summarizer()
+        
+        # Handle single URL analysis
+        if 'content' in analysis_data and 'multiple_results' not in analysis_data:
+            content = analysis_data.get('content', '')
+            title = analysis_data.get('title', '')
+            domain = analysis_data.get('domain', 'GENERAL')
+            
+            summary = summarizer.summarize_content(content, title, domain)
+            
+            # Convert to dictionary
+            summary_dict = {
+                'key_personnel': [
+                    {
+                        'name': p.name,
+                        'title': p.title,
+                        'organization': p.organization,
+                        'role_in_story': p.role_in_story,
+                        'quotes': p.quotes,
+                        'relevance_score': p.relevance_score
+                    } for p in summary.key_personnel
+                ],
+                'important_quotes': [
+                    {
+                        'quote': q.quote,
+                        'speaker': q.speaker,
+                        'speaker_title': q.speaker_title,
+                        'context': q.context,
+                        'significance': q.significance,
+                        'impact_score': q.impact_score
+                    } for q in summary.important_quotes
+                ],
+                'key_insights': [
+                    {
+                        'insight': i.insight,
+                        'category': i.category,
+                        'supporting_evidence': i.supporting_evidence,
+                        'importance_score': i.importance_score
+                    } for i in summary.key_insights
+                ],
+                'main_themes': summary.main_themes,
+                'executive_summary': summary.executive_summary,
+                'content_type': summary.content_type,
+                'credibility_indicators': summary.credibility_indicators
+            }
+            
+            return jsonify({
+                'success': True,
+                'session_id': session_id,
+                'summary_type': 'single_source',
+                'summary': summary_dict
+            })
+        
+        # Handle multiple URL analysis
+        elif 'multiple_results' in analysis_data:
+            multiple_results = analysis_data['multiple_results']
+            
+            # Prepare sources for multi-source summarization
+            sources = []
+            for result in multiple_results:
+                if result.get('domain') != 'error':  # Skip failed analyses
+                    sources.append({
+                        'content': result.get('formatted_content', result.get('raw_content', '')),
+                        'title': result.get('title', ''),
+                        'url': result.get('url', ''),
+                        'domain': result.get('domain', 'GENERAL')
+                    })
+            
+            if not sources:
+                return jsonify({'error': 'No valid sources found for summarization'}), 400
+            
+            # Generate multi-source summary
+            multi_summary = summarizer.summarize_multiple_sources(sources)
+            
+            return jsonify({
+                'success': True,
+                'session_id': session_id,
+                'summary_type': 'multi_source',
+                'summary': multi_summary
+            })
+        
+        else:
+            return jsonify({'error': 'No content available for summarization'}), 400
+            
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
