@@ -207,13 +207,13 @@ const BiasResearch: React.FC = () => {
                 {/* Multi-Source Analysis */}
                 {selectedSession.is_multiple && selectedSession.multiple_results && (
                   <div style={{ display: 'flex', height: 'calc(100vh - 400px)', gap: 24 }}>
-                    {/* Original Articles Panel */}
+                    {/* Source URLs Panel */}
                     <div style={{ flex: 1, overflow: 'auto' }}>
-                      <Card 
+                      <Card
                         title={
                           <Space>
-                            <FileTextOutlined />
-                            Original Articles ({selectedSession.multiple_results.length})
+                            <LinkOutlined />
+                            Research Sources ({selectedSession.multiple_results.length})
                           </Space>
                         }
                         style={{ height: '100%' }}
@@ -225,32 +225,43 @@ const BiasResearch: React.FC = () => {
                               <Title level={5} style={{ margin: 0, marginBottom: 8 }}>
                                 {result.title || result.scraped_title}
                               </Title>
-                              <Space wrap>
+                              <Space wrap style={{ marginBottom: 8 }}>
                                 <Tag color="blue">{result.domain}</Tag>
                                 <Tag color="green">{result.facts_count} Facts</Tag>
                                 <Tag color="orange">{result.opinions_count} Opinions</Tag>
-                                <a href={result.url} target="_blank" rel="noopener noreferrer">
-                                  <LinkOutlined /> Source
-                                </a>
                               </Space>
                             </div>
                             
-                            <div 
-                              style={{ 
-                                maxHeight: '300px', 
-                                overflow: 'auto',
-                                background: '#fafafa',
+                            <div
+                              style={{
+                                background: '#f8f9fa',
                                 padding: 12,
                                 borderRadius: 6,
-                                fontSize: '14px',
-                                lineHeight: 1.6
+                                border: '1px solid #e9ecef'
                               }}
                             >
-                              <div 
-                                dangerouslySetInnerHTML={{ 
-                                  __html: getSourceContent(result).replace(/\n/g, '<br>') 
+                              <div style={{ marginBottom: 8 }}>
+                                <Text strong style={{ fontSize: '13px', color: '#495057' }}>Source URL:</Text>
+                              </div>
+                              <a
+                                href={result.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  fontSize: '14px',
+                                  wordBreak: 'break-all',
+                                  display: 'block',
+                                  padding: '8px 12px',
+                                  background: 'white',
+                                  border: '1px solid #dee2e6',
+                                  borderRadius: '4px',
+                                  textDecoration: 'none',
+                                  color: '#0066cc'
                                 }}
-                              />
+                              >
+                                <LinkOutlined style={{ marginRight: 8 }} />
+                                {result.url}
+                              </a>
                             </div>
                           </div>
                         ))}

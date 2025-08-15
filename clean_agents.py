@@ -847,7 +847,7 @@ class CleanAnalysisSystem:
             return "ERROR: No sentences found to analyze"
         
         consensus_results = []
-        analysis_limit = min(len(sentences), 2)  # Limit for API costs
+        analysis_limit = min(len(sentences), 10)  # Analyze up to 10 sentences for research
         
         for i, sentence in enumerate(sentences[:analysis_limit], 1):
             print(f"   Analyzing sentence {i}/{analysis_limit}...")

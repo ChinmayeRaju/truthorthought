@@ -14,9 +14,7 @@ import {
   Divider,
   message,
   Select,
-  DatePicker,
-  Descriptions,
-  Collapse
+  Descriptions
 } from 'antd';
 import {
   DownloadOutlined,
@@ -26,7 +24,8 @@ import {
   TrophyOutlined,
   TeamOutlined,
   BulbOutlined,
-  EyeOutlined
+  EyeOutlined,
+  DashboardOutlined
 } from '@ant-design/icons';
 import { QuestionnaireAnalyzer } from '../utils/questionnaireAnalysis';
 import type { SessionData } from '../utils/questionnaireAnalysis';
@@ -34,7 +33,6 @@ import AppLayout from '../components/AppLayout';
 
 const { Title, Paragraph, Text } = Typography;
 const { Option } = Select;
-const { Panel } = Collapse;
 
 const ResearchDashboard: React.FC = () => {
   const [sessions, setSessions] = useState<SessionData[]>([]);
@@ -55,14 +53,8 @@ const ResearchDashboard: React.FC = () => {
       // Debug individual sessions
       data.forEach((session, index) => {
         console.log(`Session ${index}:`, session);
-        if (session.preQuestionnaire) {
-          console.log(`Pre-questionnaire ${index}:`, session.preQuestionnaire);
-          console.log(`Pre-questionnaire keys:`, Object.keys(session.preQuestionnaire));
-        }
-        if (session.postQuestionnaire) {
-          console.log(`Post-questionnaire ${index}:`, session.postQuestionnaire);
-          console.log(`Post-questionnaire keys:`, Object.keys(session.postQuestionnaire));
-        }
+        console.log(`Pre-questionnaire keys:`, session.preQuestionnaire ? Object.keys(session.preQuestionnaire) : 'None');
+        console.log(`Post-questionnaire keys:`, session.postQuestionnaire ? Object.keys(session.postQuestionnaire) : 'None');
       });
       
       setSessions(data);
@@ -98,26 +90,17 @@ const ResearchDashboard: React.FC = () => {
   const preOnlySessions = sessions.filter(s => s.preQuestionnaire && !s.postQuestionnaire);
   const completionRate = sessions.length > 0 ? (completedSessions.length / sessions.length) * 100 : 0;
 
-  // Analyze data for each research question
-  const nlpAccuracyAnalysis = QuestionnaireAnalyzer.analyzeNLPAccuracy(completedSessions);
-  const interfaceAnalysis = QuestionnaireAnalyzer.analyzeInterfaceStrategies(completedSessions);
-  const biasDetectionAnalysis = QuestionnaireAnalyzer.analyzeBiasDetectionImprovement(completedSessions);
-  const behavioralAnalysis = QuestionnaireAnalyzer.analyzeBehavioralChanges(completedSessions);
-  const automationAnalysis = QuestionnaireAnalyzer.analyzeAutomationBalance(completedSessions);
-  const individualDifferencesAnalysis = QuestionnaireAnalyzer.analyzeIndividualDifferences(completedSessions);
+  // Analyze data using new analysis functions
+  const taskLoadAnalysis = QuestionnaireAnalyzer.analyzeTaskLoad(completedSessions);
+  const clarityAnalysis = QuestionnaireAnalyzer.analyzeSystemClarity(completedSessions);
+  const trustAnalysis = QuestionnaireAnalyzer.analyzeTrustFactors(completedSessions);
+  const featureAnalysis = QuestionnaireAnalyzer.analyzeFeatureEffectiveness(completedSessions);
+  const userExperienceAnalysis = QuestionnaireAnalyzer.analyzeUserExperience(completedSessions);
+  const contentGapAnalysis = QuestionnaireAnalyzer.analyzeContentGaps(completedSessions);
+  const demographicsAnalysis = QuestionnaireAnalyzer.analyzeDemographics(completedSessions);
 
-  // Calculate average satisfaction
-  const avgSatisfaction = completedSessions.length > 0
-    ? completedSessions.reduce((sum, s) => sum + (s.postQuestionnaire?.overallSatisfaction || 0), 0) / completedSessions.length
-    : 0;
-
-  // Calculate skill improvement percentage
-  const skillImprovementCount = biasDetectionAnalysis.skillImprovementRatings.filter(
-    rating => ['significantly-improved', 'somewhat-improved', 'slightly-improved'].includes(rating)
-  ).length;
-  const skillImprovementRate = completedSessions.length > 0 
-    ? (skillImprovementCount / completedSessions.length) * 100 
-    : 0;
+  // Calculate average satisfaction (using a relevant metric from new questionnaire)
+  const avgClarity = clarityAnalysis.averageClarity;
 
   const overviewCards = [
     {
@@ -139,8 +122,8 @@ const ResearchDashboard: React.FC = () => {
       color: '#f39c12'
     },
     {
-      title: 'Avg Satisfaction',
-      value: `${avgSatisfaction.toFixed(1)}/10`,
+      title: 'Avg Clarity Rating',
+      value: `${avgClarity.toFixed(1)}/5`,
       icon: <ExperimentOutlined />,
       color: '#e74c3c'
     }
@@ -149,34 +132,52 @@ const ResearchDashboard: React.FC = () => {
   const researchQuestionTabs = [
     {
       key: '1',
-      title: 'NLP Accuracy',
+      title: 'Task Load (NASA-TLX)',
       icon: <BarChartOutlined />,
       content: (
         <Row gutter={[16, 16]}>
           <Col span={24}>
-            <Card title="NLP Accuracy Perception Analysis">
+            <Card title="NASA-TLX Analysis">
               <Row gutter={16}>
                 <Col span={8}>
                   <Statistic
-                    title="Average Perceived Accuracy"
-                    value={nlpAccuracyAnalysis.perceivedAccuracy.length > 0 
-                      ? (nlpAccuracyAnalysis.perceivedAccuracy.reduce((a, b) => a + b, 0) / nlpAccuracyAnalysis.perceivedAccuracy.length).toFixed(1)
+                    title="Average Mental Demand"
+                    value={taskLoadAnalysis.mentalDemandScores.length > 0 
+                      ? (taskLoadAnalysis.mentalDemandScores.reduce((a, b) => a + b, 0) / taskLoadAnalysis.mentalDemandScores.length).toFixed(1)
                       : 0}
-                    suffix="/ 10"
+                    suffix="/ 100"
                   />
                 </Col>
                 <Col span={8}>
                   <Statistic
-                    title="Accuracy Expectations Met"
-                    value={nlpAccuracyAnalysis.accuracyGap.filter(gap => gap >= 0).length}
-                    suffix={`/ ${nlpAccuracyAnalysis.accuracyGap.length}`}
+                    title="Average Effort Required"
+                    value={taskLoadAnalysis.effortScores.length > 0 
+                      ? (taskLoadAnalysis.effortScores.reduce((a, b) => a + b, 0) / taskLoadAnalysis.effortScores.length).toFixed(1)
+                      : 0}
+                    suffix="/ 100"
                   />
                 </Col>
                 <Col span={8}>
                   <Statistic
-                    title="High Accuracy Ratings (8+)"
-                    value={nlpAccuracyAnalysis.perceivedAccuracy.filter(rating => rating >= 8).length}
-                    suffix={`/ ${nlpAccuracyAnalysis.perceivedAccuracy.length}`}
+                    title="Average Frustration"
+                    value={taskLoadAnalysis.frustrationScores.length > 0 
+                      ? (taskLoadAnalysis.frustrationScores.reduce((a, b) => a + b, 0) / taskLoadAnalysis.frustrationScores.length).toFixed(1)
+                      : 0}
+                    suffix="/ 100"
+                  />
+                </Col>
+              </Row>
+              <Divider />
+              <Row gutter={16}>
+                <Col span={24}>
+                  <Statistic
+                    title="Overall Task Load Index"
+                    value={taskLoadAnalysis.averageTLX.toFixed(1)}
+                    suffix="/ 100"
+                  />
+                  <Progress 
+                    percent={taskLoadAnalysis.averageTLX} 
+                    strokeColor={taskLoadAnalysis.averageTLX > 70 ? '#ff4d4f' : taskLoadAnalysis.averageTLX > 40 ? '#faad14' : '#52c41a'}
                   />
                 </Col>
               </Row>
@@ -187,40 +188,58 @@ const ResearchDashboard: React.FC = () => {
     },
     {
       key: '2',
-      title: 'Interface Strategies',
+      title: 'System Clarity',
       icon: <BulbOutlined />,
       content: (
         <Row gutter={[16, 16]}>
           <Col span={12}>
-            <Card title="User Agency Ratings">
+            <Card title="Fact-Opinion Clarity">
+              <Statistic
+                title="Average Clarity Rating"
+                value={clarityAnalysis.averageClarity.toFixed(1)}
+                suffix="/ 5"
+              />
+              <Progress 
+                percent={clarityAnalysis.averageClarity * 20} 
+                strokeColor="#52c41a"
+              />
+              <Divider />
               <div>
-                {Object.entries(
-                  interfaceAnalysis.userAgencyRatings.reduce((acc, rating) => {
-                    acc[rating] = (acc[rating] || 0) + 1;
-                    return acc;
-                  }, {} as Record<string, number>)
-                ).map(([rating, count]) => (
-                  <div key={rating} style={{ marginBottom: 8 }}>
-                    <Text>{rating.replace('-', ' ')}: </Text>
-                    <Tag color="blue">{count}</Tag>
+                <Text strong>Clarity Distribution:</Text>
+                {Object.entries(clarityAnalysis.clarityDistribution).map(([rating, count]) => (
+                  <div key={rating} style={{ marginTop: 8 }}>
+                    <Text>{rating}/5: </Text>
+                    <Tag color="blue">{count} participants</Tag>
                   </div>
                 ))}
               </div>
             </Card>
           </Col>
           <Col span={12}>
-            <Card title="Most Effective Learning Mechanisms">
-              <div>
-                {Object.entries(interfaceAnalysis.learningMechanisms)
-                  .sort(([,a], [,b]) => b - a)
-                  .slice(0, 5)
-                  .map(([mechanism, count]) => (
-                    <div key={mechanism} style={{ marginBottom: 8 }}>
-                      <Text>{mechanism.replace('-', ' ')}: </Text>
-                      <Tag color="green">{count}</Tag>
-                    </div>
-                  ))}
-              </div>
+            <Card title="User Control & Trust">
+              <Row gutter={16}>
+                <Col span={24}>
+                  <Statistic
+                    title="Average Control Level"
+                    value={clarityAnalysis.controlScores.length > 0 
+                      ? (clarityAnalysis.controlScores.reduce((a, b) => a + b, 0) / clarityAnalysis.controlScores.length).toFixed(1)
+                      : 0}
+                    suffix="/ 5"
+                  />
+                </Col>
+              </Row>
+              <Divider />
+              <Row gutter={16}>
+                <Col span={24}>
+                  <Statistic
+                    title="Source Label Influence"
+                    value={clarityAnalysis.sourceInfluenceScores.length > 0 
+                      ? (clarityAnalysis.sourceInfluenceScores.reduce((a, b) => a + b, 0) / clarityAnalysis.sourceInfluenceScores.length).toFixed(1)
+                      : 0}
+                    suffix="/ 5"
+                  />
+                </Col>
+              </Row>
             </Card>
           </Col>
         </Row>
@@ -228,37 +247,39 @@ const ResearchDashboard: React.FC = () => {
     },
     {
       key: '3',
-      title: 'Bias Detection Skills',
+      title: 'Trust & Bias',
       icon: <ExperimentOutlined />,
       content: (
         <Row gutter={[16, 16]}>
-          <Col span={24}>
-            <Card title="Skill Improvement Analysis">
+          <Col span={12}>
+            <Card title="Trusted News Outlets">
+              <div>
+                {Object.entries(trustAnalysis.trustedOutlets)
+                  .sort(([,a], [,b]) => (b as number) - (a as number))
+                  .map(([outlet, count]) => (
+                    <div key={outlet} style={{ marginBottom: 8 }}>
+                      <Text>{outlet.toUpperCase()}: </Text>
+                      <Tag color="green">{count}</Tag>
+                    </div>
+                  ))}
+              </div>
+            </Card>
+          </Col>
+          <Col span={12}>
+            <Card title="Bias Perceptions">
               <Row gutter={16}>
-                <Col span={8}>
+                <Col span={12}>
                   <Statistic
-                    title="Reported Skill Improvement"
-                    value={skillImprovementRate.toFixed(1)}
-                    suffix="%"
-                  />
-                  <Progress percent={skillImprovementRate} strokeColor="#52c41a" />
-                </Col>
-                <Col span={8}>
-                  <Statistic
-                    title="Increased Confidence"
-                    value={biasDetectionAnalysis.confidenceChanges.filter(
-                      change => ['much-more-confident', 'more-confident', 'slightly-more-confident'].includes(change)
-                    ).length}
-                    suffix={`/ ${biasDetectionAnalysis.confidenceChanges.length}`}
+                    title="See Outlets as Biased"
+                    value={trustAnalysis.biasPerceptions.yes}
+                    suffix={`/ ${trustAnalysis.biasPerceptions.yes + trustAnalysis.biasPerceptions.no}`}
                   />
                 </Col>
-                <Col span={8}>
+                <Col span={12}>
                   <Statistic
-                    title="Independent Detection Capability"
-                    value={biasDetectionAnalysis.independentDetectionChanges.filter(
-                      change => ['much-more-capable', 'more-capable', 'slightly-more-capable'].includes(change)
-                    ).length}
-                    suffix={`/ ${biasDetectionAnalysis.independentDetectionChanges.length}`}
+                    title="Don't See Bias"
+                    value={trustAnalysis.biasPerceptions.no}
+                    suffix={`/ ${trustAnalysis.biasPerceptions.yes + trustAnalysis.biasPerceptions.no}`}
                   />
                 </Col>
               </Row>
@@ -269,69 +290,29 @@ const ResearchDashboard: React.FC = () => {
     },
     {
       key: '4',
-      title: 'Behavioral Changes',
+      title: 'Feature Effectiveness',
       icon: <TeamOutlined />,
       content: (
         <Row gutter={[16, 16]}>
-          <Col span={12}>
-            <Card title="Future Verification Behavior">
-              <div>
-                {Object.entries(
-                  behavioralAnalysis.verificationChanges.reduce((acc, change) => {
-                    acc[change] = (acc[change] || 0) + 1;
-                    return acc;
-                  }, {} as Record<string, number>)
-                ).map(([change, count]) => (
-                  <div key={change} style={{ marginBottom: 8 }}>
-                    <Text>{change.replace('-', ' ')}: </Text>
-                    <Tag color="blue">{count}</Tag>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </Col>
-          <Col span={12}>
-            <Card title="Tool Adoption Intention">
-              <div>
-                {Object.entries(
-                  behavioralAnalysis.toolAdoptionIntention.reduce((acc, intention) => {
-                    acc[intention] = (acc[intention] || 0) + 1;
-                    return acc;
-                  }, {} as Record<string, number>)
-                ).map(([intention, count]) => (
-                  <div key={intention} style={{ marginBottom: 8 }}>
-                    <Text>{intention.replace('-', ' ')}: </Text>
-                    <Tag color="green">{count}</Tag>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </Col>
-        </Row>
-      )
-    },
-    {
-      key: '5',
-      title: 'Automation Balance',
-      icon: <BarChartOutlined />,
-      content: (
-        <Row gutter={[16, 16]}>
           <Col span={24}>
-            <Card title="Automation Preference vs Experience">
-              <Table
-                dataSource={Object.entries(automationAnalysis.satisfactionByBalance).map(([balance, scores]) => ({
-                  key: balance,
-                  balance: balance.replace('-', ' '),
-                  count: scores.length,
-                  avgSatisfaction: (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)
-                }))}
-                columns={[
-                  { title: 'Automation Balance', dataIndex: 'balance', key: 'balance' },
-                  { title: 'Participants', dataIndex: 'count', key: 'count' },
-                  { title: 'Avg Satisfaction', dataIndex: 'avgSatisfaction', key: 'avgSatisfaction' }
-                ]}
-                pagination={false}
-                size="small"
+            <Card title="Most Helpful Features">
+              <div>
+                {Object.entries(featureAnalysis.featureFrequency)
+                  .sort(([,a], [,b]) => (b as number) - (a as number))
+                  .map(([feature, count]) => (
+                    <div key={feature} style={{ marginBottom: 8 }}>
+                      <Text>{feature.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}: </Text>
+                      <Tag color="blue">{count}</Tag>
+                    </div>
+                  ))}
+              </div>
+              <Divider />
+              <Statistic
+                title="Average Explanation Helpfulness"
+                value={featureAnalysis.explanationHelpfulness.length > 0 
+                  ? (featureAnalysis.explanationHelpfulness.reduce((a, b) => a + b, 0) / featureAnalysis.explanationHelpfulness.length).toFixed(1)
+                  : 0}
+                suffix="/ 5"
               />
             </Card>
           </Col>
@@ -339,50 +320,90 @@ const ResearchDashboard: React.FC = () => {
       )
     },
     {
-      key: '6',
-      title: 'Individual Differences',
+      key: '5',
+      title: 'User Experience',
       icon: <UserOutlined />,
       content: (
         <Row gutter={[16, 16]}>
           <Col span={12}>
-            <Card title="Satisfaction by Tech Experience">
+            <Card title="Confidence Changes">
               <div>
-                {Object.entries(individualDifferencesAnalysis.satisfactionByExperience).map(([exp, scores]) => (
-                  <div key={exp} style={{ marginBottom: 12 }}>
-                    <Text strong>{exp.replace('-', ' ')}</Text>
-                    <br />
-                    <Text>Avg: {(scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)}/10</Text>
-                    <Progress 
-                      percent={(scores.reduce((a, b) => a + b, 0) / scores.length) * 10} 
-                      size="small"
-                      showInfo={false}
-                    />
+                <Text strong>Pre vs Post Confidence:</Text>
+                {userExperienceAnalysis.confidenceChanges.map((change, index) => (
+                  <div key={index} style={{ marginTop: 8 }}>
+                    <Text>
+                      {change.pre} → {change.post} 
+                      <Tag color={change.change > 0 ? 'green' : change.change < 0 ? 'red' : 'blue'}>
+                        {change.change > 0 ? '+' : ''}{change.change.toFixed(1)}
+                      </Tag>
+                    </Text>
                   </div>
                 ))}
               </div>
             </Card>
           </Col>
           <Col span={12}>
-            <Card title="Adoption by Demographics">
+            <Card title="Performance by Tech Experience">
               <div>
-                {Object.entries(individualDifferencesAnalysis.adoptionByDemographics)
-                  .slice(0, 8)
-                  .map(([demo, adoptions]) => {
-                    const positiveAdoption = adoptions.filter(a => 
-                      ['definitely', 'probably', 'maybe'].includes(a)
-                    ).length;
-                    const rate = (positiveAdoption / adoptions.length) * 100;
-                    
-                    return (
-                      <div key={demo} style={{ marginBottom: 8 }}>
-                        <Text>{demo.replace('-', ' ')}: </Text>
-                        <Tag color={rate > 60 ? 'green' : rate > 40 ? 'orange' : 'red'}>
-                          {rate.toFixed(0)}%
-                        </Tag>
-                      </div>
-                    );
-                  })}
+                {Object.entries(userExperienceAnalysis.experienceByTech).map(([tech, data]) => (
+                  <div key={tech} style={{ marginBottom: 12 }}>
+                    <Text strong>{tech.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</Text>
+                    <br />
+                    <Text>Avg Clarity: {data.clarity.length > 0 ? (data.clarity.reduce((a, b) => a + b, 0) / data.clarity.length).toFixed(1) : 'N/A'}/5</Text>
+                    <br />
+                    <Text>Avg Control: {data.control.length > 0 ? (data.control.reduce((a, b) => a + b, 0) / data.control.length).toFixed(1) : 'N/A'}/5</Text>
+                  </div>
+                ))}
               </div>
+            </Card>
+          </Col>
+        </Row>
+      )
+    },
+    {
+      key: '6',
+      title: 'Content Gaps',
+      icon: <BulbOutlined />,
+      content: (
+        <Row gutter={[16, 16]}>
+          <Col span={24}>
+            <Card title="Missed Facts Analysis">
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Statistic
+                    title="Average Missed Facts Rating"
+                    value={contentGapAnalysis.averageMissedFacts.toFixed(1)}
+                    suffix="/ 5"
+                  />
+                </Col>
+                <Col span={8}>
+                  <Statistic
+                    title="Issues Reported"
+                    value={contentGapAnalysis.issuesReported.length}
+                    suffix="participants"
+                  />
+                </Col>
+                <Col span={8}>
+                  <Statistic
+                    title="Qualitative Gaps"
+                    value={contentGapAnalysis.qualitativeGaps.length}
+                    suffix="responses"
+                  />
+                </Col>
+              </Row>
+              {contentGapAnalysis.issuesReported.length > 0 && (
+                <>
+                  <Divider />
+                  <div>
+                    <Text strong>Common Issues:</Text>
+                    {contentGapAnalysis.issuesReported.slice(0, 5).map((issue, index) => (
+                      <div key={index} style={{ marginTop: 8, padding: 8, background: '#f5f5f5' }}>
+                        <Text>{issue}</Text>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </Card>
           </Col>
         </Row>
@@ -397,7 +418,7 @@ const ResearchDashboard: React.FC = () => {
         <div style={{ padding: '24px' }}>
           <div style={{ marginBottom: 24 }}>
             <Title level={2}>
-              <BarChartOutlined style={{ marginRight: 8, color: '#3498db' }} />
+              <DashboardOutlined style={{ marginRight: 8, color: '#3498db' }} />
               Research Dashboard
             </Title>
             <Paragraph>
@@ -451,7 +472,7 @@ const ResearchDashboard: React.FC = () => {
       <div style={{ padding: '24px' }}>
         <div style={{ marginBottom: 24 }}>
           <Title level={2}>
-            <BarChartOutlined style={{ marginRight: 8, color: '#3498db' }} />
+            <DashboardOutlined style={{ marginRight: 8, color: '#3498db' }} />
             Research Dashboard
           </Title>
           <Paragraph>
@@ -459,9 +480,9 @@ const ResearchDashboard: React.FC = () => {
           </Paragraph>
           
           <Space style={{ marginBottom: 16 }}>
-            <Button
-              type="primary"
-              icon={<DownloadOutlined />}
+            <Button 
+              type="primary" 
+              icon={<DownloadOutlined />} 
               onClick={exportData}
               disabled={sessions.length === 0}
             >
@@ -499,8 +520,8 @@ const ResearchDashboard: React.FC = () => {
 
         {/* Research Questions Analysis */}
         <Card>
-          <Tabs
-            defaultActiveKey="1"
+          <Tabs 
+            defaultActiveKey="1" 
             type="card"
             items={researchQuestionTabs.map(tab => ({
               key: tab.key,
@@ -518,26 +539,26 @@ const ResearchDashboard: React.FC = () => {
         {/* Session Details Table */}
         <Card title="Session Details" style={{ marginTop: 24 }}>
           <Table
-            dataSource={sessions.map((session, index) => ({
+            dataSource={sessions.map((session) => ({
               key: session.sessionId,
               sessionId: session.sessionId,
               preCompleted: !!session.preQuestionnaire,
               postCompleted: !!session.postQuestionnaire,
               preTimestamp: session.preQuestionnaire?.timestamp,
               postTimestamp: session.postQuestionnaire?.timestamp,
-              satisfaction: session.postQuestionnaire?.overallSatisfaction || 'N/A',
+              clarity: session.postQuestionnaire?.factOpinionClarity || 'N/A',
               session: session
             }))}
             columns={[
-              {
-                title: 'Session ID',
-                dataIndex: 'sessionId',
+              { 
+                title: 'Session ID', 
+                dataIndex: 'sessionId', 
                 key: 'sessionId',
                 render: (text) => <Text code>{text.slice(-8)}</Text>
               },
-              {
-                title: 'Pre-Questionnaire',
-                dataIndex: 'preCompleted',
+              { 
+                title: 'Pre-Questionnaire', 
+                dataIndex: 'preCompleted', 
                 key: 'preCompleted',
                 render: (completed) => (
                   <Tag color={completed ? 'green' : 'red'}>
@@ -545,9 +566,9 @@ const ResearchDashboard: React.FC = () => {
                   </Tag>
                 )
               },
-              {
-                title: 'Post-Questionnaire',
-                dataIndex: 'postCompleted',
+              { 
+                title: 'Post-Questionnaire', 
+                dataIndex: 'postCompleted', 
                 key: 'postCompleted',
                 render: (completed) => (
                   <Tag color={completed ? 'green' : 'red'}>
@@ -555,11 +576,11 @@ const ResearchDashboard: React.FC = () => {
                   </Tag>
                 )
               },
-              {
-                title: 'Satisfaction',
-                dataIndex: 'satisfaction',
-                key: 'satisfaction',
-                render: (score) => score !== 'N/A' ? `${score}/10` : 'N/A'
+              { 
+                title: 'Clarity Rating', 
+                dataIndex: 'clarity', 
+                key: 'clarity',
+                render: (score) => score !== 'N/A' ? `${score}/5` : 'N/A'
               }
             ]}
             expandable={{
@@ -570,13 +591,13 @@ const ResearchDashboard: React.FC = () => {
                       <Col span={12}>
                         <Card title="Pre-Questionnaire Responses" size="small">
                           <Descriptions column={1} size="small">
-                            {record.session.preQuestionnaire && Object.entries(record.session.preQuestionnaire)
+                            {Object.entries(record.session.preQuestionnaire)
                               .filter(([key]) => key !== 'timestamp' && key !== 'type')
                               .map(([key, value]) => (
                                 <Descriptions.Item key={key} label={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}>
-                                  {Array.isArray(value)
-                                    ? value.join(', ')
-                                    : typeof value === 'object'
+                                  {Array.isArray(value) 
+                                    ? value.join(', ') 
+                                    : typeof value === 'object' 
                                       ? JSON.stringify(value)
                                       : String(value || 'N/A')}
                                 </Descriptions.Item>
@@ -589,13 +610,13 @@ const ResearchDashboard: React.FC = () => {
                       <Col span={12}>
                         <Card title="Post-Questionnaire Responses" size="small">
                           <Descriptions column={1} size="small">
-                            {record.session.postQuestionnaire && Object.entries(record.session.postQuestionnaire)
+                            {Object.entries(record.session.postQuestionnaire)
                               .filter(([key]) => key !== 'timestamp' && key !== 'type')
                               .map(([key, value]) => (
                                 <Descriptions.Item key={key} label={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}>
-                                  {Array.isArray(value)
-                                    ? value.join(', ')
-                                    : typeof value === 'object'
+                                  {Array.isArray(value) 
+                                    ? value.join(', ') 
+                                    : typeof value === 'object' 
                                       ? JSON.stringify(value)
                                       : String(value || 'N/A')}
                                 </Descriptions.Item>
@@ -608,9 +629,9 @@ const ResearchDashboard: React.FC = () => {
                 </div>
               ),
               expandIcon: ({ expanded, onExpand, record }) => (
-                <Button
-                  type="text"
-                  icon={<EyeOutlined />}
+                <Button 
+                  type="text" 
+                  icon={<EyeOutlined />} 
                   onClick={e => onExpand(record, e)}
                   size="small"
                 >

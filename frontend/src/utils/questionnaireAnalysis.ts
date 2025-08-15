@@ -1,57 +1,48 @@
 // Utility functions for analyzing questionnaire data
 
 export interface PreQuestionnaireData {
+  // News Familiarity
+  newsFamiliarity: number; // 1-5 Likert scale
+  newsFrequency: string; // daily/weekly/monthly/rarely
+  factOpinionConfidence: number; // 1-5 Likert scale
+  
+  // Trust & Bias
+  trustedOutlets: string[]; // BBC/CNN/Guardian/Other
+  outletsBiased: string; // yes/no
+  biasedOutletsSpecify?: string; // text
+  aiFamiliarityTools: number; // 1-5 Likert scale
+  
+  // Reading Habits
+  headlineReliance: number; // 1-5 Likert scale
+  crossCheckFrequency: number; // 1-5 Likert scale
+  
   // Demographics
+  techExperience: string; // beginner/intermediate/advanced/expert
   age: string;
-  education: string;
-  techExperience: string;
-  aiExperience: string;
-  
-  // Media Habits
-  mediaConsumption: string[];
-  newsFrequency: string;
-  sourceVerification: string;
-  factChecking: string;
-  
-  // Bias Detection Skills
-  factOpinionConfidence: string;
-  biasAwareness: string;
-  biasTypes: string[];
-  mediaSkepticism: string;
-  
-  // AI Perceptions
-  aiTrust: string;
-  aiAccuracyExpectation: string;
-  automationPreference: string;
-  learningExpectation: string;
+  profession: string;
 }
 
 export interface PostQuestionnaireData {
-  // System Evaluation
-  systemAccuracy: number;
-  systemHelpfulness: number;
-  interfaceUsability: number;
-  userAgency: string;
-  automationBalance: string;
+  // Task Difficulty (NASA-TLX)
+  mentalDemand: number; // 0-100 slider
+  effortRequired: number; // 0-100 slider
+  frustrationLevel: number; // 0-100 slider
   
-  // Learning & Skills
-  skillImprovement: string;
-  confidenceChange: string;
-  independentDetection: string;
-  learningMechanisms: string[];
+  // System Clarity
+  factOpinionClarity: number; // 1-5 Likert scale
+  controlLevel: number; // 1-5 Likert scale
+  sourceInfluence: number; // 1-5 Likert scale
+  explanationHelpfulness: number; // 1-5 Likert scale
   
-  // Behavioral Changes
-  futureVerification: string;
-  mediaApproach: string;
-  toolAdoption: string;
-  recommendToOthers: string;
+  // Features & Issues
+  mostHelpfulFeature: string[]; // checkboxes
+  otherHelpfulFeature?: string; // text
+  issuesEncountered: string; // text
+  missedFacts: number; // 1-5 Likert scale
+  missedFactsSpecify?: string; // text
   
-  // Final Feedback
-  overallSatisfaction: number;
-  mostValuableFeature: string;
-  improvements: string;
-  concerns: string;
-  additionalComments?: string;
+  // Final Comments
+  additionalComments: string; // text
 }
 
 export interface SessionData {
@@ -72,118 +63,124 @@ export interface SessionData {
   };
 }
 
-// Research Question Analysis Functions
+// Research Analysis Functions
 
 export class QuestionnaireAnalyzer {
   
   /**
-   * Research Question 1: How accurately can NLP techniques distinguish factual from opinion statements?
+   * NASA-TLX Analysis: Mental demand, effort, and frustration
    */
-  static analyzeNLPAccuracy(sessions: SessionData[]) {
+  static analyzeTaskLoad(sessions: SessionData[]) {
     const analysis = {
-      expectedAccuracy: [] as string[],
-      perceivedAccuracy: [] as number[],
-      accuracyGap: [] as number[],
-      confidenceCorrelation: [] as { confidence: number; perceived: number }[]
-    };
-
-    sessions.forEach(session => {
-      if (session.preQuestionnaire && session.postQuestionnaire) {
-        const pre = session.preQuestionnaire;
-        const post = session.postQuestionnaire;
-        
-        analysis.expectedAccuracy.push(pre.aiAccuracyExpectation);
-        analysis.perceivedAccuracy.push(post.systemAccuracy);
-        
-        // Calculate accuracy gap (expected vs perceived)
-        const expectedMidpoint = this.getAccuracyMidpoint(pre.aiAccuracyExpectation);
-        analysis.accuracyGap.push(post.systemAccuracy - expectedMidpoint);
-        
-        // Confidence correlation
-        const confidence = parseInt(pre.factOpinionConfidence);
-        analysis.confidenceCorrelation.push({
-          confidence,
-          perceived: post.systemAccuracy
-        });
-      }
-    });
-
-    return analysis;
-  }
-
-  /**
-   * Research Question 2: What interface strategies best preserve user agency and support learning?
-   */
-  static analyzeInterfaceStrategies(sessions: SessionData[]) {
-    const analysis = {
-      userAgencyRatings: [] as string[],
-      automationBalance: [] as string[],
-      usabilityScores: [] as number[],
-      learningMechanisms: {} as Record<string, number>,
-      agencyVsUsability: [] as { agency: number; usability: number }[]
+      mentalDemandScores: [] as number[],
+      effortScores: [] as number[],
+      frustrationScores: [] as number[],
+      averageTLX: 0,
+      taskLoadByUser: [] as { sessionId: string; mentalDemand: number; effort: number; frustration: number; average: number }[]
     };
 
     sessions.forEach(session => {
       if (session.postQuestionnaire) {
         const post = session.postQuestionnaire;
         
-        analysis.userAgencyRatings.push(post.userAgency);
-        analysis.automationBalance.push(post.automationBalance);
-        analysis.usabilityScores.push(post.interfaceUsability);
+        analysis.mentalDemandScores.push(post.mentalDemand);
+        analysis.effortScores.push(post.effortRequired);
+        analysis.frustrationScores.push(post.frustrationLevel);
         
-        // Count learning mechanisms
-        if (post.learningMechanisms && Array.isArray(post.learningMechanisms)) {
-          post.learningMechanisms.forEach(mechanism => {
-            analysis.learningMechanisms[mechanism] = (analysis.learningMechanisms[mechanism] || 0) + 1;
+        const avgTLX = (post.mentalDemand + post.effortRequired + post.frustrationLevel) / 3;
+        analysis.taskLoadByUser.push({
+          sessionId: session.sessionId,
+          mentalDemand: post.mentalDemand,
+          effort: post.effortRequired,
+          frustration: post.frustrationLevel,
+          average: avgTLX
+        });
+      }
+    });
+
+    if (analysis.mentalDemandScores.length > 0) {
+      const totalTLX = analysis.taskLoadByUser.reduce((sum, user) => sum + user.average, 0);
+      analysis.averageTLX = totalTLX / analysis.taskLoadByUser.length;
+    }
+
+    return analysis;
+  }
+
+  /**
+   * System Clarity Analysis: Fact-opinion clarity across UI designs and outlets
+   */
+  static analyzeSystemClarity(sessions: SessionData[]) {
+    const analysis = {
+      clarityScores: [] as number[],
+      controlScores: [] as number[],
+      sourceInfluenceScores: [] as number[],
+      explanationHelpfulnessScores: [] as number[],
+      averageClarity: 0,
+      clarityDistribution: {} as Record<number, number>
+    };
+
+    sessions.forEach(session => {
+      if (session.postQuestionnaire) {
+        const post = session.postQuestionnaire;
+        
+        analysis.clarityScores.push(post.factOpinionClarity);
+        analysis.controlScores.push(post.controlLevel);
+        analysis.sourceInfluenceScores.push(post.sourceInfluence);
+        analysis.explanationHelpfulnessScores.push(post.explanationHelpfulness);
+        
+        // Count clarity distribution
+        analysis.clarityDistribution[post.factOpinionClarity] = 
+          (analysis.clarityDistribution[post.factOpinionClarity] || 0) + 1;
+      }
+    });
+
+    if (analysis.clarityScores.length > 0) {
+      analysis.averageClarity = analysis.clarityScores.reduce((a, b) => a + b, 0) / analysis.clarityScores.length;
+    }
+
+    return analysis;
+  }
+
+  /**
+   * Trust Analysis: How source labels influence trust
+   */
+  static analyzeTrustFactors(sessions: SessionData[]) {
+    const analysis = {
+      trustedOutlets: {} as Record<string, number>,
+      biasPerceptions: { yes: 0, no: 0 },
+      sourceInfluenceOnTrust: [] as number[],
+      trustVsInfluence: [] as { trusted: string[]; influence: number }[]
+    };
+
+    sessions.forEach(session => {
+      if (session.preQuestionnaire) {
+        const pre = session.preQuestionnaire;
+        
+        // Count trusted outlets
+        if (pre.trustedOutlets && Array.isArray(pre.trustedOutlets)) {
+          pre.trustedOutlets.forEach(outlet => {
+            analysis.trustedOutlets[outlet] = (analysis.trustedOutlets[outlet] || 0) + 1;
           });
         }
         
-        // Agency vs Usability correlation
-        const agencyScore = this.convertAgencyToScore(post.userAgency);
-        analysis.agencyVsUsability.push({
-          agency: agencyScore,
-          usability: post.interfaceUsability
-        });
-      }
-    });
-
-    return analysis;
-  }
-
-  /**
-   * Research Question 3: Does AI assistance improve independent bias detection over time?
-   */
-  static analyzeBiasDetectionImprovement(sessions: SessionData[]) {
-    const analysis = {
-      skillImprovementRatings: [] as string[],
-      confidenceChanges: [] as string[],
-      independentDetectionChanges: [] as string[],
-      prePostConfidenceComparison: [] as { pre: number; post: string }[],
-      improvementByExperience: {} as Record<string, string[]>
-    };
-
-    sessions.forEach(session => {
-      if (session.preQuestionnaire && session.postQuestionnaire) {
-        const pre = session.preQuestionnaire;
-        const post = session.postQuestionnaire;
-        
-        analysis.skillImprovementRatings.push(post.skillImprovement);
-        analysis.confidenceChanges.push(post.confidenceChange);
-        analysis.independentDetectionChanges.push(post.independentDetection);
-        
-        // Pre-post confidence comparison
-        const preConfidence = parseInt(pre.factOpinionConfidence);
-        analysis.prePostConfidenceComparison.push({
-          pre: preConfidence,
-          post: post.confidenceChange
-        });
-        
-        // Improvement by AI experience
-        const aiExp = pre.aiExperience;
-        if (!analysis.improvementByExperience[aiExp]) {
-          analysis.improvementByExperience[aiExp] = [];
+        // Count bias perceptions
+        if (pre.outletsBiased === 'yes') {
+          analysis.biasPerceptions.yes++;
+        } else {
+          analysis.biasPerceptions.no++;
         }
-        analysis.improvementByExperience[aiExp].push(post.skillImprovement);
+      }
+      
+      if (session.postQuestionnaire) {
+        const post = session.postQuestionnaire;
+        analysis.sourceInfluenceOnTrust.push(post.sourceInfluence);
+        
+        if (session.preQuestionnaire) {
+          analysis.trustVsInfluence.push({
+            trusted: session.preQuestionnaire.trustedOutlets || [],
+            influence: post.sourceInfluence
+          });
+        }
       }
     });
 
@@ -191,29 +188,31 @@ export class QuestionnaireAnalyzer {
   }
 
   /**
-   * Research Question 4: How does the model affect user behavior compared to traditional media literacy?
+   * Feature Effectiveness Analysis: Most helpful features
    */
-  static analyzeBehavioralChanges(sessions: SessionData[]) {
+  static analyzeFeatureEffectiveness(sessions: SessionData[]) {
     const analysis = {
-      verificationChanges: [] as string[],
-      mediaApproachChanges: [] as string[],
-      toolAdoptionIntention: [] as string[],
-      traditionalVsAI: [] as { traditional: string; aiAdoption: string }[]
+      featureFrequency: {} as Record<string, number>,
+      explanationHelpfulness: [] as number[],
+      featureVsClarity: [] as { features: string[]; clarity: number }[]
     };
 
     sessions.forEach(session => {
-      if (session.preQuestionnaire && session.postQuestionnaire) {
-        const pre = session.preQuestionnaire;
+      if (session.postQuestionnaire) {
         const post = session.postQuestionnaire;
         
-        analysis.verificationChanges.push(post.futureVerification);
-        analysis.mediaApproachChanges.push(post.mediaApproach);
-        analysis.toolAdoptionIntention.push(post.toolAdoption);
+        // Count feature frequency
+        if (post.mostHelpfulFeature && Array.isArray(post.mostHelpfulFeature)) {
+          post.mostHelpfulFeature.forEach(feature => {
+            analysis.featureFrequency[feature] = (analysis.featureFrequency[feature] || 0) + 1;
+          });
+        }
         
-        // Traditional vs AI comparison
-        analysis.traditionalVsAI.push({
-          traditional: pre.factChecking,
-          aiAdoption: post.toolAdoption
+        analysis.explanationHelpfulness.push(post.explanationHelpfulness);
+        
+        analysis.featureVsClarity.push({
+          features: post.mostHelpfulFeature || [],
+          clarity: post.factOpinionClarity
         });
       }
     });
@@ -222,14 +221,16 @@ export class QuestionnaireAnalyzer {
   }
 
   /**
-   * Research Question 5: What balance of automation and human judgment is optimal?
+   * User Experience Analysis: Pre vs post confidence changes
    */
-  static analyzeAutomationBalance(sessions: SessionData[]) {
+  static analyzeUserExperience(sessions: SessionData[]) {
     const analysis = {
-      preferredAutomation: [] as string[],
-      experiencedBalance: [] as string[],
-      satisfactionByBalance: {} as Record<string, number[]>,
-      optimalBalanceIndicators: [] as { preferred: string; experienced: string; satisfaction: number }[]
+      preConfidence: [] as number[],
+      postClarity: [] as number[],
+      confidenceChanges: [] as { pre: number; post: number; change: number }[],
+      newsFamiliarity: [] as number[],
+      aiFamiliarity: [] as number[],
+      experienceByTech: {} as Record<string, { clarity: number[]; control: number[] }>
     };
 
     sessions.forEach(session => {
@@ -237,22 +238,24 @@ export class QuestionnaireAnalyzer {
         const pre = session.preQuestionnaire;
         const post = session.postQuestionnaire;
         
-        analysis.preferredAutomation.push(pre.automationPreference);
-        analysis.experiencedBalance.push(post.automationBalance);
+        analysis.preConfidence.push(pre.factOpinionConfidence);
+        analysis.postClarity.push(post.factOpinionClarity);
+        analysis.newsFamiliarity.push(pre.newsFamiliarity);
+        analysis.aiFamiliarity.push(pre.aiFamiliarityTools);
         
-        // Satisfaction by balance
-        const balance = post.automationBalance;
-        if (!analysis.satisfactionByBalance[balance]) {
-          analysis.satisfactionByBalance[balance] = [];
-        }
-        analysis.satisfactionByBalance[balance].push(post.overallSatisfaction);
-        
-        // Optimal balance indicators
-        analysis.optimalBalanceIndicators.push({
-          preferred: pre.automationPreference,
-          experienced: post.automationBalance,
-          satisfaction: post.overallSatisfaction
+        const change = post.factOpinionClarity - pre.factOpinionConfidence;
+        analysis.confidenceChanges.push({
+          pre: pre.factOpinionConfidence,
+          post: post.factOpinionClarity,
+          change: change
         });
+        
+        // Group by tech experience
+        if (!analysis.experienceByTech[pre.techExperience]) {
+          analysis.experienceByTech[pre.techExperience] = { clarity: [], control: [] };
+        }
+        analysis.experienceByTech[pre.techExperience].clarity.push(post.factOpinionClarity);
+        analysis.experienceByTech[pre.techExperience].control.push(post.controlLevel);
       }
     });
 
@@ -260,58 +263,81 @@ export class QuestionnaireAnalyzer {
   }
 
   /**
-   * Research Question 6: How do individual differences affect utility and adoption?
+   * Content Gap Analysis: Missed facts and information
    */
-  static analyzeIndividualDifferences(sessions: SessionData[]) {
+  static analyzeContentGaps(sessions: SessionData[]) {
     const analysis = {
-      demographicSegments: {} as Record<string, any>,
-      adoptionByDemographics: {} as Record<string, string[]>,
-      satisfactionByExperience: {} as Record<string, number[]>,
-      utilityFactors: [] as { age: string; education: string; techExp: string; satisfaction: number; adoption: string }[]
+      missedFactsScores: [] as number[],
+      averageMissedFacts: 0,
+      issuesReported: [] as string[],
+      gapsByOutlet: {} as Record<string, number[]>,
+      qualitativeGaps: [] as string[]
     };
 
     sessions.forEach(session => {
-      if (session.preQuestionnaire && session.postQuestionnaire) {
-        const pre = session.preQuestionnaire;
+      if (session.postQuestionnaire) {
         const post = session.postQuestionnaire;
         
-        // Demographic segments
-        const segment = `${pre.age}_${pre.education}_${pre.techExperience}`;
-        if (!analysis.demographicSegments[segment]) {
-          analysis.demographicSegments[segment] = {
-            count: 0,
-            satisfaction: [],
-            adoption: []
-          };
-        }
-        analysis.demographicSegments[segment].count++;
-        analysis.demographicSegments[segment].satisfaction.push(post.overallSatisfaction);
-        analysis.demographicSegments[segment].adoption.push(post.toolAdoption);
+        analysis.missedFactsScores.push(post.missedFacts);
         
-        // Adoption by demographics
-        ['age', 'education', 'techExperience', 'aiExperience'].forEach(demo => {
-          const key = pre[demo as keyof PreQuestionnaireData] as string;
-          if (!analysis.adoptionByDemographics[key]) {
-            analysis.adoptionByDemographics[key] = [];
+        if (post.issuesEncountered && post.issuesEncountered.toLowerCase() !== 'none') {
+          analysis.issuesReported.push(post.issuesEncountered);
+        }
+        
+        if (post.missedFactsSpecify) {
+          analysis.qualitativeGaps.push(post.missedFactsSpecify);
+        }
+      }
+    });
+
+    if (analysis.missedFactsScores.length > 0) {
+      analysis.averageMissedFacts = analysis.missedFactsScores.reduce((a, b) => a + b, 0) / analysis.missedFactsScores.length;
+    }
+
+    return analysis;
+  }
+
+  /**
+   * Demographics Analysis: Performance by user characteristics
+   */
+  static analyzeDemographics(sessions: SessionData[]) {
+    const analysis = {
+      ageDistribution: {} as Record<string, number>,
+      professionDistribution: {} as Record<string, number>,
+      techExperienceDistribution: {} as Record<string, number>,
+      newsFrequencyDistribution: {} as Record<string, number>,
+      performanceByAge: {} as Record<string, { clarity: number[]; control: number[] }>,
+      performanceByTech: {} as Record<string, { clarity: number[]; control: number[] }>
+    };
+
+    sessions.forEach(session => {
+      if (session.preQuestionnaire) {
+        const pre = session.preQuestionnaire;
+        
+        // Count distributions
+        analysis.ageDistribution[pre.age] = (analysis.ageDistribution[pre.age] || 0) + 1;
+        analysis.professionDistribution[pre.profession] = (analysis.professionDistribution[pre.profession] || 0) + 1;
+        analysis.techExperienceDistribution[pre.techExperience] = (analysis.techExperienceDistribution[pre.techExperience] || 0) + 1;
+        analysis.newsFrequencyDistribution[pre.newsFrequency] = (analysis.newsFrequencyDistribution[pre.newsFrequency] || 0) + 1;
+        
+        if (session.postQuestionnaire) {
+          const post = session.postQuestionnaire;
+          
+          // Performance by age groups
+          const ageGroup = this.getAgeGroup(pre.age);
+          if (!analysis.performanceByAge[ageGroup]) {
+            analysis.performanceByAge[ageGroup] = { clarity: [], control: [] };
           }
-          analysis.adoptionByDemographics[key].push(post.toolAdoption);
-        });
-        
-        // Satisfaction by experience
-        const techExp = pre.techExperience;
-        if (!analysis.satisfactionByExperience[techExp]) {
-          analysis.satisfactionByExperience[techExp] = [];
+          analysis.performanceByAge[ageGroup].clarity.push(post.factOpinionClarity);
+          analysis.performanceByAge[ageGroup].control.push(post.controlLevel);
+          
+          // Performance by tech experience
+          if (!analysis.performanceByTech[pre.techExperience]) {
+            analysis.performanceByTech[pre.techExperience] = { clarity: [], control: [] };
+          }
+          analysis.performanceByTech[pre.techExperience].clarity.push(post.factOpinionClarity);
+          analysis.performanceByTech[pre.techExperience].control.push(post.controlLevel);
         }
-        analysis.satisfactionByExperience[techExp].push(post.overallSatisfaction);
-        
-        // Utility factors
-        analysis.utilityFactors.push({
-          age: pre.age,
-          education: pre.education,
-          techExp: pre.techExperience,
-          satisfaction: post.overallSatisfaction,
-          adoption: post.toolAdoption
-        });
       }
     });
 
@@ -319,35 +345,24 @@ export class QuestionnaireAnalyzer {
   }
 
   // Helper functions
-  private static getAccuracyMidpoint(range: string): number {
-    const midpoints: Record<string, number> = {
-      '90-100': 95,
-      '70-89': 79.5,
-      '50-69': 59.5,
-      '30-49': 39.5,
-      'below-30': 15
-    };
-    return midpoints[range] || 50;
-  }
-
-  private static convertAgencyToScore(agency: string): number {
-    const scores: Record<string, number> = {
-      'complete-control': 10,
-      'mostly-control': 8,
-      'some-control': 6,
-      'little-control': 4,
-      'no-control': 2
-    };
-    return scores[agency] || 5;
+  private static getAgeGroup(age: string): string {
+    const ageNum = parseInt(age);
+    if (ageNum < 25) return '18-24';
+    if (ageNum < 35) return '25-34';
+    if (ageNum < 45) return '35-44';
+    if (ageNum < 55) return '45-54';
+    if (ageNum < 65) return '55-64';
+    return '65+';
   }
 
   // Data export functions
   static exportToCSV(sessions: SessionData[]): string {
     const headers = [
-      'sessionId', 'age', 'education', 'techExperience', 'aiExperience',
-      'factOpinionConfidence', 'biasAwareness', 'aiTrust', 'aiAccuracyExpectation',
-      'systemAccuracy', 'systemHelpfulness', 'skillImprovement', 'toolAdoption',
-      'overallSatisfaction'
+      'sessionId', 'newsFamiliarity', 'newsFrequency', 'factOpinionConfidence', 'trustedOutlets',
+      'outletsBiased', 'aiFamiliarityTools', 'headlineReliance', 'crossCheckFrequency',
+      'techExperience', 'age', 'profession', 'mentalDemand', 'effortRequired', 'frustrationLevel',
+      'factOpinionClarity', 'controlLevel', 'sourceInfluence', 'explanationHelpfulness',
+      'mostHelpfulFeature', 'issuesEncountered', 'missedFacts', 'additionalComments'
     ];
 
     const rows = sessions.map(session => {
@@ -356,19 +371,28 @@ export class QuestionnaireAnalyzer {
       
       return [
         session.sessionId,
-        pre?.age || '',
-        pre?.education || '',
-        pre?.techExperience || '',
-        pre?.aiExperience || '',
+        pre?.newsFamiliarity || '',
+        pre?.newsFrequency || '',
         pre?.factOpinionConfidence || '',
-        pre?.biasAwareness || '',
-        pre?.aiTrust || '',
-        pre?.aiAccuracyExpectation || '',
-        post?.systemAccuracy || '',
-        post?.systemHelpfulness || '',
-        post?.skillImprovement || '',
-        post?.toolAdoption || '',
-        post?.overallSatisfaction || ''
+        Array.isArray(pre?.trustedOutlets) ? pre.trustedOutlets.join(';') : (pre?.trustedOutlets || ''),
+        pre?.outletsBiased || '',
+        pre?.aiFamiliarityTools || '',
+        pre?.headlineReliance || '',
+        pre?.crossCheckFrequency || '',
+        pre?.techExperience || '',
+        pre?.age || '',
+        pre?.profession || '',
+        post?.mentalDemand || '',
+        post?.effortRequired || '',
+        post?.frustrationLevel || '',
+        post?.factOpinionClarity || '',
+        post?.controlLevel || '',
+        post?.sourceInfluence || '',
+        post?.explanationHelpfulness || '',
+        Array.isArray(post?.mostHelpfulFeature) ? post.mostHelpfulFeature.join(';') : (post?.mostHelpfulFeature || ''),
+        post?.issuesEncountered || '',
+        post?.missedFacts || '',
+        post?.additionalComments || ''
       ].join(',');
     });
 

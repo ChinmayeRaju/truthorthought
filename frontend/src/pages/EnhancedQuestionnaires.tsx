@@ -1,63 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Form,
   Button,
-  Row,
-  Col,
+  Steps,
   Typography,
+  Space,
   Radio,
   Checkbox,
-  message,
-  Steps,
-  Space,
-  Divider,
   Slider,
-  Input
+  Input,
+  message,
+  Row,
+  Col
 } from 'antd';
-import { 
-  ExperimentOutlined, 
-  UserOutlined, 
-  QuestionCircleOutlined,
-  RocketOutlined,
-  BulbOutlined,
-  CheckCircleOutlined,
+import {
+  UserOutlined,
+  ExperimentOutlined,
   BarChartOutlined,
-  TeamOutlined
+  BulbOutlined
 } from '@ant-design/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppLayout from '../components/AppLayout';
 
-const { Title, Paragraph, Text } = Typography;
-const { Step } = Steps;
+const { Title, Text } = Typography;
 const { TextArea } = Input;
 
-interface EnhancedQuestionnairesProps {
-  questionnaireType?: 'pre' | 'post';
-}
-
-const EnhancedQuestionnaires: React.FC<EnhancedQuestionnairesProps> = ({ questionnaireType = 'pre' }) => {
-  const [currentStep, setCurrentStep] = useState(0);
+const EnhancedQuestionnaires: React.FC = () => {
   const [form] = Form.useForm();
+  const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
-  const isPostQuestionnaire = questionnaireType === 'post' || searchParams.get('type') === 'post';
   const sessionId = searchParams.get('sessionId');
-
-  const handleNext = async () => {
-    try {
-      await form.validateFields();
-      setCurrentStep(currentStep + 1);
-    } catch (error) {
-      console.log('Validation failed:', error);
-    }
-  };
-
-  const handlePrevious = () => {
-    setCurrentStep(currentStep - 1);
-  };
+  const isPostQuestionnaire = searchParams.get('type') === 'post';
 
   const handleSubmit = async () => {
     try {
@@ -105,9 +82,9 @@ const EnhancedQuestionnaires: React.FC<EnhancedQuestionnairesProps> = ({ questio
         message.success('Post-study questionnaire completed! Thank you for your participation.');
         setTimeout(() => {
           navigate('/');
-        }, 2000);
+        }, 1500);
       } else {
-        message.success('Pre-study questionnaire completed! Redirecting to analysis...');
+        message.success('Pre-study questionnaire completed! Redirecting to the analysis tool...');
         setTimeout(() => {
           navigate(`/analysis?sessionId=${currentSessionId}&fromQuestionnaire=true`);
         }, 1500);
@@ -121,48 +98,211 @@ const EnhancedQuestionnaires: React.FC<EnhancedQuestionnairesProps> = ({ questio
     }
   };
 
-  // Pre-questionnaire steps
+  // Pre-experiment questionnaire steps
   const preQuestionnaireSteps = [
     {
-      title: 'Demographics',
+      title: 'News Familiarity',
       icon: <UserOutlined />,
       content: (
         <Space direction="vertical" style={{ width: '100%' }} size="large">
-          <Title level={4}>Tell us about yourself</Title>
+          <Title level={4}>Your News Reading Habits</Title>
           
           <Form.Item
-            name="age"
-            label="Age Group"
-            rules={[{ required: true, message: 'Please select your age group' }]}
+            name="newsFamiliarity"
+            label="How familiar are you with online news sources like BBC, CNN, Guardian?"
+            rules={[{ required: true, message: 'Please rate your familiarity' }]}
+            initialValue={3}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Not familiar',
+                  2: 'Slightly familiar',
+                  3: 'Moderately familiar',
+                  4: 'Very familiar',
+                  5: 'Extremely familiar'
+                }}
+                step={1}
+                defaultValue={3}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="newsFrequency"
+            label="How often do you read online news?"
+            rules={[{ required: true, message: 'Please select an option' }]}
           >
             <Radio.Group>
-              <Radio value="18-24">18-24</Radio>
-              <Radio value="25-34">25-34</Radio>
-              <Radio value="35-44">35-44</Radio>
-              <Radio value="45-54">45-54</Radio>
-              <Radio value="55-64">55-64</Radio>
-              <Radio value="65+">65+</Radio>
+              <Radio value="daily">Daily</Radio>
+              <Radio value="weekly">Weekly</Radio>
+              <Radio value="monthly">Monthly</Radio>
+              <Radio value="rarely">Rarely</Radio>
             </Radio.Group>
           </Form.Item>
 
           <Form.Item
-            name="education"
-            label="Highest Education Level"
-            rules={[{ required: true, message: 'Please select your education level' }]}
+            name="factOpinionConfidence"
+            label="How confident are you in distinguishing facts from opinions in news articles?"
+            rules={[{ required: true, message: 'Please rate your confidence' }]}
+            initialValue={3}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Not confident',
+                  2: 'Slightly confident',
+                  3: 'Moderately confident',
+                  4: 'Very confident',
+                  5: 'Extremely confident'
+                }}
+                step={1}
+                defaultValue={3}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+        </Space>
+      ),
+    },
+    {
+      title: 'Trust & Bias',
+      icon: <ExperimentOutlined />,
+      content: (
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Title level={4}>Your Trust in News Sources</Title>
+          
+          <Form.Item
+            name="trustedOutlets"
+            label="Which outlets do you trust the most?"
+            rules={[{ required: true, message: 'Please select at least one option' }]}
+          >
+            <Checkbox.Group>
+              <Checkbox value="bbc">BBC</Checkbox>
+              <Checkbox value="cnn">CNN</Checkbox>
+              <Checkbox value="guardian">Guardian</Checkbox>
+              <Checkbox value="other">Other</Checkbox>
+            </Checkbox.Group>
+          </Form.Item>
+
+          <Form.Item
+            name="outletsBiased"
+            label="Do you feel certain outlets are more biased than others?"
+            rules={[{ required: true, message: 'Please select an option' }]}
           >
             <Radio.Group>
-              <Radio value="high-school">High School</Radio>
-              <Radio value="some-college">Some College</Radio>
-              <Radio value="bachelors">Bachelor's Degree</Radio>
-              <Radio value="masters">Master's Degree</Radio>
-              <Radio value="doctorate">Doctorate</Radio>
+              <Radio value="yes">Yes</Radio>
+              <Radio value="no">No</Radio>
             </Radio.Group>
           </Form.Item>
 
+          <Form.Item
+            name="biasedOutletsSpecify"
+            label="If yes, which outlets do you consider biased?"
+            dependencies={['outletsBiased']}
+          >
+            <TextArea rows={2} placeholder="Specify which outlets and why..." />
+          </Form.Item>
+
+          <Form.Item
+            name="aiFamiliarityTools"
+            label="How familiar are you with AI-assisted fact/opinion tools?"
+            rules={[{ required: true, message: 'Please rate your familiarity' }]}
+            initialValue={3}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Not familiar',
+                  2: 'Slightly familiar',
+                  3: 'Moderately familiar',
+                  4: 'Very familiar',
+                  5: 'Extremely familiar'
+                }}
+                step={1}
+                defaultValue={3}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+        </Space>
+      ),
+    },
+    {
+      title: 'Reading Habits',
+      icon: <BarChartOutlined />,
+      content: (
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Title level={4}>How You Process News</Title>
+          
+          <Form.Item
+            name="headlineReliance"
+            label="How much do you rely on headlines to judge whether something is fact or opinion?"
+            rules={[{ required: true, message: 'Please rate your reliance' }]}
+            initialValue={3}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Not at all',
+                  2: 'Slightly',
+                  3: 'Moderately',
+                  4: 'Very much',
+                  5: 'Completely'
+                }}
+                step={1}
+                defaultValue={3}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="crossCheckFrequency"
+            label="How often do you cross-check news statements with other sources?"
+            rules={[{ required: true, message: 'Please rate your frequency' }]}
+            initialValue={3}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Never',
+                  2: 'Rarely',
+                  3: 'Sometimes',
+                  4: 'Often',
+                  5: 'Always'
+                }}
+                step={1}
+                defaultValue={3}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+        </Space>
+      ),
+    },
+    {
+      title: 'Demographics',
+      icon: <BulbOutlined />,
+      content: (
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Title level={4}>About You</Title>
+          
           <Form.Item
             name="techExperience"
-            label="How would you rate your experience with technology?"
-            rules={[{ required: true, message: 'Please rate your tech experience' }]}
+            label="How do you rate your experience with technology?"
+            rules={[{ required: true, message: 'Please select your experience level' }]}
           >
             <Radio.Group>
               <Radio value="beginner">Beginner</Radio>
@@ -173,565 +313,297 @@ const EnhancedQuestionnaires: React.FC<EnhancedQuestionnairesProps> = ({ questio
           </Form.Item>
 
           <Form.Item
-            name="aiExperience"
-            label="How familiar are you with AI/machine learning tools?"
-            rules={[{ required: true, message: 'Please select your AI experience level' }]}
+            name="age"
+            label="Age"
+            rules={[{ required: true, message: 'Please enter your age' }]}
           >
-            <Radio.Group>
-              <Radio value="never-used">Never used</Radio>
-              <Radio value="basic-awareness">Basic awareness</Radio>
-              <Radio value="occasional-use">Occasional use</Radio>
-              <Radio value="regular-use">Regular use</Radio>
-              <Radio value="professional-use">Professional use</Radio>
-            </Radio.Group>
-          </Form.Item>
-        </Space>
-      ),
-    },
-    {
-      title: 'Media Habits',
-      icon: <QuestionCircleOutlined />,
-      content: (
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
-          <Title level={4}>Your media consumption habits</Title>
-          
-          <Form.Item
-            name="mediaConsumption"
-            label="Primary News Sources (select all that apply)"
-            rules={[{ required: true, message: 'Please select at least one news source' }]}
-          >
-            <Checkbox.Group>
-              <Row>
-                <Col span={8}><Checkbox value="tv">Television</Checkbox></Col>
-                <Col span={8}><Checkbox value="online">Online News Sites</Checkbox></Col>
-                <Col span={8}><Checkbox value="social">Social Media</Checkbox></Col>
-                <Col span={8}><Checkbox value="newspapers">Newspapers</Checkbox></Col>
-                <Col span={8}><Checkbox value="radio">Radio</Checkbox></Col>
-                <Col span={8}><Checkbox value="podcasts">Podcasts</Checkbox></Col>
-              </Row>
-            </Checkbox.Group>
+            <Input placeholder="Enter your age" type="number" />
           </Form.Item>
 
           <Form.Item
-            name="newsFrequency"
-            label="How often do you consume news?"
-            rules={[{ required: true, message: 'Please select news consumption frequency' }]}
+            name="profession"
+            label="Profession"
+            rules={[{ required: true, message: 'Please enter your profession' }]}
           >
-            <Radio.Group>
-              <Radio value="multiple-daily">Multiple times daily</Radio>
-              <Radio value="daily">Once daily</Radio>
-              <Radio value="few-weekly">Few times a week</Radio>
-              <Radio value="weekly">Weekly</Radio>
-              <Radio value="rarely">Rarely</Radio>
-            </Radio.Group>
-          </Form.Item>
-
-          <Form.Item
-            name="sourceVerification"
-            label="How often do you verify information from multiple sources?"
-            rules={[{ required: true, message: 'Please select an option' }]}
-          >
-            <Radio.Group>
-              <Radio value="always">Always</Radio>
-              <Radio value="often">Often</Radio>
-              <Radio value="sometimes">Sometimes</Radio>
-              <Radio value="rarely">Rarely</Radio>
-              <Radio value="never">Never</Radio>
-            </Radio.Group>
-          </Form.Item>
-
-          <Form.Item
-            name="factChecking"
-            label="Do you use fact-checking websites?"
-            rules={[{ required: true, message: 'Please select an option' }]}
-          >
-            <Radio.Group>
-              <Radio value="regularly">Regularly</Radio>
-              <Radio value="occasionally">Occasionally</Radio>
-              <Radio value="rarely">Rarely</Radio>
-              <Radio value="never">Never</Radio>
-              <Radio value="unaware">Unaware of them</Radio>
-            </Radio.Group>
-          </Form.Item>
-        </Space>
-      ),
-    },
-    {
-      title: 'Bias Detection Skills',
-      icon: <BulbOutlined />,
-      content: (
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
-          <Title level={4}>Your current bias detection abilities</Title>
-          
-          <Form.Item
-            name="factOpinionConfidence"
-            label="How confident are you in distinguishing facts from opinions in news?"
-            rules={[{ required: true, message: 'Please rate your confidence' }]}
-          >
-            <div>
-              <Slider
-                min={1}
-                max={10}
-                marks={{
-                  1: 'Not confident at all',
-                  5: 'Moderately confident',
-                  10: 'Extremely confident'
-                }}
-                style={{ marginBottom: 20 }}
-              />
-              <Radio.Group>
-                <Radio value="1">1</Radio>
-                <Radio value="2">2</Radio>
-                <Radio value="3">3</Radio>
-                <Radio value="4">4</Radio>
-                <Radio value="5">5</Radio>
-                <Radio value="6">6</Radio>
-                <Radio value="7">7</Radio>
-                <Radio value="8">8</Radio>
-                <Radio value="9">9</Radio>
-                <Radio value="10">10</Radio>
-              </Radio.Group>
-            </div>
-          </Form.Item>
-
-          <Form.Item
-            name="biasAwareness"
-            label="How confident are you in identifying media bias?"
-            rules={[{ required: true, message: 'Please rate your confidence' }]}
-          >
-            <Radio.Group>
-              <Radio value="very-confident">Very confident</Radio>
-              <Radio value="confident">Confident</Radio>
-              <Radio value="somewhat-confident">Somewhat confident</Radio>
-              <Radio value="not-confident">Not confident</Radio>
-              <Radio value="no-idea">No idea</Radio>
-            </Radio.Group>
-          </Form.Item>
-
-          <Form.Item
-            name="biasTypes"
-            label="Which types of bias can you identify? (select all that apply)"
-            rules={[{ required: true, message: 'Please select at least one' }]}
-          >
-            <Checkbox.Group>
-              <Row>
-                <Col span={12}><Checkbox value="confirmation">Confirmation bias</Checkbox></Col>
-                <Col span={12}><Checkbox value="selection">Selection bias</Checkbox></Col>
-                <Col span={12}><Checkbox value="framing">Framing bias</Checkbox></Col>
-                <Col span={12}><Checkbox value="political">Political bias</Checkbox></Col>
-                <Col span={12}><Checkbox value="emotional">Emotional bias</Checkbox></Col>
-                <Col span={12}><Checkbox value="commercial">Commercial bias</Checkbox></Col>
-                <Col span={12}><Checkbox value="cultural">Cultural bias</Checkbox></Col>
-                <Col span={12}><Checkbox value="unsure">Not sure</Checkbox></Col>
-              </Row>
-            </Checkbox.Group>
-          </Form.Item>
-
-          <Form.Item
-            name="mediaSkepticism"
-            label="How skeptical are you of mainstream media reporting?"
-            rules={[{ required: true, message: 'Please select an option' }]}
-          >
-            <Radio.Group>
-              <Radio value="very-skeptical">Very skeptical</Radio>
-              <Radio value="skeptical">Skeptical</Radio>
-              <Radio value="neutral">Neutral</Radio>
-              <Radio value="trusting">Generally trusting</Radio>
-              <Radio value="very-trusting">Very trusting</Radio>
-            </Radio.Group>
-          </Form.Item>
-        </Space>
-      ),
-    },
-    {
-      title: 'AI Perceptions',
-      icon: <ExperimentOutlined />,
-      content: (
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
-          <Title level={4}>Your thoughts on AI assistance</Title>
-          
-          <Form.Item
-            name="aiTrust"
-            label="How much do you trust AI systems for analyzing news content?"
-            rules={[{ required: true, message: 'Please select an option' }]}
-          >
-            <Radio.Group>
-              <Radio value="completely">Completely trust</Radio>
-              <Radio value="mostly">Mostly trust</Radio>
-              <Radio value="somewhat">Somewhat trust</Radio>
-              <Radio value="little">Little trust</Radio>
-              <Radio value="no-trust">No trust at all</Radio>
-            </Radio.Group>
-          </Form.Item>
-
-          <Form.Item
-            name="aiAccuracyExpectation"
-            label="How accurate do you expect AI to be at distinguishing facts from opinions?"
-            rules={[{ required: true, message: 'Please rate expected accuracy' }]}
-          >
-            <Radio.Group>
-              <Radio value="90-100">90-100% accurate</Radio>
-              <Radio value="70-89">70-89% accurate</Radio>
-              <Radio value="50-69">50-69% accurate</Radio>
-              <Radio value="30-49">30-49% accurate</Radio>
-              <Radio value="below-30">Below 30% accurate</Radio>
-            </Radio.Group>
-          </Form.Item>
-
-          <Form.Item
-            name="automationPreference"
-            label="How much automation would you prefer in bias detection?"
-            rules={[{ required: true, message: 'Please select your preference' }]}
-          >
-            <Radio.Group>
-              <Radio value="full-automation">Full automation - AI decides everything</Radio>
-              <Radio value="ai-suggestions">AI suggestions with human final decision</Radio>
-              <Radio value="balanced">Balanced AI-human collaboration</Radio>
-              <Radio value="human-primary">Human primary with AI assistance</Radio>
-              <Radio value="minimal-ai">Minimal AI, mostly human judgment</Radio>
-            </Radio.Group>
-          </Form.Item>
-
-          <Form.Item
-            name="learningExpectation"
-            label="Do you expect using AI tools will improve your own bias detection skills?"
-            rules={[{ required: true, message: 'Please select an option' }]}
-          >
-            <Radio.Group>
-              <Radio value="definitely">Definitely will improve</Radio>
-              <Radio value="probably">Probably will improve</Radio>
-              <Radio value="maybe">Maybe will improve</Radio>
-              <Radio value="probably-not">Probably won't improve</Radio>
-              <Radio value="definitely-not">Definitely won't improve</Radio>
-            </Radio.Group>
+            <Input placeholder="Enter your profession" />
           </Form.Item>
         </Space>
       ),
     },
   ];
 
-  // Post-questionnaire steps
+  // Post-experiment questionnaire steps
   const postQuestionnaireSteps = [
     {
-      title: 'System Evaluation',
+      title: 'Task Difficulty',
+      icon: <ExperimentOutlined />,
+      content: (
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Title level={4}>Task Experience (NASA-TLX)</Title>
+          
+          <Form.Item
+            name="mentalDemand"
+            label="How mentally demanding was the task?"
+            rules={[{ required: true, message: 'Please rate the mental demand' }]}
+            initialValue={50}
+          >
+            <div>
+              <Slider
+                min={0}
+                max={100}
+                marks={{
+                  0: 'Very Low',
+                  25: 'Low',
+                  50: 'Medium',
+                  75: 'High',
+                  100: 'Very High'
+                }}
+                step={1}
+                defaultValue={50}
+                tooltip={{ formatter: (value) => `${value}/100` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="effortRequired"
+            label="How much effort did you need to classify statements?"
+            rules={[{ required: true, message: 'Please rate the effort required' }]}
+            initialValue={50}
+          >
+            <div>
+              <Slider
+                min={0}
+                max={100}
+                marks={{
+                  0: 'Very Low',
+                  25: 'Low',
+                  50: 'Medium',
+                  75: 'High',
+                  100: 'Very High'
+                }}
+                step={1}
+                defaultValue={50}
+                tooltip={{ formatter: (value) => `${value}/100` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="frustrationLevel"
+            label="How frustrated were you while using Truth or Thought?"
+            rules={[{ required: true, message: 'Please rate your frustration level' }]}
+            initialValue={50}
+          >
+            <div>
+              <Slider
+                min={0}
+                max={100}
+                marks={{
+                  0: 'Not at all',
+                  25: 'Slightly',
+                  50: 'Moderately',
+                  75: 'Very',
+                  100: 'Extremely'
+                }}
+                step={1}
+                defaultValue={50}
+                tooltip={{ formatter: (value) => `${value}/100` }}
+              />
+            </div>
+          </Form.Item>
+        </Space>
+      ),
+    },
+    {
+      title: 'System Clarity',
       icon: <BarChartOutlined />,
       content: (
         <Space direction="vertical" style={{ width: '100%' }} size="large">
-          <Title level={4}>Evaluate the AI system you just used</Title>
+          <Title level={4}>System Understanding</Title>
           
           <Form.Item
-            name="systemAccuracy"
-            label="How accurate was the AI at distinguishing facts from opinions?"
-            rules={[{ required: true, message: 'Please rate the accuracy' }]}
-            initialValue={5}
+            name="factOpinionClarity"
+            label="How clear were fact–opinion distinctions?"
+            rules={[{ required: true, message: 'Please rate the clarity' }]}
+            initialValue={3}
           >
             <div>
               <Slider
                 min={1}
-                max={10}
+                max={5}
                 marks={{
-                  1: '1',
-                  3: '3',
-                  5: '5',
-                  7: '7',
-                  10: '10'
+                  1: 'Very unclear',
+                  2: 'Unclear',
+                  3: 'Neutral',
+                  4: 'Clear',
+                  5: 'Very clear'
                 }}
                 step={1}
-                defaultValue={5}
-                tooltip={{ formatter: (value) => `${value}/10` }}
+                defaultValue={3}
+                tooltip={{ formatter: (value) => `${value}/5` }}
               />
-              <div style={{ marginTop: 8, display: 'flex', justifyContent: 'space-between' }}>
-                <Text type="secondary">Very inaccurate</Text>
-                <Text type="secondary">Very accurate</Text>
-              </div>
             </div>
           </Form.Item>
 
           <Form.Item
-            name="systemHelpfulness"
-            label="How helpful was the AI system for understanding bias?"
-            rules={[{ required: true, message: 'Please rate helpfulness' }]}
-            initialValue={5}
+            name="controlLevel"
+            label="How much control did you feel over the classification process?"
+            rules={[{ required: true, message: 'Please rate your sense of control' }]}
+            initialValue={3}
           >
             <div>
               <Slider
                 min={1}
-                max={10}
+                max={5}
                 marks={{
-                  1: '1',
-                  3: '3',
-                  5: '5',
-                  7: '7',
-                  10: '10'
+                  1: 'No control',
+                  2: 'Little control',
+                  3: 'Some control',
+                  4: 'Good control',
+                  5: 'Full control'
                 }}
                 step={1}
-                defaultValue={5}
-                tooltip={{ formatter: (value) => `${value}/10` }}
+                defaultValue={3}
+                tooltip={{ formatter: (value) => `${value}/5` }}
               />
-              <div style={{ marginTop: 8, display: 'flex', justifyContent: 'space-between' }}>
-                <Text type="secondary">Not helpful at all</Text>
-                <Text type="secondary">Extremely helpful</Text>
-              </div>
             </div>
           </Form.Item>
 
           <Form.Item
-            name="interfaceUsability"
-            label="How easy was the interface to use?"
-            rules={[{ required: true, message: 'Please rate usability' }]}
-            initialValue={5}
+            name="sourceInfluence"
+            label="How much did the source labels (BBC, CNN, Guardian) influence your trust in the system?"
+            rules={[{ required: true, message: 'Please rate the influence' }]}
+            initialValue={3}
           >
             <div>
               <Slider
                 min={1}
-                max={10}
+                max={5}
                 marks={{
-                  1: '1',
-                  3: '3',
-                  5: '5',
-                  7: '7',
-                  10: '10'
+                  1: 'Not at all',
+                  2: 'Slightly',
+                  3: 'Moderately',
+                  4: 'Significantly',
+                  5: 'Completely'
                 }}
                 step={1}
-                defaultValue={5}
-                tooltip={{ formatter: (value) => `${value}/10` }}
+                defaultValue={3}
+                tooltip={{ formatter: (value) => `${value}/5` }}
               />
-              <div style={{ marginTop: 8, display: 'flex', justifyContent: 'space-between' }}>
-                <Text type="secondary">Very difficult</Text>
-                <Text type="secondary">Very easy</Text>
-              </div>
             </div>
           </Form.Item>
 
           <Form.Item
-            name="userAgency"
-            label="Did you feel you maintained control over the analysis process?"
-            rules={[{ required: true, message: 'Please select an option' }]}
+            name="explanationHelpfulness"
+            label="Did the explanations (if provided) help you understand classifications?"
+            rules={[{ required: true, message: 'Please rate the helpfulness' }]}
+            initialValue={3}
           >
-            <Radio.Group>
-              <Radio value="complete-control">Complete control</Radio>
-              <Radio value="mostly-control">Mostly in control</Radio>
-              <Radio value="some-control">Some control</Radio>
-              <Radio value="little-control">Little control</Radio>
-              <Radio value="no-control">No control</Radio>
-            </Radio.Group>
-          </Form.Item>
-
-          <Form.Item
-            name="automationBalance"
-            label="Was the balance between AI automation and human judgment appropriate?"
-            rules={[{ required: true, message: 'Please select an option' }]}
-          >
-            <Radio.Group>
-              <Radio value="too-automated">Too automated</Radio>
-              <Radio value="slightly-automated">Slightly too automated</Radio>
-              <Radio value="just-right">Just right</Radio>
-              <Radio value="slightly-manual">Slightly too manual</Radio>
-              <Radio value="too-manual">Too manual</Radio>
-            </Radio.Group>
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Not helpful',
+                  2: 'Slightly helpful',
+                  3: 'Moderately helpful',
+                  4: 'Very helpful',
+                  5: 'Extremely helpful'
+                }}
+                step={1}
+                defaultValue={3}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
           </Form.Item>
         </Space>
       ),
     },
     {
-      title: 'Learning & Skills',
+      title: 'Features & Issues',
       icon: <BulbOutlined />,
       content: (
         <Space direction="vertical" style={{ width: '100%' }} size="large">
-          <Title level={4}>Changes in your bias detection abilities</Title>
+          <Title level={4}>System Features</Title>
           
           <Form.Item
-            name="skillImprovement"
-            label="Do you feel your bias detection skills improved after using the system?"
-            rules={[{ required: true, message: 'Please select an option' }]}
-          >
-            <Radio.Group>
-              <Radio value="significantly-improved">Significantly improved</Radio>
-              <Radio value="somewhat-improved">Somewhat improved</Radio>
-              <Radio value="slightly-improved">Slightly improved</Radio>
-              <Radio value="no-change">No change</Radio>
-              <Radio value="worse">Got worse</Radio>
-            </Radio.Group>
-          </Form.Item>
-
-          <Form.Item
-            name="confidenceChange"
-            label="How has your confidence in identifying bias changed?"
-            rules={[{ required: true, message: 'Please select an option' }]}
-          >
-            <Radio.Group>
-              <Radio value="much-more-confident">Much more confident</Radio>
-              <Radio value="more-confident">More confident</Radio>
-              <Radio value="slightly-more-confident">Slightly more confident</Radio>
-              <Radio value="no-change">No change</Radio>
-              <Radio value="less-confident">Less confident</Radio>
-            </Radio.Group>
-          </Form.Item>
-
-          <Form.Item
-            name="independentDetection"
-            label="Do you feel more capable of detecting bias independently (without AI)?"
-            rules={[{ required: true, message: 'Please select an option' }]}
-          >
-            <Radio.Group>
-              <Radio value="much-more-capable">Much more capable</Radio>
-              <Radio value="more-capable">More capable</Radio>
-              <Radio value="slightly-more-capable">Slightly more capable</Radio>
-              <Radio value="no-change">No change</Radio>
-              <Radio value="less-capable">Less capable</Radio>
-            </Radio.Group>
-          </Form.Item>
-
-          <Form.Item
-            name="learningMechanisms"
-            label="What helped you learn the most? (select all that apply)"
-            rules={[{ required: true, message: 'Please select at least one' }]}
+            name="mostHelpfulFeature"
+            label="Which feature did you find most helpful?"
+            rules={[{ required: true, message: 'Please select at least one feature' }]}
           >
             <Checkbox.Group>
-              <Row>
-                <Col span={12}><Checkbox value="ai-explanations">AI explanations</Checkbox></Col>
-                <Col span={12}><Checkbox value="examples">Concrete examples</Checkbox></Col>
-                <Col span={12}><Checkbox value="practice">Practice with feedback</Checkbox></Col>
-                <Col span={12}><Checkbox value="comparisons">Comparing different analyses</Checkbox></Col>
-                <Col span={12}><Checkbox value="interactive-features">Interactive features</Checkbox></Col>
-                <Col span={12}><Checkbox value="visual-highlights">Visual highlighting</Checkbox></Col>
-                <Col span={12}><Checkbox value="step-by-step">Step-by-step process</Checkbox></Col>
-                <Col span={12}><Checkbox value="nothing">Nothing helped</Checkbox></Col>
-              </Row>
+              <Checkbox value="sourceLabel">Source label</Checkbox>
+              <Checkbox value="explanation">Explanation</Checkbox>
+              <Checkbox value="citations">Citations</Checkbox>
+              <Checkbox value="highlighting">Highlighting</Checkbox>
+              <Checkbox value="other">Other</Checkbox>
             </Checkbox.Group>
           </Form.Item>
-        </Space>
-      ),
-    },
-    {
-      title: 'Behavioral Changes',
-      icon: <TeamOutlined />,
-      content: (
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
-          <Title level={4}>Impact on your media consumption behavior</Title>
-          
+
           <Form.Item
-            name="futureVerification"
-            label="Will you verify news sources more often after this experience?"
-            rules={[{ required: true, message: 'Please select an option' }]}
+            name="otherHelpfulFeature"
+            label="If other, please specify:"
+            dependencies={['mostHelpfulFeature']}
           >
-            <Radio.Group>
-              <Radio value="definitely-more">Definitely more often</Radio>
-              <Radio value="probably-more">Probably more often</Radio>
-              <Radio value="maybe-more">Maybe more often</Radio>
-              <Radio value="no-change">No change</Radio>
-              <Radio value="less-likely">Less likely</Radio>
-            </Radio.Group>
+            <Input placeholder="Describe the other helpful feature..." />
           </Form.Item>
 
           <Form.Item
-            name="mediaApproach"
-            label="How will your approach to reading news change?"
-            rules={[{ required: true, message: 'Please select an option' }]}
+            name="issuesEncountered"
+            label="Were there any issues you encountered?"
+            rules={[{ required: true, message: 'Please describe any issues or write "None"' }]}
           >
-            <Radio.Group>
-              <Radio value="much-more-critical">Much more critical/analytical</Radio>
-              <Radio value="more-critical">More critical/analytical</Radio>
-              <Radio value="slightly-more-critical">Slightly more critical</Radio>
-              <Radio value="no-change">No change</Radio>
-              <Radio value="less-critical">Less critical</Radio>
-            </Radio.Group>
+            <TextArea rows={3} placeholder="Describe any issues you encountered or write 'None'..." />
           </Form.Item>
 
           <Form.Item
-            name="toolAdoption"
-            label="Would you use similar AI bias detection tools in the future?"
-            rules={[{ required: true, message: 'Please select an option' }]}
-          >
-            <Radio.Group>
-              <Radio value="definitely">Definitely would use</Radio>
-              <Radio value="probably">Probably would use</Radio>
-              <Radio value="maybe">Maybe would use</Radio>
-              <Radio value="probably-not">Probably wouldn't use</Radio>
-              <Radio value="definitely-not">Definitely wouldn't use</Radio>
-            </Radio.Group>
-          </Form.Item>
-
-          <Form.Item
-            name="recommendToOthers"
-            label="Would you recommend this tool to others?"
-            rules={[{ required: true, message: 'Please select an option' }]}
-          >
-            <Radio.Group>
-              <Radio value="definitely">Definitely recommend</Radio>
-              <Radio value="probably">Probably recommend</Radio>
-              <Radio value="maybe">Maybe recommend</Radio>
-              <Radio value="probably-not">Probably not recommend</Radio>
-              <Radio value="definitely-not">Definitely not recommend</Radio>
-            </Radio.Group>
-          </Form.Item>
-        </Space>
-      ),
-    },
-    {
-      title: 'Final Feedback',
-      icon: <CheckCircleOutlined />,
-      content: (
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
-          <Title level={4}>Your overall experience and suggestions</Title>
-          
-          <Form.Item
-            name="overallSatisfaction"
-            label="Overall satisfaction with the system"
-            rules={[{ required: true, message: 'Please rate your satisfaction' }]}
-            initialValue={5}
+            name="missedFacts"
+            label="Did we miss any facts or information in the articles?"
+            rules={[{ required: true, message: 'Please rate if facts were missed' }]}
+            initialValue={3}
           >
             <div>
               <Slider
                 min={1}
-                max={10}
+                max={5}
                 marks={{
-                  1: '1',
-                  3: '3',
-                  5: '5',
-                  7: '7',
-                  10: '10'
+                  1: 'Not at all',
+                  2: 'A few',
+                  3: 'Some',
+                  4: 'Many',
+                  5: 'Very many'
                 }}
                 step={1}
-                defaultValue={5}
-                tooltip={{ formatter: (value) => `${value}/10` }}
+                defaultValue={3}
+                tooltip={{ formatter: (value) => `${value}/5` }}
               />
-              <div style={{ marginTop: 8, display: 'flex', justifyContent: 'space-between' }}>
-                <Text type="secondary">Very dissatisfied</Text>
-                <Text type="secondary">Very satisfied</Text>
-              </div>
             </div>
           </Form.Item>
 
           <Form.Item
-            name="mostValuableFeature"
-            label="What was the most valuable feature of the system?"
-            rules={[{ required: true, message: 'Please provide feedback' }]}
+            name="missedFactsSpecify"
+            label="If yes, please specify what facts were missed:"
+            dependencies={['missedFacts']}
           >
-            <TextArea rows={3} placeholder="Describe the feature you found most helpful..." />
+            <TextArea rows={3} placeholder="Describe what facts or information were missed..." />
           </Form.Item>
-
-          <Form.Item
-            name="improvements"
-            label="What improvements would you suggest?"
-            rules={[{ required: true, message: 'Please provide suggestions' }]}
-          >
-            <TextArea rows={3} placeholder="Suggest improvements or additional features..." />
-          </Form.Item>
-
-          <Form.Item
-            name="concerns"
-            label="Do you have any concerns about AI-assisted bias detection?"
-            rules={[{ required: true, message: 'Please share your thoughts' }]}
-          >
-            <TextArea rows={3} placeholder="Share any concerns or limitations you noticed..." />
-          </Form.Item>
-
+        </Space>
+      ),
+    },
+    {
+      title: 'Final Comments',
+      icon: <UserOutlined />,
+      content: (
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Title level={4}>Additional Feedback</Title>
+          
           <Form.Item
             name="additionalComments"
-            label="Additional comments (optional)"
+            label="Any additional comments or suggestions?"
+            rules={[{ required: true, message: 'Please provide feedback or write "None"' }]}
           >
-            <TextArea rows={3} placeholder="Any other thoughts or feedback..." />
+            <TextArea rows={4} placeholder="Share any additional thoughts, suggestions, or feedback..." />
           </Form.Item>
         </Space>
       ),
@@ -739,85 +611,54 @@ const EnhancedQuestionnaires: React.FC<EnhancedQuestionnairesProps> = ({ questio
   ];
 
   const steps = isPostQuestionnaire ? postQuestionnaireSteps : preQuestionnaireSteps;
-  const questionnaireTitle = isPostQuestionnaire ? 'Post-Study Questionnaire' : 'Pre-Study Questionnaire';
-  const questionnaireDescription = isPostQuestionnaire 
-    ? 'Please share your experience with the AI bias detection system and how it affected your understanding.'
-    : 'This questionnaire helps us understand your media consumption habits and initial perceptions.';
+
+  const next = () => {
+    setCurrentStep(currentStep + 1);
+  };
+
+  const prev = () => {
+    setCurrentStep(currentStep - 1);
+  };
 
   return (
     <AppLayout>
-      <Row justify="center" style={{ height: '100%' }}>
-        <Col xs={24} sm={20} md={16} lg={12} xl={10}>
-          <Card
-            style={{ 
-              borderRadius: 15, 
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              background: 'white'
-            }}
-          >
-            <div style={{ textAlign: 'center', marginBottom: 32 }}>
-              <Title level={2} style={{ marginBottom: 8 }}>
-                <ExperimentOutlined style={{ color: isPostQuestionnaire ? '#52c41a' : '#3498db', marginRight: 8 }} />
-                {questionnaireTitle}
-              </Title>
-              <Paragraph type="secondary" style={{ fontSize: 16 }}>
-                {questionnaireDescription}
-                Your responses will be kept confidential and used only for research purposes.
-              </Paragraph>
-            </div>
+      <div style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
+        <Card>
+          <Title level={2} style={{ textAlign: 'center', marginBottom: '32px' }}>
+            {isPostQuestionnaire ? 'Post-Experiment Questionnaire' : 'Pre-Experiment Questionnaire'}
+          </Title>
+          
+          <Steps current={currentStep} style={{ marginBottom: '32px' }}>
+            {steps.map((step, index) => (
+              <Steps.Step key={index} title={step.title} icon={step.icon} />
+            ))}
+          </Steps>
 
-            <Steps current={currentStep} style={{ marginBottom: 32 }}>
-              {steps.map((step, index) => (
-                <Step key={index} title={step.title} icon={step.icon} />
-              ))}
-            </Steps>
+          <Form form={form} layout="vertical" style={{ minHeight: '400px' }}>
+            <div>{steps[currentStep].content}</div>
+          </Form>
 
-            <Form form={form} layout="vertical" style={{ minHeight: '400px' }}>
-              {steps[currentStep].content}
-            </Form>
-
-            <Divider />
-
-            <div style={{ textAlign: 'center' }}>
-              <Space>
-                {currentStep > 0 && (
-                  <Button onClick={handlePrevious}>
-                    Previous
-                  </Button>
-                )}
-                
-                {currentStep < steps.length - 1 && (
-                  <Button type="primary" onClick={handleNext}>
-                    Next
-                  </Button>
-                )}
-                
-                {currentStep === steps.length - 1 && (
-                  <Button 
-                    type="primary" 
-                    onClick={handleSubmit}
-                    loading={loading}
-                    icon={<RocketOutlined />}
-                    size="large"
-                    style={{
-                      background: isPostQuestionnaire 
-                        ? 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)'
-                        : 'linear-gradient(135deg, #27ae60 0%, #2ecc71 100%)',
-                      border: 'none',
-                      borderRadius: 8,
-                      height: 48,
-                      fontSize: 16,
-                      fontWeight: 600,
-                    }}
-                  >
-                    {isPostQuestionnaire ? 'Complete Study' : 'Complete & Start Analysis'}
-                  </Button>
-                )}
-              </Space>
-            </div>
-          </Card>
-        </Col>
-      </Row>
+          <div style={{ marginTop: '32px', textAlign: 'center' }}>
+            <Space>
+              {currentStep > 0 && (
+                <Button onClick={prev}>
+                  Previous
+                </Button>
+              )}
+              {currentStep < steps.length - 1 && (
+                <Button type="primary" onClick={next}>
+                  Next
+                </Button>
+              )}
+              {currentStep === steps.length - 1 && (
+                <Button type="primary" onClick={handleSubmit} loading={loading}>
+                  Submit {isPostQuestionnaire ? 'Post-Experiment' : 'Pre-Experiment'} Questionnaire
+                </Button>
+              )}
+            </Space>
+          </div>
+        </Card>
+      </div>
     </AppLayout>
   );
 };
