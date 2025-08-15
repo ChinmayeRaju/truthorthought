@@ -4,6 +4,8 @@ import { ConfigProvider, theme } from 'antd';
 import MainAnalysis from './pages/MainAnalysis';
 import BiasResearch from './pages/BiasResearch';
 import Questionnaires from './pages/Questionnaires';
+import EnhancedQuestionnaires from './pages/EnhancedQuestionnaires';
+import ResearchDashboard from './pages/ResearchDashboard';
 
 const App: React.FC = () => {
   return (
@@ -22,8 +24,13 @@ const App: React.FC = () => {
     >
       <Router>
         <Routes>
-          <Route path="/" element={<MainAnalysis />} />
+          <Route path="/" element={<EnhancedQuestionnaires />} />
+          <Route path="/analysis" element={<MainAnalysis />} />
           <Route path="/questionnaires" element={<Questionnaires />} />
+          <Route path="/enhanced-questionnaires" element={<EnhancedQuestionnaires />} />
+          <Route path="/pre-questionnaire" element={<EnhancedQuestionnaires />} />
+          <Route path="/post-questionnaire" element={<EnhancedQuestionnaires />} />
+          <Route path="/research-dashboard" element={<ResearchDashboard />} />
           <Route path="/bias_research" element={<BiasResearch />} />
         </Routes>
       </Router>

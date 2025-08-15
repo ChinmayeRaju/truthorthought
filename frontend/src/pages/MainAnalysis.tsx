@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { 
-  Card, 
-  Input, 
-  Button, 
+import React, { useState, useEffect } from 'react';
+import {
+  Card,
+  Input,
+  Button,
   Row,
-  Col, 
-  Statistic, 
-  Typography, 
-  message, 
-  Spin, 
-  Tag, 
+  Col,
+  Statistic,
+  Typography,
+  message,
+  Spin,
+  Tag,
   Divider,
   Badge,
   Space,
@@ -26,8 +26,10 @@ import {
   UserOutlined,
   TeamOutlined,
   SoundOutlined,
-  ContactsOutlined
+  ContactsOutlined,
+  FormOutlined
 } from '@ant-design/icons';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppLayout from '../components/AppLayout';
 import ChatComponent from '../components/ChatComponent';
 import { apiService } from '../services/api';
@@ -43,6 +45,23 @@ const MainAnalysis: React.FC = () => {
   const [showChat, setShowChat] = useState(false);
   const [summary, setSummary] = useState<SummaryResponse | null>(null);
   const [loadingSummary, setLoadingSummary] = useState(false);
+  const [showPostQuestionnaire, setShowPostQuestionnaire] = useState(false);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  const sessionId = searchParams.get('sessionId');
+  const fromQuestionnaire = searchParams.get('fromQuestionnaire') === 'true';
+
+  useEffect(() => {
+    // Show post-questionnaire option after user has interacted with results
+    if (results && fromQuestionnaire) {
+      const timer = setTimeout(() => {
+        setShowPostQuestionnaire(true);
+      }, 30000); // Show after 30 seconds of analysis interaction
+      
+      return () => clearTimeout(timer);
+    }
+  }, [results, fromQuestionnaire]);
 
   const handleAnalyze = async () => {
     if (!urls.trim()) {
@@ -885,6 +904,58 @@ Add multiple URLs to analyze and compare facts vs opinions across sources...`}
                     </Card>
                   </Col>
                 </Row>
+
+                {/* Post-Questionnaire Option */}
+                {showPostQuestionnaire && sessionId && (
+                  <Card
+                    title={
+                      <Space>
+                        <FormOutlined style={{ color: '#52c41a' }} />
+                        Complete Your Research Participation
+                      </Space>
+                    }
+                    style={{
+                      marginTop: 24,
+                      border: '2px solid #52c41a',
+                      borderRadius: 12
+                    }}
+                  >
+                    <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                      <Typography.Title level={4} style={{ color: '#52c41a', marginBottom: 16 }}>
+                        Thank you for using our AI bias detection system!
+                      </Typography.Title>
+                      <Typography.Paragraph style={{ fontSize: 16, marginBottom: 24 }}>
+                        Help us improve by sharing your experience in our post-study questionnaire.
+                        Your feedback is valuable for advancing AI-assisted media literacy research.
+                      </Typography.Paragraph>
+                      <Space size="large">
+                        <Button
+                          type="primary"
+                          size="large"
+                          icon={<FormOutlined />}
+                          onClick={() => navigate(`/post-questionnaire?type=post&sessionId=${sessionId}`)}
+                          style={{
+                            background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
+                            border: 'none',
+                            borderRadius: 8,
+                            height: 48,
+                            fontSize: 16,
+                            fontWeight: 600,
+                          }}
+                        >
+                          Complete Post-Study Questionnaire
+                        </Button>
+                        <Button
+                          size="large"
+                          onClick={() => setShowPostQuestionnaire(false)}
+                          style={{ height: 48 }}
+                        >
+                          Maybe Later
+                        </Button>
+                      </Space>
+                    </div>
+                  </Card>
+                )}
 
                 {/* Chat Component */}
                 {showChat && results.session_id && (

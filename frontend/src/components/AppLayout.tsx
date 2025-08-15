@@ -1,6 +1,6 @@
 import React from 'react';
 import { Layout, Menu, Typography, Button } from 'antd';
-import { BarChartOutlined, ExperimentOutlined, HomeOutlined } from '@ant-design/icons';
+import { BarChartOutlined, ExperimentOutlined, HomeOutlined, DashboardOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const { Header, Content } = Layout;
@@ -32,6 +32,12 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       icon: <BarChartOutlined />,
       label: 'Bias Analysis',
       onClick: () => navigate('/bias_research'),
+    },
+    {
+      key: '/research-dashboard',
+      icon: <DashboardOutlined />,
+      label: 'Research Dashboard',
+      onClick: () => navigate('/research-dashboard'),
     },
   ];
 
