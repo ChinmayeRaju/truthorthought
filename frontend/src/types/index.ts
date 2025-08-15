@@ -15,6 +15,8 @@ export interface Statement {
   citation?: Citation;
   source_url?: string;
   source_title?: string;
+  source_name?: string;
+  original_sentence?: string;
 }
 
 export interface AnalysisResult {

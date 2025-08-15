@@ -464,8 +464,8 @@ def analyze_multiple():
                         'facts_count': len([r for r in analysis_data['results'] if r['final_classification'] == 'FACT']),
                         'opinions_count': len([r for r in analysis_data['results'] if r['final_classification'] == 'OPINION']),
                         'sentences_count': len(analysis_data['results']),
-                        'facts': [{'sentence': r['sentence'], 'citation': r['citation'], 'citations': r.get('citations', [])} for r in analysis_data['results'] if r['final_classification'] == 'FACT'],
-                        'opinions': [{'sentence': r['sentence']} for r in analysis_data['results'] if r['final_classification'] == 'OPINION']
+                        'facts': [{'sentence': r['sentence'], 'citation': r['citation'], 'citations': r.get('citations', []), 'source_url': r.get('source_url', url), 'source_name': r.get('source_name', 'Unknown Source')} for r in analysis_data['results'] if r['final_classification'] == 'FACT'],
+                        'opinions': [{'sentence': r['sentence'], 'source_url': r.get('source_url', url), 'source_name': r.get('source_name', 'Unknown Source')} for r in analysis_data['results'] if r['final_classification'] == 'OPINION']
                     })
                     
                     # Debug: Print what we're sending

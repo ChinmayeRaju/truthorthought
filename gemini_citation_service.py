@@ -291,6 +291,91 @@ IMPORTANT: Provide realistic, authoritative sources that would be expected to co
         # Ensure score is between 0 and 1
         return max(0.0, min(1.0, score))
     
+    def extract_source_name(self, citation: VerifiedCitation) -> str:
+        """Extract a clean source name from citation for sentence prefixing"""
+        if not citation:
+            return "Unknown Source"
+        
+        domain = citation.domain.lower()
+        
+        # Map common domains to readable source names
+        source_mapping = {
+            'bbc.co.uk': 'BBC',
+            'bbc.com': 'BBC',
+            'cnn.com': 'CNN',
+            'edition.cnn.com': 'CNN',
+            'reuters.com': 'Reuters',
+            'guardian.com': 'The Guardian',
+            'theguardian.com': 'The Guardian',
+            'nytimes.com': 'The New York Times',
+            'washingtonpost.com': 'The Washington Post',
+            'npr.org': 'NPR',
+            'skynews.com': 'Sky News',
+            'ap.org': 'Associated Press',
+            'apnews.com': 'Associated Press',
+            'metro.co.uk': 'Metro',
+            'aljazeera.com': 'Al Jazeera',
+            'foxnews.com': 'Fox News',
+            'nbcnews.com': 'NBC News',
+            'abcnews.go.com': 'ABC News',
+            'cbsnews.com': 'CBS News'
+        }
+        
+        # Check for exact domain matches
+        for domain_key, source_name in source_mapping.items():
+            if domain_key in domain:
+                return source_name
+        
+        # Extract from title if domain mapping fails
+        title = citation.title.lower()
+        if 'bbc' in title:
+            return 'BBC'
+        elif 'cnn' in title:
+            return 'CNN'
+        elif 'reuters' in title:
+            return 'Reuters'
+        elif 'guardian' in title:
+            return 'The Guardian'
+        elif 'new york times' in title or 'nytimes' in title:
+            return 'The New York Times'
+        elif 'washington post' in title:
+            return 'The Washington Post'
+        elif 'associated press' in title or 'ap news' in title:
+            return 'Associated Press'
+        elif 'sky news' in title:
+            return 'Sky News'
+        elif 'metro' in title:
+            return 'Metro'
+        elif 'al jazeera' in title:
+            return 'Al Jazeera'
+        
+        # Fallback: capitalize domain name
+        if '.' in domain:
+            base_domain = domain.split('.')[0]
+            return base_domain.capitalize()
+        
+        return "News Source"
+    
+    def create_source_attributed_sentence(self, original_sentence: str, citations: List[VerifiedCitation]) -> str:
+        """Create a sentence with source attribution prefix"""
+        if not citations or len(citations) == 0:
+            return original_sentence
+        
+        # Use the highest-scoring citation as the primary source
+        primary_citation = max(citations, key=lambda c: c.verification_score)
+        source_name = self.extract_source_name(primary_citation)
+        
+        # Create the attributed sentence
+        # Remove any existing punctuation at the start of the sentence
+        clean_sentence = original_sentence.strip()
+        if clean_sentence and clean_sentence[0] in '"\'':
+            clean_sentence = clean_sentence[1:]
+        
+        # Format the attribution
+        attributed_sentence = f"{source_name} reported {clean_sentence}"
+        
+        return attributed_sentence
+    
     def batch_get_citations(self, sentences: List[str], domain: str = "GENERAL") -> Dict[str, List[VerifiedCitation]]:
         """Get citations for multiple sentences with rate limiting"""
         results = {}

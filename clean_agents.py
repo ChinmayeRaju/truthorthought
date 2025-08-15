@@ -644,6 +644,61 @@ class CleanAnalysisSystem:
         # Initialize with default GENERAL agents
         self.agents = self._create_agents_for_domain('GENERAL')
     
+    def _extract_source_name_from_url(self, url: str) -> str:
+        """Extract source name from URL for sentence attribution"""
+        if not url:
+            return "Unknown Source"
+        
+        from urllib.parse import urlparse
+        parsed = urlparse(url.lower())
+        domain = parsed.netloc
+        
+        # Remove 'www.' prefix if present
+        if domain.startswith('www.'):
+            domain = domain[4:]
+        
+        # Map common domains to readable source names
+        source_mapping = {
+            'bbc.co.uk': 'BBC',
+            'bbc.com': 'BBC',
+            'cnn.com': 'CNN',
+            'edition.cnn.com': 'CNN',
+            'reuters.com': 'Reuters',
+            'guardian.com': 'The Guardian',
+            'theguardian.com': 'The Guardian',
+            'nytimes.com': 'The New York Times',
+            'washingtonpost.com': 'The Washington Post',
+            'npr.org': 'NPR',
+            'skynews.com': 'Sky News',
+            'ap.org': 'Associated Press',
+            'apnews.com': 'Associated Press',
+            'metro.co.uk': 'Metro',
+            'aljazeera.com': 'Al Jazeera',
+            'foxnews.com': 'Fox News',
+            'nbcnews.com': 'NBC News',
+            'abcnews.go.com': 'ABC News',
+            'cbsnews.com': 'CBS News',
+            'independent.co.uk': 'The Independent',
+            'dailymail.co.uk': 'Daily Mail',
+            'telegraph.co.uk': 'The Telegraph',
+            'usatoday.com': 'USA Today',
+            'wsj.com': 'The Wall Street Journal',
+            'bloomberg.com': 'Bloomberg',
+            'politico.com': 'Politico',
+            'huffpost.com': 'HuffPost'
+        }
+        
+        # Check for exact domain matches
+        if domain in source_mapping:
+            return source_mapping[domain]
+        
+        # Fallback: capitalize domain name and remove TLD
+        if '.' in domain:
+            base_domain = domain.split('.')[0]
+            return base_domain.capitalize()
+        
+        return "News Source"
+    
     def _create_agents_for_domain(self, domain: str) -> List[Agent]:
         """Create specialized agents based on domain"""
         roles = DOMAIN_ROLES.get(domain, DOMAIN_ROLES['GENERAL'])
@@ -690,10 +745,13 @@ class CleanAnalysisSystem:
         print(f"Scraped {len(scraped_data['content'])} characters")
         print(f"Title: {scraped_data.get('title', 'N/A')}")
         
+        # Add URL to scraped data for source tracking
+        scraped_data['url'] = url
+        
         # Detect domain and update agents
         detected_domain = self.domain_detector.detect_domain(
-            url, 
-            scraped_data.get('title', ''), 
+            url,
+            scraped_data.get('title', ''),
             scraped_data.get('content', '')
         )
         print(f"Detected domain: {detected_domain}")
@@ -805,6 +863,15 @@ class CleanAnalysisSystem:
             
             # Extract citation information from sources if this is a FACT
             citations = []
+            attributed_sentence = sentence_text  # Default to original sentence
+            
+            # Create source-attributed sentence based on the original URL
+            source_url = data.get('url', '')
+            if source_url:
+                source_name = self._extract_source_name_from_url(source_url)
+                attributed_sentence = f"{source_name} reported {sentence_text}"
+                print(f"📝 Source-attributed sentence: {attributed_sentence[:100]}...")
+            
             if hasattr(consensus, 'final_classification') and consensus.final_classification == 'FACT':
                 print(f"🔍 Getting verified citations for FACT using Gemini with Google Search...")
                 
@@ -847,7 +914,10 @@ class CleanAnalysisSystem:
             
             # Create a result object that matches what the frontend expects
             formatted_result = {
-                'sentence': sentence_text,
+                'sentence': attributed_sentence,  # Use source-attributed sentence for facts
+                'original_sentence': sentence_text,  # Keep original for reference
+                'source_url': source_url,  # Add source URL for reference
+                'source_name': self._extract_source_name_from_url(source_url) if source_url else 'Unknown Source',  # Add source name
                 'final_classification': consensus.final_classification if hasattr(consensus, 'final_classification') else 'MIXED',
                 'consensus_confidence': consensus.confidence if hasattr(consensus, 'confidence') else 0.5,
                 'citation': citations[0] if citations else None,  # Primary citation for backward compatibility
