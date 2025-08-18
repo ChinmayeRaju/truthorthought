@@ -12,6 +12,8 @@ from clean_agents import CleanAnalysisSystem
 from content_summarizer import ContentSummarizer
 import uuid
 from dotenv import load_dotenv
+from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Font, PatternFill, Alignment
 
 # Load environment variables
 load_dotenv()
@@ -849,6 +851,181 @@ def summarize_session(session_id):
             
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+def save_questionnaire_to_excel(questionnaire_data, questionnaire_type):
+    """Save questionnaire data to Excel file"""
+    try:
+        # Create questionnaires directory if it doesn't exist
+        os.makedirs('questionnaire_data', exist_ok=True)
+        
+        # Define Excel file path
+        excel_file = 'questionnaire_data/truth_or_thought_research_data.xlsx'
+        
+        # Load existing workbook or create new one
+        try:
+            wb = load_workbook(excel_file)
+        except FileNotFoundError:
+            wb = Workbook()
+            # Remove default sheet
+            if 'Sheet' in wb.sheetnames:
+                wb.remove(wb['Sheet'])
+        
+        # Create or get worksheet for this questionnaire type
+        sheet_name = f"{questionnaire_type.title()}_Questionnaire"
+        if sheet_name in wb.sheetnames:
+            ws = wb[sheet_name]
+        else:
+            ws = wb.create_sheet(sheet_name)
+            
+            # Create headers based on questionnaire type - OPTIMIZED FOR RESEARCH VALUE
+            if questionnaire_type == 'pre':
+                headers = [
+                    'Session_ID', 'Timestamp', 'User_ID',
+                    'News_Frequency', 'Fact_Opinion_Confidence_Baseline', 'AI_Familiarity_Tools',
+                    'Age', 'Profession', 'Tech_Experience'
+                ]
+            elif questionnaire_type == 'post':
+                headers = [
+                    'Session_ID', 'Timestamp', 'User_ID',
+                    # Truth or Thought Effectiveness Metrics
+                    'Perspective_Awareness_Improvement', 'Bias_Detection_Improvement', 'Objective_Subjective_Clarity',
+                    # Usability & Efficiency Metrics
+                    'Quick_Evaluation', 'Effort_vs_Expected', 'Time_Efficiency', 'Clarity_Rating',
+                    # Trust & Adoption Metrics
+                    'Future_Usage_Intent', 'Recommendation_Likelihood', 'Trust_In_Analysis', 'Vs_Traditional_Methods',
+                    # Feature Value Assessment
+                    'Most_Helpful_Feature', 'Tool_Effectiveness_Rating',
+                    # Article Familiarity Assessment
+                    'Article_Familiarity', 'Familiarity_Bias_Impact', 'Model_Effectiveness_New_Content'
+                ]
+            else:  # exit questionnaire
+                headers = [
+                    'Session_ID', 'Timestamp', 'User_ID',
+                    'Task_Preference', 'Bias_Detection_Task_Difference', 'Personnel_Influence_Rating',
+                    'Overall_Tool_Value', 'Research_Feedback'
+                ]
+            
+            # Add headers with styling
+            for col, header in enumerate(headers, 1):
+                cell = ws.cell(row=1, column=col, value=header)
+                cell.font = Font(bold=True)
+                cell.fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
+                cell.alignment = Alignment(horizontal="center")
+        
+        # Find next empty row
+        next_row = ws.max_row + 1
+        
+        # Extract data based on questionnaire type
+        session_id = questionnaire_data.get('sessionId', f"session_{int(time.time())}")
+        timestamp = questionnaire_data.get('timestamp', datetime.now().isoformat())
+        q_type = questionnaire_data.get('type', questionnaire_type)
+        
+        # Extract user ID from session for tracking
+        user_id = session_id.split('_')[0] if '_' in session_id else session_id
+        
+        if questionnaire_type == 'pre':
+            row_data = [
+                session_id, timestamp, user_id,
+                questionnaire_data.get('newsFrequency', ''),
+                questionnaire_data.get('factOpinionConfidence', ''),
+                questionnaire_data.get('aiFamiliarityTools', ''),
+                questionnaire_data.get('age', ''),
+                questionnaire_data.get('profession', ''),
+                questionnaire_data.get('techExperience', '')
+            ]
+        elif questionnaire_type == 'post':
+            row_data = [
+                session_id, timestamp, user_id,
+                # Truth or Thought Effectiveness Metrics
+                questionnaire_data.get('perspectiveAwareness', ''),
+                questionnaire_data.get('biasDetectionImprovement', ''),
+                questionnaire_data.get('objectiveSubjectiveClarity', ''),
+                # Usability & Efficiency Metrics
+                questionnaire_data.get('quickEvaluation', ''),
+                questionnaire_data.get('lessEffortThanExpected', ''),
+                questionnaire_data.get('timeConsumingQuick', ''),
+                questionnaire_data.get('confusingClear', ''),
+                # Trust & Adoption Metrics
+                questionnaire_data.get('futureUsage', ''),
+                questionnaire_data.get('recommendToOthers', ''),
+                questionnaire_data.get('trustInAnalysis', ''),
+                questionnaire_data.get('comparedToTraditional', ''),
+                # Feature Value Assessment
+                ', '.join(questionnaire_data.get('mostHelpfulFeature', [])) if isinstance(questionnaire_data.get('mostHelpfulFeature'), list) else questionnaire_data.get('mostHelpfulFeature', ''),
+                questionnaire_data.get('factOpinionClarity', ''),  # Overall effectiveness rating
+                # Article Familiarity Assessment
+                questionnaire_data.get('articleFamiliarity', ''),
+                questionnaire_data.get('familiarityBiasImpact', ''),
+                questionnaire_data.get('modelEffectivenessNewContent', '')
+            ]
+        else:  # exit questionnaire
+            row_data = [
+                session_id, timestamp, user_id,
+                questionnaire_data.get('taskPreference', ''),
+                questionnaire_data.get('biasDetectionDifference', ''),
+                questionnaire_data.get('personnelInfluence', ''),
+                questionnaire_data.get('overallToolValue', ''),
+                questionnaire_data.get('additionalComments', '')
+            ]
+        
+        # Add data to worksheet
+        for col, value in enumerate(row_data, 1):
+            ws.cell(row=next_row, column=col, value=value)
+        
+        # Auto-adjust column widths
+        for column in ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)  # Cap at 50 characters
+            ws.column_dimensions[column_letter].width = adjusted_width
+        
+        # Save workbook
+        wb.save(excel_file)
+        return True, excel_file
+        
+    except Exception as e:
+        return False, str(e)
+
+@app.route('/submit_questionnaire', methods=['POST'])
+def submit_questionnaire():
+    """Submit questionnaire data and save to Excel"""
+    try:
+        data = request.get_json()
+        questionnaire_type = data.get('type', 'unknown')
+        
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'No questionnaire data provided'
+            }), 400
+        
+        # Save to Excel
+        success, result = save_questionnaire_to_excel(data, questionnaire_type)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'{questionnaire_type.title()} questionnaire data saved successfully',
+                'file_path': result,
+                'session_id': data.get('sessionId', f"session_{int(time.time())}")
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Failed to save questionnaire data: {result}'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Error processing questionnaire submission: {str(e)}'
+        }), 500
 
 @app.route('/health')
 def health():

@@ -89,6 +89,12 @@ export const apiService = {
     return response.data;
   },
 
+  // Submit questionnaire data
+  submitQuestionnaire: async (questionnaireData: any): Promise<{ success: boolean; message: string; session_id: string; file_path?: string }> => {
+    const response = await api.post('/submit_questionnaire', questionnaireData);
+    return response.data;
+  },
+
   // Health check
   healthCheck: async (): Promise<{ status: string; timestamp: string }> => {
     const response = await api.get('/health');

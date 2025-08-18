@@ -189,3 +189,224 @@ export interface ChatMessage {
   sender: 'user' | 'assistant';
   timestamp: Date;
 }
+
+export interface ExitQuestionnaireData {
+  easierTask: string;
+  betterUnderstanding: string;
+  moreControl: string;
+  timeSaving: string;
+  lessMentalDemand: string;
+  moreTrust: string;
+  biasNoticed: string;
+  biasDescription?: string;
+  personnelInfluence: number;
+  personnelInfluenceDifference: string;
+  personnelInfluenceDescription?: string;
+  futurePreference: string;
+  additionalComments?: string;
+  sessionId: string;
+  timestamp: string;
+}
+
+export interface ComprehensivePreQuestionnaireData {
+  // Media Trust Foundation
+  mediaTrustGeneral: number;
+  mediaCredibilityFactors: string[];
+  informationVerificationHabits: string;
+  
+  // Outlet Assessment
+  outletTrustRankingBBC?: number;
+  outletTrustRankingCNN?: number;
+  outletTrustRankingGuardian?: number;
+  outletTrustRankingReuters?: number;
+  outletTrustRankingAP?: number;
+  perceivedBiasTopics: string[];
+  biasDetectionConfidence: number;
+  
+  // Psychological Impact
+  newsEmotionalDraining: number;
+  newsMoodImpact: string;
+  newsAnxietyRelationship: string;
+  stressfulNewsTopics: string[];
+  
+  // News Behaviors
+  newsAvoidanceBehaviors: string;
+  newsCheckingFrequency: string;
+  newsCheckingTriggers: string[];
+  preferredNewsFormat: string;
+  
+  // Crisis Information
+  crisisInformationSources: string[];
+  crisisInformationSpeed: number;
+  informationOverloadCoping: string;
+  misinformationConcern: number;
+  
+  // Demographics & Background
+  age: number;
+  education: string;
+  profession: string;
+  politicalInterest: number;
+  techComfort: number;
+  additionalComments?: string;
+  
+  // Metadata
+  sessionId: string;
+  timestamp: string;
+  type: 'comprehensive_pre';
+}
+
+export interface ResearchAlignedPreQuestionnaireData {
+  // Demographics & Individual Differences (RQ6)
+  age: string;
+  education: string;
+  profession: string;
+  technologyComfort: number;
+  learningStyle: string;
+  cognitiveStyle: string;
+  
+  // Fact/Opinion Detection Baseline (RQ1)
+  factOpinionConfidence: number;
+  factOpinionMethods: string[];
+  factOpinionAccuracy: number;
+  factOpinionChallenges: string;
+  
+  // Bias Detection & Media Literacy (RQ3, RQ4)
+  biasDetectionConfidence: number;
+  biasDetectionMethods: string[];
+  mediaLiteracyTraining: string;
+  newsEvaluationProcess: string;
+  informationVerificationFrequency: string;
+  
+  // Automation & AI Preferences (RQ5)
+  automationOversightPreference: string;
+  aiTrustLevel: number;
+  aiExperienceLevel: string;
+  automationConcerns: string[];
+  
+  // Cognitive Processing & Interface Preferences (RQ2)
+  informationProcessingStyle: string;
+  cognitiveLoadFactors: string[];
+  preferredInformationPresentation: string[];
+  mentalEffortNews: number;
+  learningMechanismsPreference: string[];
+  
+  // News Consumption Patterns
+  generalMediaTrust: number;
+  mostTrustworthy: string;
+  secondTrustworthy: string;
+  thirdTrustworthy: string;
+  fourthTrustworthy: string;
+  leastTrustworthy: string;
+  newsEmotionalImpact: number;
+  newsConsumptionFrequency: string;
+  newsSourceTypes: string[];
+  aiExpectations: string;
+  successMetrics: string[];
+  additionalComments?: string;
+  
+  // Metadata
+  sessionId: string;
+  timestamp: string;
+  type: 'research_pre';
+}
+
+export interface ResearchAlignedPostQuestionnaireData {
+  // AI Accuracy Perception (RQ1)
+  aiAccuracyPerception: number;
+  aiVsHumanAccuracy: string;
+  aiTrustChange: string;
+  aiClassificationAgreement: number;
+  aiAccuracyExpectationComparison: string;
+  aiErrorTypes: string[];
+  
+  // Cognitive Load & Interface (RQ2)
+  mentalDemand: number;
+  effortRequired: number;
+  frustrationLevel: number;
+  interfaceUsability: number;
+  learningSupport: number;
+  cognitiveLoadComparison: string;
+  interfaceFeatureHelpfulness: string[];
+  
+  // Skill Development & Learning (RQ3)
+  biasDetectionConfidenceChange: string;
+  skillDevelopmentPerception: number;
+  learningMechanisms: string[];
+  skillTransferConfidence: number;
+  independentAnalysisImprovement: string;
+  newSkillsLearned: string;
+  
+  // Behavioral Changes & Comparison (RQ4)
+  approachChange: string;
+  aiVsTraditionalPreference: string;
+  effectivenessComparison: number;
+  behavioralChanges: string[];
+  traditionalMethodsStillUseful: string[];
+  
+  // Automation Balance Preferences (RQ5)
+  optimalAutomationLevel: string;
+  trustBalancePreference: number;
+  controlSatisfaction: number;
+  automationImprovements: string;
+  overrideFrequency: number;
+  agencyFeeling: number;
+  
+  // Decision-Making Clarity & Understanding
+  decisionMakingConfidence: number;
+  informationInfluence: number;
+  claritySemanticDifferential: number;
+  factOpinionDistinction: number;
+  objectiveSubjectiveUnderstanding: number;
+  
+  // Efficiency & Cognitive Load Assessment
+  evaluationSpeed: number;
+  effortRequiredSanitized: number;
+  judgmentSpeed: number;
+  focusEfficiency: number;
+  timeSemanticDifferential: number;
+  effortSemanticDifferential: number;
+  judgmentSpeedSemanticDifferential: number;
+  
+  // Perception of Balance
+  informationBalance: number;
+  perspectiveAwareness: number;
+  
+  // Adoption & Individual Factors (RQ6)
+  agencyAndInfluence: number;
+  citationEffectiveness: number;
+  mostValuableInterfaceElement: string;
+  comprehensiveCoverage: number;
+  timeEfficiencyImprovement: string;
+  emotionalBurdenReduction: string;
+  systematicBiasDetection: string;
+  
+  // TAM-style Adoption Questions
+  futureUseConsideration: number;
+  likelyToUse: number;
+  recommendToOthers: number;
+  toolUsefulness: number;
+  useLikelihoodSemanticDifferential: number;
+  interestSemanticDifferential: number;
+  recommendationSemanticDifferential: number;
+  
+  continuedUseIntention: number;
+  perceivedUtility: number;
+  recommendationLikelihood: number;
+  individualFactorsInfluence: string[];
+  adoptionBarriers: string[];
+  overallSatisfaction: number;
+  finalComments?: string;
+  
+  // AI Feature Evaluation
+  personnelRelevanceAccuracy: number;
+  personnelHelpfulness: number;
+  quotesRelevanceAccuracy: number;
+  quotesHelpfulness: number;
+  featureUsagePreference: string[];
+  featureImprovementSuggestions?: string;
+  
+  // Metadata
+  sessionId: string;
+  timestamp: string;
+  type: 'research_post';
+}

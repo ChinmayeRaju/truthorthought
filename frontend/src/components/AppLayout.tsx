@@ -1,6 +1,6 @@
 import React from 'react';
 import { Layout, Menu, Typography, Button } from 'antd';
-import { BarChartOutlined, ExperimentOutlined, HomeOutlined, DashboardOutlined } from '@ant-design/icons';
+import { BarChartOutlined, ExperimentOutlined, HomeOutlined, DashboardOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const { Header, Content } = Layout;
@@ -38,6 +38,12 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       icon: <DashboardOutlined />,
       label: 'Research Dashboard',
       onClick: () => navigate('/research-dashboard'),
+    },
+    {
+      key: '/exit-questionnaire',
+      icon: <LogoutOutlined />,
+      label: 'Exit Questionnaire',
+      onClick: () => navigate('/exit-questionnaire'),
     },
   ];
 

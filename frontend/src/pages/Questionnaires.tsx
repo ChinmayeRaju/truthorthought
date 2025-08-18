@@ -21,6 +21,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '../components/AppLayout';
+import apiService from '../services/api';
 
 const { Title, Paragraph } = Typography;
 const { Step } = Steps;
@@ -52,15 +53,29 @@ const Questionnaires: React.FC = () => {
       // Generate session ID
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
-      // Store questionnaire data (in real study, this would go to backend)
-      localStorage.setItem(`questionnaire_${sessionId}`, JSON.stringify(values));
+      const dataToSave = {
+        ...values,
+        sessionId,
+        timestamp: new Date().toISOString(),
+        type: 'basic'
+      };
       
-      message.success('Questionnaire completed! Redirecting to analysis...');
+      // Submit to backend (saves to Excel)
+      const response = await apiService.submitQuestionnaire(dataToSave);
       
-      // Redirect to main analysis with session info
-      setTimeout(() => {
-        navigate(`/?sessionId=${sessionId}&fromQuestionnaire=true`);
-      }, 1500);
+      if (response.success) {
+        // Also store questionnaire data in localStorage as backup
+        localStorage.setItem(`questionnaire_${sessionId}`, JSON.stringify(dataToSave));
+        
+        message.success('Questionnaire completed and saved! Redirecting to analysis...');
+        
+        // Redirect to main analysis with session info
+        setTimeout(() => {
+          navigate(`/?sessionId=${sessionId}&fromQuestionnaire=true`);
+        }, 1500);
+      } else {
+        throw new Error(response.message || 'Failed to save questionnaire data');
+      }
       
     } catch (error) {
       console.log('Submission failed:', error);

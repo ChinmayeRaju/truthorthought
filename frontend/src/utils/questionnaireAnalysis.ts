@@ -1,4 +1,5 @@
 // Utility functions for analyzing questionnaire data
+import type { ExitQuestionnaireData } from '../types';
 
 export interface PreQuestionnaireData {
   // News Familiarity
@@ -425,5 +426,126 @@ export class QuestionnaireAnalyzer {
     }
     
     return sessions;
+  }
+
+  /**
+   * Exit Questionnaire Analysis: Task 1 vs Task 2 comparison
+   */
+  static analyzeExitQuestionnaire(exitData: ExitQuestionnaireData[]) {
+    const analysis = {
+      taskPreferences: {
+        easier: { task1: 0, task2: 0, equal: 0 },
+        betterUnderstanding: { task1: 0, task2: 0, equal: 0 },
+        moreControl: { task1: 0, task2: 0, equal: 0 },
+        timeSaving: { task1: 0, task2: 0, equal: 0 },
+        lessMentalDemand: { task1: 0, task2: 0, equal: 0 },
+        moreTrust: { task1: 0, task2: 0, equal: 0 },
+        futurePreference: { task1: 0, task2: 0, equal: 0 }
+      },
+      biasPerception: {
+        task1: 0,
+        task2: 0,
+        noDifference: 0,
+        descriptions: [] as string[]
+      },
+      personnelInfluence: {
+        scores: [] as number[],
+        averageScore: 0,
+        differences: { task1: 0, task2: 0, noDifference: 0 },
+        descriptions: [] as string[]
+      },
+      qualitativeFeedback: [] as string[],
+      totalResponses: 0
+    };
+
+    exitData.forEach(response => {
+      analysis.totalResponses++;
+
+      // Count task preferences
+      const preferences = [
+        'easier', 'betterUnderstanding', 'moreControl',
+        'timeSaving', 'lessMentalDemand', 'moreTrust', 'futurePreference'
+      ];
+
+      preferences.forEach(pref => {
+        const value = response[pref as keyof ExitQuestionnaireData] as string;
+        if (value === 'task1') analysis.taskPreferences[pref as keyof typeof analysis.taskPreferences].task1++;
+        else if (value === 'task2') analysis.taskPreferences[pref as keyof typeof analysis.taskPreferences].task2++;
+        else if (value === 'equal') analysis.taskPreferences[pref as keyof typeof analysis.taskPreferences].equal++;
+      });
+
+      // Bias perception analysis
+      if (response.biasNoticed === 'task1') analysis.biasPerception.task1++;
+      else if (response.biasNoticed === 'task2') analysis.biasPerception.task2++;
+      else analysis.biasPerception.noDifference++;
+
+      if (response.biasDescription) {
+        analysis.biasPerception.descriptions.push(response.biasDescription);
+      }
+
+      // Personnel influence analysis
+      analysis.personnelInfluence.scores.push(response.personnelInfluence);
+
+      if (response.personnelInfluenceDifference === 'task1') analysis.personnelInfluence.differences.task1++;
+      else if (response.personnelInfluenceDifference === 'task2') analysis.personnelInfluence.differences.task2++;
+      else analysis.personnelInfluence.differences.noDifference++;
+
+      if (response.personnelInfluenceDescription) {
+        analysis.personnelInfluence.descriptions.push(response.personnelInfluenceDescription);
+      }
+
+      // Qualitative feedback
+      if (response.additionalComments) {
+        analysis.qualitativeFeedback.push(response.additionalComments);
+      }
+    });
+
+    // Calculate average personnel influence
+    if (analysis.personnelInfluence.scores.length > 0) {
+      analysis.personnelInfluence.averageScore =
+        analysis.personnelInfluence.scores.reduce((a, b) => a + b, 0) / analysis.personnelInfluence.scores.length;
+    }
+
+    return analysis;
+  }
+
+  /**
+   * Get all exit questionnaire data from localStorage
+   */
+  static getAllExitQuestionnaireData(): ExitQuestionnaireData[] {
+    const exitData = localStorage.getItem('exitQuestionnaires');
+    return exitData ? JSON.parse(exitData) : [];
+  }
+
+  /**
+   * Export exit questionnaire data to CSV
+   */
+  static exportExitQuestionnaireToCSV(exitData: ExitQuestionnaireData[]): string {
+    const headers = [
+      'sessionId', 'timestamp', 'easierTask', 'betterUnderstanding', 'moreControl',
+      'timeSaving', 'lessMentalDemand', 'moreTrust', 'biasNoticed', 'biasDescription',
+      'personnelInfluence', 'personnelInfluenceDifference', 'personnelInfluenceDescription',
+      'futurePreference', 'additionalComments'
+    ];
+
+    const rows = exitData.map(response => [
+      response.sessionId,
+      response.timestamp,
+      response.easierTask,
+      response.betterUnderstanding,
+      response.moreControl,
+      response.timeSaving,
+      response.lessMentalDemand,
+      response.moreTrust,
+      response.biasNoticed,
+      response.biasDescription || '',
+      response.personnelInfluence,
+      response.personnelInfluenceDifference,
+      response.personnelInfluenceDescription || '',
+      response.futurePreference,
+      response.additionalComments || ''
+    ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(','));
+
+    return [headers.join(','), ...rows].join('\n');
   }
 }

@@ -85,6 +85,26 @@ const ResearchDashboard: React.FC = () => {
     }
   };
 
+  const exportExitData = () => {
+    try {
+      const exitData = QuestionnaireAnalyzer.getAllExitQuestionnaireData();
+      const csv = QuestionnaireAnalyzer.exportExitQuestionnaireToCSV(exitData);
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `exit_questionnaire_data_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      message.success('Exit questionnaire data exported successfully');
+    } catch (error) {
+      message.error('Failed to export exit questionnaire data');
+      console.error('Export error:', error);
+    }
+  };
+
   // Calculate summary statistics
   const completedSessions = sessions.filter(s => s.preQuestionnaire && s.postQuestionnaire);
   const preOnlySessions = sessions.filter(s => s.preQuestionnaire && !s.postQuestionnaire);
@@ -98,6 +118,10 @@ const ResearchDashboard: React.FC = () => {
   const userExperienceAnalysis = QuestionnaireAnalyzer.analyzeUserExperience(completedSessions);
   const contentGapAnalysis = QuestionnaireAnalyzer.analyzeContentGaps(completedSessions);
   const demographicsAnalysis = QuestionnaireAnalyzer.analyzeDemographics(completedSessions);
+  
+  // Exit questionnaire analysis
+  const exitQuestionnaireData = QuestionnaireAnalyzer.getAllExitQuestionnaireData();
+  const exitAnalysis = QuestionnaireAnalyzer.analyzeExitQuestionnaire(exitQuestionnaireData);
 
   // Calculate average satisfaction (using a relevant metric from new questionnaire)
   const avgClarity = clarityAnalysis.averageClarity;
@@ -402,6 +426,133 @@ const ResearchDashboard: React.FC = () => {
                       </div>
                     ))}
                   </div>
+                </>
+              )}
+            </Card>
+          </Col>
+        </Row>
+      )
+    },
+    {
+      key: '7',
+      title: 'Exit Questionnaire',
+      icon: <EyeOutlined />,
+      content: (
+        <Row gutter={[16, 16]}>
+          <Col span={24}>
+            <Card title="Task Comparison Analysis" extra={
+              <Button
+                type="primary"
+                icon={<DownloadOutlined />}
+                onClick={exportExitData}
+                disabled={exitAnalysis.totalResponses === 0}
+              >
+                Export Exit Data
+              </Button>
+            }>
+              {exitAnalysis.totalResponses === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px' }}>
+                  <Text type="secondary">No exit questionnaire responses yet</Text>
+                </div>
+              ) : (
+                <>
+                  <Row gutter={16} style={{ marginBottom: 24 }}>
+                    <Col span={6}>
+                      <Statistic
+                        title="Total Responses"
+                        value={exitAnalysis.totalResponses}
+                        prefix={<UserOutlined />}
+                      />
+                    </Col>
+                    <Col span={6}>
+                      <Statistic
+                        title="Avg Personnel Influence"
+                        value={exitAnalysis.personnelInfluence.averageScore.toFixed(1)}
+                        suffix="/ 5"
+                      />
+                    </Col>
+                    <Col span={6}>
+                      <Statistic
+                        title="Future Preference: Task 1"
+                        value={exitAnalysis.taskPreferences.futurePreference.task1}
+                        suffix={`/ ${exitAnalysis.totalResponses}`}
+                      />
+                    </Col>
+                    <Col span={6}>
+                      <Statistic
+                        title="Future Preference: Task 2"
+                        value={exitAnalysis.taskPreferences.futurePreference.task2}
+                        suffix={`/ ${exitAnalysis.totalResponses}`}
+                      />
+                    </Col>
+                  </Row>
+
+                  <Row gutter={[16, 16]}>
+                    <Col span={12}>
+                      <Card title="Task Preferences" size="small">
+                        <div>
+                          {Object.entries(exitAnalysis.taskPreferences).map(([category, prefs]) => (
+                            <div key={category} style={{ marginBottom: 16 }}>
+                              <Text strong>{category.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</Text>
+                              <div style={{ marginLeft: 16, marginTop: 4 }}>
+                                <div>Task 1: <Tag color="blue">{prefs.task1}</Tag></div>
+                                <div>Task 2: <Tag color="green">{prefs.task2}</Tag></div>
+                                <div>Equal: <Tag color="orange">{prefs.equal}</Tag></div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </Card>
+                    </Col>
+                    <Col span={12}>
+                      <Card title="Bias Perception" size="small">
+                        <Row gutter={16}>
+                          <Col span={8}>
+                            <Statistic
+                              title="More Bias in Task 1"
+                              value={exitAnalysis.biasPerception.task1}
+                              suffix={`/ ${exitAnalysis.totalResponses}`}
+                            />
+                          </Col>
+                          <Col span={8}>
+                            <Statistic
+                              title="More Bias in Task 2"
+                              value={exitAnalysis.biasPerception.task2}
+                              suffix={`/ ${exitAnalysis.totalResponses}`}
+                            />
+                          </Col>
+                          <Col span={8}>
+                            <Statistic
+                              title="No Difference"
+                              value={exitAnalysis.biasPerception.noDifference}
+                              suffix={`/ ${exitAnalysis.totalResponses}`}
+                            />
+                          </Col>
+                        </Row>
+                        {exitAnalysis.biasPerception.descriptions.length > 0 && (
+                          <>
+                            <Divider />
+                            <Text strong>Bias Descriptions:</Text>
+                            {exitAnalysis.biasPerception.descriptions.map((desc, index) => (
+                              <div key={index} style={{ marginTop: 8, padding: 8, background: '#f5f5f5' }}>
+                                <Text>{desc}</Text>
+                              </div>
+                            ))}
+                          </>
+                        )}
+                      </Card>
+                    </Col>
+                  </Row>
+
+                  {exitAnalysis.qualitativeFeedback.length > 0 && (
+                    <Card title="Additional Comments" style={{ marginTop: 16 }} size="small">
+                      {exitAnalysis.qualitativeFeedback.map((comment, index) => (
+                        <div key={index} style={{ marginTop: 8, padding: 8, background: '#f5f5f5' }}>
+                          <Text>{comment}</Text>
+                        </div>
+                      ))}
+                    </Card>
+                  )}
                 </>
               )}
             </Card>
