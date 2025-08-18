@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 from scraper import NewsContentScraper
 from gemini_citation_service import GeminiCitationService, VerifiedCitation
+from integrated_citation_validator import IntegratedCitationValidator
 
 # Load environment variables
 load_dotenv()
@@ -637,6 +638,8 @@ class CleanAnalysisSystem:
         self.domain_detector = DomainDetector(self.client)
         # Add Gemini citation service with Google Search grounding
         self.citation_service = GeminiCitationService()
+        # Add integrated citation validator for comprehensive URL validation
+        self.citation_validator = IntegratedCitationValidator()
         self.last_analysis_data = None
         self.formatter = SimpleFormatter()
         self.current_domain = 'GENERAL'
@@ -847,7 +850,7 @@ class CleanAnalysisSystem:
             return "ERROR: No sentences found to analyze"
         
         consensus_results = []
-        analysis_limit = min(len(sentences), 10)  # Analyze up to 10 sentences for research
+        analysis_limit = min(len(sentences), 5)  # Analyze up to 5 sentences for research
         
         for i, sentence in enumerate(sentences[:analysis_limit], 1):
             print(f"   Analyzing sentence {i}/{analysis_limit}...")
@@ -926,7 +929,8 @@ class CleanAnalysisSystem:
             }
             formatted_results.append(formatted_result)
         
-        self.last_analysis_data = {
+        # Store initial analysis data
+        initial_analysis_data = {
             'content': data['content'],
             'results': formatted_results,  # Use formatted results
             'consensus_result': {
@@ -936,6 +940,10 @@ class CleanAnalysisSystem:
             'title': data.get('title', ''),
             'url': data.get('url', '')
         }
+        
+        # Apply comprehensive URL validation to filter facts with working sources
+        print(f"🔧 Applying comprehensive URL validation to filter facts...")
+        self.last_analysis_data = self.citation_validator.get_verified_facts_with_working_sources(initial_analysis_data)
         
         # Format output similar to the MultiRolePromptingSystem
         return self._format_results(consensus_results, data.get('title', ''), domain)
@@ -1049,3 +1057,17 @@ class CleanAnalysisSystem:
             lines.append("")
         
         return lines
+    
+    def get_facts_section_with_verified_sources(self) -> str:
+        """Generate Facts section with only comprehensively verified sources"""
+        if not self.last_analysis_data:
+            return "No analysis data available. Please run an analysis first."
+        
+        return self.citation_validator.generate_facts_section_with_verified_sources(self.last_analysis_data)
+    
+    def get_verification_summary(self) -> dict:
+        """Get summary of URL verification results"""
+        if not self.last_analysis_data:
+            return {"error": "No analysis data available"}
+        
+        return self.last_analysis_data.get('verification_summary', {})
