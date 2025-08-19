@@ -652,47 +652,69 @@ def analyze_multiple():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    """Handle chat questions about analysis"""
+    """Handle chat questions about analysis using intelligent assistant"""
     try:
         data = request.get_json()
         session_id = data.get('session_id')
         question = data.get('question')
         
-        if not session_id or session_id not in session:
-            return jsonify({'error': 'Invalid session'}), 400
+        if not session_id or session_id not in analysis_sessions:
+            return jsonify({'error': 'Invalid session ID'}), 400
         
-        if not question:
+        if not question or not question.strip():
             return jsonify({'error': 'No question provided'}), 400
         
         # Get analysis data from session
         analysis_data = analysis_sessions[session_id]['analysis_data']
         
         # Debug: Print session data info
-        print(f"DEBUG: Session analysis data keys: {analysis_data.keys()}")
-        print(f"DEBUG: Results type: {type(analysis_data['results'])}")
-        print(f"DEBUG: Results length: {len(analysis_data['results']) if analysis_data['results'] else 0}")
-        print(f"DEBUG: Domain: {analysis_data['domain']}")
-        print(f"DEBUG: Title: {analysis_data['title']}")
+        print(f"🤖 Chat request for session: {session_id}")
+        print(f"📝 Question: {question}")
+        print(f"📊 Analysis data available: {bool(analysis_data)}")
         
-        # Create chat interface
-        from multi_role_prompting_system import ChatInterface
-        chat_interface = ChatInterface(
-            analysis_data['content'],
-            analysis_data['results'],
-            analysis_data['domain'],
-            analysis_data['title']
-        )
+        # Create intelligent chat assistant
+        from intelligent_chat_assistant import IntelligentChatAssistant
+        assistant = IntelligentChatAssistant()
         
-        # Get answer
-        answer = chat_interface._answer_question(question)
+        # Create chat context from analysis data
+        context = assistant.create_chat_context(analysis_data, session_id)
+        
+        # Get intelligent response
+        answer = assistant.answer_question(question, context)
+        
+        # Get suggested follow-up questions
+        suggestions = assistant.get_suggested_questions(context)
+        
+        print(f"✅ Generated response length: {len(answer)} characters")
         
         return jsonify({
             'success': True,
-            'answer': answer
+            'answer': answer,
+            'suggested_questions': suggestions[:4],  # Limit to 4 suggestions
+            'context_info': {
+                'facts_count': len(context.facts),
+                'opinions_count': len(context.opinions),
+                'domain': context.domain,
+                'has_verified_sources': context.analysis_summary.get('has_verified_sources', False)
+            }
         })
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"❌ Chat error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        # Return helpful error message
+        return jsonify({
+            'success': False,
+            'error': 'I apologize, but I encountered an issue processing your question. Please try rephrasing your question or ask about a different aspect of the analysis.',
+            'suggested_questions': [
+                'What are the main facts in this article?',
+                'Can you summarize the key points?',
+                'What sources support the claims made?',
+                'Are there any potential biases in this content?'
+            ]
+        }), 500
 
 @app.route('/summarize_content', methods=['POST'])
 def summarize_content():

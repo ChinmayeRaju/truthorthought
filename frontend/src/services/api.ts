@@ -65,7 +65,18 @@ export const apiService = {
   },
 
   // Chat with AI
-  chat: async (sessionId: string, question: string): Promise<{ success: boolean; answer: string }> => {
+  chat: async (sessionId: string, question: string): Promise<{
+    success: boolean;
+    answer: string;
+    suggested_questions?: string[];
+    context_info?: {
+      facts_count: number;
+      opinions_count: number;
+      domain: string;
+      has_verified_sources: boolean;
+    };
+    error?: string;
+  }> => {
     const response = await api.post('/chat', {
       session_id: sessionId,
       question,

@@ -1,15 +1,22 @@
-import React, { useState } from 'react';
-import { Input, Button, List, Typography, Space, message } from 'antd';
-import { SendOutlined, UserOutlined, RobotOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Input, Button, List, Typography, Space, message, Card, Tag, Divider } from 'antd';
+import { SendOutlined, UserOutlined, RobotOutlined, BulbOutlined, CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { apiService } from '../services/api';
 
-const { Text } = Typography;
+const { Text, Paragraph } = Typography;
 
 interface ChatMessage {
   id: string;
   text: string;
   sender: 'user' | 'assistant';
   timestamp: Date;
+  suggestedQuestions?: string[];
+  contextInfo?: {
+    facts_count: number;
+    opinions_count: number;
+    domain: string;
+    has_verified_sources: boolean;
+  };
 }
 
 interface ChatComponentProps {
@@ -20,13 +27,37 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ sessionId }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
+  const [currentSuggestions, setCurrentSuggestions] = useState<string[]>([]);
+  const [contextInfo, setContextInfo] = useState<any>(null);
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
+  // Initialize with welcome message and suggestions
+  useEffect(() => {
+    const welcomeMessage: ChatMessage = {
+      id: 'welcome',
+      text: `Hello! I'm your intelligent analysis assistant. I can help you understand the content, identify key facts and opinions, analyze sources, detect potential biases, and answer questions about the article's themes and implications.
+
+What would you like to know about this analysis?`,
+      sender: 'assistant',
+      timestamp: new Date(),
+      suggestedQuestions: [
+        'What are the main facts in this article?',
+        'Can you summarize the key points?',
+        'What sources support the claims made?',
+        'Are there any potential biases in this content?'
+      ]
+    };
+    
+    setMessages([welcomeMessage]);
+    setCurrentSuggestions(welcomeMessage.suggestedQuestions || []);
+  }, []);
+
+  const handleSendMessage = async (questionText?: string) => {
+    const question = questionText || inputValue.trim();
+    if (!question) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
-      text: inputValue,
+      text: question,
       sender: 'user',
       timestamp: new Date(),
     };
@@ -34,23 +65,52 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ sessionId }) => {
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setLoading(true);
+    setCurrentSuggestions([]);
 
     try {
-      const response = await apiService.chat(sessionId, inputValue);
+      const response = await apiService.chat(sessionId, question);
       if (response.success) {
         const assistantMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           text: response.answer,
           sender: 'assistant',
           timestamp: new Date(),
+          suggestedQuestions: response.suggested_questions || [],
+          contextInfo: response.context_info
         };
+        
         setMessages(prev => [...prev, assistantMessage]);
+        setCurrentSuggestions(response.suggested_questions || []);
+        setContextInfo(response.context_info);
       } else {
-        message.error('Failed to get response from AI');
+        const errorMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          text: response.error || 'I apologize, but I encountered an issue processing your question. Please try rephrasing your question.',
+          sender: 'assistant',
+          timestamp: new Date(),
+          suggestedQuestions: response.suggested_questions || [
+            'What are the main facts in this article?',
+            'Can you summarize the key points?',
+            'What sources support the claims made?'
+          ]
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        setCurrentSuggestions(errorMessage.suggestedQuestions || []);
       }
     } catch (error) {
       console.error('Chat error:', error);
-      message.error('Network error occurred');
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        text: 'I apologize, but I encountered a network error. Please check your connection and try again.',
+        sender: 'assistant',
+        timestamp: new Date(),
+        suggestedQuestions: [
+          'What are the main facts in this article?',
+          'Can you summarize the key points?'
+        ]
+      };
+      setMessages(prev => [...prev, errorMessage]);
+      setCurrentSuggestions(errorMessage.suggestedQuestions || []);
     } finally {
       setLoading(false);
     }
@@ -63,64 +123,162 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ sessionId }) => {
     }
   };
 
+  const handleSuggestionClick = (suggestion: string) => {
+    handleSendMessage(suggestion);
+  };
+
   return (
-    <div style={{ height: '400px', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '500px', display: 'flex', flexDirection: 'column' }}>
+      {/* Context Info Bar */}
+      {contextInfo && (
+        <Card size="small" style={{ marginBottom: 12, backgroundColor: '#f8f9fa' }}>
+          <Space wrap>
+            <Tag color="blue" icon={<CheckCircleOutlined />}>
+              {contextInfo.facts_count} Facts
+            </Tag>
+            <Tag color="orange" icon={<ExclamationCircleOutlined />}>
+              {contextInfo.opinions_count} Opinions
+            </Tag>
+            <Tag color="green">
+              Domain: {contextInfo.domain}
+            </Tag>
+            {contextInfo.has_verified_sources && (
+              <Tag color="cyan" icon={<CheckCircleOutlined />}>
+                Verified Sources
+              </Tag>
+            )}
+          </Space>
+        </Card>
+      )}
+
+      {/* Messages Area */}
       <div style={{ flex: 1, overflow: 'auto', marginBottom: 16 }}>
-        {messages.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>
-            <RobotOutlined style={{ fontSize: 48, marginBottom: 16 }} />
-            <div>Ask me anything about the analysis!</div>
-          </div>
-        ) : (
-          <List
-            dataSource={messages}
-            renderItem={(message) => (
-              <List.Item style={{ padding: '8px 0', border: 'none' }}>
+        <List
+          dataSource={messages}
+          renderItem={(message) => (
+            <List.Item style={{ padding: '12px 0', border: 'none' }}>
+              <div
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start',
+                }}
+              >
                 <div
                   style={{
-                    width: '100%',
-                    display: 'flex',
-                    justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start',
+                    maxWidth: '85%',
+                    padding: '16px 20px',
+                    borderRadius: 16,
+                    background: message.sender === 'user' ? '#1890ff' : '#ffffff',
+                    color: message.sender === 'user' ? 'white' : 'black',
+                    border: message.sender === 'assistant' ? '1px solid #e8e8e8' : 'none',
+                    boxShadow: message.sender === 'assistant' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
                   }}
                 >
-                  <div
-                    style={{
-                      maxWidth: '80%',
-                      padding: '12px 16px',
-                      borderRadius: 12,
-                      background: message.sender === 'user' ? '#1890ff' : '#f0f0f0',
-                      color: message.sender === 'user' ? 'white' : 'black',
-                    }}
-                  >
-                    <Space>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                    <div style={{
+                      fontSize: 18,
+                      marginTop: 2,
+                      color: message.sender === 'user' ? 'white' : '#1890ff'
+                    }}>
                       {message.sender === 'user' ? <UserOutlined /> : <RobotOutlined />}
-                      <Text style={{ color: message.sender === 'user' ? 'white' : 'black' }}>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <Paragraph
+                        style={{
+                          margin: 0,
+                          color: message.sender === 'user' ? 'white' : 'black',
+                          whiteSpace: 'pre-wrap',
+                          lineHeight: 1.6
+                        }}
+                      >
                         {message.text}
-                      </Text>
-                    </Space>
+                      </Paragraph>
+                      
+                      {/* Show timestamp for assistant messages */}
+                      {message.sender === 'assistant' && (
+                        <Text
+                          type="secondary"
+                          style={{
+                            fontSize: 11,
+                            marginTop: 8,
+                            display: 'block'
+                          }}
+                        >
+                          {message.timestamp.toLocaleTimeString()}
+                        </Text>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </List.Item>
-            )}
-          />
-        )}
+              </div>
+            </List.Item>
+          )}
+        />
       </div>
+
+      {/* Suggested Questions */}
+      {currentSuggestions.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <BulbOutlined style={{ color: '#faad14' }} />
+            <Text strong style={{ fontSize: 12, color: '#666' }}>
+              Suggested questions:
+            </Text>
+          </div>
+          <Space wrap size={[8, 8]}>
+            {currentSuggestions.map((suggestion, index) => (
+              <Button
+                key={index}
+                size="small"
+                type="default"
+                onClick={() => handleSuggestionClick(suggestion)}
+                style={{
+                  borderRadius: 16,
+                  fontSize: 12,
+                  height: 'auto',
+                  padding: '6px 12px',
+                  border: '1px solid #d9d9d9',
+                  backgroundColor: '#fafafa'
+                }}
+                disabled={loading}
+              >
+                {suggestion}
+              </Button>
+            ))}
+          </Space>
+          <Divider style={{ margin: '12px 0' }} />
+        </div>
+      )}
       
-      <div style={{ display: 'flex', gap: 8 }}>
+      {/* Input Area */}
+      <div style={{ display: 'flex', gap: 12 }}>
         <Input.TextArea
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Ask a follow-up question..."
-          autoSize={{ minRows: 1, maxRows: 3 }}
-          style={{ flex: 1 }}
+          placeholder="Ask about facts, opinions, sources, biases, themes, or any aspect of the analysis..."
+          autoSize={{ minRows: 2, maxRows: 4 }}
+          style={{
+            flex: 1,
+            borderRadius: 12,
+            fontSize: 14
+          }}
+          disabled={loading}
         />
         <Button
           type="primary"
           icon={<SendOutlined />}
-          onClick={handleSendMessage}
+          onClick={() => handleSendMessage()}
           loading={loading}
           disabled={!inputValue.trim()}
+          style={{
+            height: 'auto',
+            minHeight: 48,
+            borderRadius: 12,
+            paddingLeft: 20,
+            paddingRight: 20
+          }}
         >
           Send
         </Button>
