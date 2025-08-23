@@ -8,3 +8,5 @@ __pycache__
 .roo
 **/node_modules
 Gemini IAM Client.json
+*.json
+questionnaire_data

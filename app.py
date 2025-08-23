@@ -21,9 +21,35 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
-# Global storage for analysis sessions (in-memory for demo purposes)
-# In production, you'd want to use a database or persistent storage
+# Global storage for analysis sessions with file persistence
 analysis_sessions = {}
+
+def load_analysis_sessions():
+    """Load analysis sessions from disk"""
+    global analysis_sessions
+    try:
+        if os.path.exists('analysis_sessions.json'):
+            with open('analysis_sessions.json', 'r') as f:
+                analysis_sessions = json.load(f)
+                print(f"Loaded {len(analysis_sessions)} analysis sessions from disk")
+        else:
+            analysis_sessions = {}
+            print("No existing analysis sessions file found, starting fresh")
+    except Exception as e:
+        print(f"Error loading analysis sessions: {e}")
+        analysis_sessions = {}
+
+def save_analysis_sessions():
+    """Save analysis sessions to disk"""
+    try:
+        with open('analysis_sessions.json', 'w') as f:
+            json.dump(analysis_sessions, f, indent=2)
+        print(f"Saved {len(analysis_sessions)} analysis sessions to disk")
+    except Exception as e:
+        print(f"Error saving analysis sessions: {e}")
+
+# Load existing sessions on startup
+load_analysis_sessions()
 
 # Global system instances
 analysis_system = None
@@ -73,6 +99,9 @@ def bias_research():
 def get_analyzed_sessions():
     """Get all previously analyzed sessions for bias research"""
     try:
+        # Force reload sessions from disk to ensure we have the latest data
+        load_analysis_sessions()
+        
         # Get all stored sessions with analysis data
         analyzed_sessions_list = []
         
@@ -90,28 +119,61 @@ def get_analyzed_sessions():
                     'total_opinions': 0,
                     'total_sentences': 0,
                     'url': analysis_data.get('url', ''),
-                    'is_multiple': 'multiple_results' in analysis_data
+                    'is_multiple': 'multiple_results' in analysis_data or ('urls' in analysis_data and len(analysis_data.get('urls', [])) > 1)
                 }
                 
-                # Calculate metrics
-                if 'results' in analysis_data:
-                    results = analysis_data['results']
-                    session_info['total_facts'] = len([r for r in results if r.get('final_classification') == 'FACT'])
-                    session_info['total_opinions'] = len([r for r in results if r.get('final_classification') == 'OPINION'])
-                    session_info['total_sentences'] = len(results)
-                elif 'multiple_results' in analysis_data:
+                # Calculate metrics - check for multi-source sessions first
+                if 'multiple_results' in analysis_data:
                     # Handle multiple URL results
                     total_facts = 0
                     total_opinions = 0
                     total_sentences = 0
-                    for result in analysis_data['multiple_results']:
-                        total_facts += result.get('facts_count', 0)
-                        total_opinions += result.get('opinions_count', 0)
-                        total_sentences += result.get('sentences_count', 0)
+                    urls = []
+                    
+                    # First, try to get URLs from the direct 'urls' field (saved by analyze_multiple)
+                    if 'urls' in analysis_data and analysis_data['urls']:
+                        urls = analysis_data['urls']
+                    
+                    # Process individual results for metrics
+                    for i, result in enumerate(analysis_data['multiple_results']):
+                        facts_count = result.get('facts_count', 0)
+                        opinions_count = result.get('opinions_count', 0)
+                        sentences_count = result.get('sentences_count', 0)
+                        url = result.get('url', '')
+                        total_facts += facts_count
+                        total_opinions += opinions_count
+                        total_sentences += sentences_count
+                        
+                        # If we didn't get URLs from the direct field, collect them from individual results
+                        if not urls and url:
+                            urls.append(url)
+                    
                     session_info['total_facts'] = total_facts
                     session_info['total_opinions'] = total_opinions
                     session_info['total_sentences'] = total_sentences
-                    session_info['title'] = f"Multi-Source Analysis ({len(analysis_data['multiple_results'])} URLs)"
+                    session_info['title'] = f"Multi-Source Analysis ({len(urls)} URLs)" if urls else f"Multi-Source Analysis ({len(analysis_data['multiple_results'])} URLs)"
+                    # For multi-source, include the URLs as a comma-separated string or array
+                    session_info['url'] = urls[0] if len(urls) == 1 else ', '.join(urls) if urls else ''
+                    session_info['urls'] = urls  # Also include as array for frontend
+                elif 'urls' in analysis_data and len(analysis_data.get('urls', [])) > 1:
+                    # Handle sessions with multiple URLs but no multiple_results (individual analysis mode)
+                    urls = analysis_data['urls']
+                    
+                    # Use the regular results array for metrics since there's no multiple_results
+                    if 'results' in analysis_data and len(analysis_data['results']) > 0:
+                        results = analysis_data['results']
+                        session_info['total_facts'] = len([r for r in results if r.get('final_classification') == 'FACT'])
+                        session_info['total_opinions'] = len([r for r in results if r.get('final_classification') == 'OPINION'])
+                        session_info['total_sentences'] = len(results)
+                    
+                    session_info['title'] = f"Multi-Source Analysis ({len(urls)} URLs)"
+                    session_info['url'] = ', '.join(urls) if isinstance(urls, list) else str(urls)
+                    session_info['urls'] = urls  # Also include as array for frontend
+                elif 'results' in analysis_data and len(analysis_data['results']) > 0:
+                    results = analysis_data['results']
+                    session_info['total_facts'] = len([r for r in results if r.get('final_classification') == 'FACT'])
+                    session_info['total_opinions'] = len([r for r in results if r.get('final_classification') == 'OPINION'])
+                    session_info['total_sentences'] = len(results)
                 
                 analyzed_sessions_list.append(session_info)
         
@@ -130,6 +192,9 @@ def get_analyzed_sessions():
 def load_session_for_bias(session_id):
     """Load a specific session's data for bias research analysis"""
     try:
+        # Force reload sessions from disk to ensure we have the latest data
+        load_analysis_sessions()
+        
         if session_id not in analysis_sessions:
             return jsonify({'error': 'Session not found'}), 404
         
@@ -155,8 +220,104 @@ def load_session_for_bias(session_id):
             'specialists': []
         }
         
+        # Handle multiple URL analysis (with multiple_results)
+        if 'multiple_results' in analysis_data:
+            response_data['is_multiple'] = True
+            response_data['multiple_results'] = analysis_data['multiple_results']
+            
+            # Extract URLs from the direct 'urls' field if available
+            if 'urls' in analysis_data:
+                response_data['urls'] = analysis_data['urls']
+            
+            # For bias research, we need the full article content from each URL
+            from scraper import NewsContentScraper
+            scraper = NewsContentScraper()
+            
+            # Fetch full content for each URL and enhance multiple_results
+            enhanced_results = []
+            for i, url_result in enumerate(analysis_data['multiple_results']):
+                enhanced_result = url_result.copy()
+                
+                # Try to get full article content
+                if 'url' in url_result:
+                    try:
+                        scraped_data = scraper.scrape_url(url_result['url'])
+                        if scraped_data and scraped_data.get('content'):
+                            enhanced_result['full_content'] = scraped_data['content']
+                            enhanced_result['scraped_title'] = scraped_data.get('title', url_result.get('title', 'Unknown'))
+                        else:
+                            enhanced_result['full_content'] = url_result.get('summary', 'Content not available')
+                            enhanced_result['scraped_title'] = url_result.get('title', 'Unknown')
+                    except Exception as e:
+                        print(f"Error scraping content for {url_result['url']}: {e}")
+                        enhanced_result['full_content'] = url_result.get('summary', 'Content not available')
+                        enhanced_result['scraped_title'] = url_result.get('title', 'Unknown')
+                else:
+                    enhanced_result['full_content'] = url_result.get('summary', 'Content not available')
+                    enhanced_result['scraped_title'] = url_result.get('title', 'Unknown')
+                
+                enhanced_results.append(enhanced_result)
+            
+            response_data['multiple_results'] = enhanced_results
+            
+            # Aggregate facts and opinions from all sources
+            all_facts = []
+            all_opinions = []
+            
+            for url_result in enhanced_results:
+                if 'facts' in url_result:
+                    for fact in url_result['facts']:
+                        fact['source_url'] = url_result['url']
+                        fact['source_title'] = url_result['title']
+                        all_facts.append(fact)
+                
+                if 'opinions' in url_result:
+                    for opinion in url_result['opinions']:
+                        opinion['source_url'] = url_result['url']
+                        opinion['source_title'] = url_result['title']
+                        all_opinions.append(opinion)
+            
+            response_data['facts'] = all_facts
+            response_data['opinions'] = all_opinions
+            response_data['total_facts'] = len(all_facts)
+            response_data['total_opinions'] = len(all_opinions)
+        
+        # Handle sessions with multiple URLs but no multiple_results (individual analysis mode)
+        elif 'urls' in analysis_data and len(analysis_data.get('urls', [])) > 1:
+            print(f"DEBUG: Loading multi-URL session without multiple_results")
+            print(f"DEBUG: Found URLs: {analysis_data['urls']}")
+            
+            response_data['is_multiple'] = True
+            response_data['urls'] = analysis_data['urls']
+            response_data['title'] = f"Multi-Source Analysis ({len(analysis_data['urls'])} URLs)"
+            
+            # For this type of session, the results are in the regular 'results' array
+            # but they represent analysis from multiple sources
+            if 'results' in analysis_data and len(analysis_data['results']) > 0:
+                results = analysis_data['results']
+                
+                # Extract facts and opinions with detailed information
+                for result in results:
+                    sentence_data = {
+                        'sentence': result.get('sentence', ''),
+                        'confidence': result.get('consensus_confidence', 0),
+                        'reasoning': result.get('consensus_reasoning', ''),
+                        'citations': result.get('citations', []),
+                        'citation': result.get('citation', {}),
+                        'source_url': result.get('source_url', ''),
+                        'source_name': result.get('source_name', '')
+                    }
+                    
+                    if result.get('final_classification') == 'FACT':
+                        response_data['facts'].append(sentence_data)
+                    elif result.get('final_classification') == 'OPINION':
+                        response_data['opinions'].append(sentence_data)
+                
+                response_data['total_facts'] = len(response_data['facts'])
+                response_data['total_opinions'] = len(response_data['opinions'])
+        
         # Handle single URL analysis
-        if 'results' in analysis_data:
+        elif 'results' in analysis_data and len(analysis_data['results']) > 0:
             results = analysis_data['results']
             
             # Extract facts and opinions with detailed information
@@ -177,13 +338,18 @@ def load_session_for_bias(session_id):
             response_data['total_facts'] = len(response_data['facts'])
             response_data['total_opinions'] = len(response_data['opinions'])
         
-        # Handle multiple URL analysis
+        # Handle multiple URL analysis (with multiple_results)
         elif 'multiple_results' in analysis_data:
             print(f"DEBUG: Loading multiple results session")
             print(f"DEBUG: Found {len(analysis_data['multiple_results'])} results in session")
             
             response_data['is_multiple'] = True
             response_data['multiple_results'] = analysis_data['multiple_results']
+            
+            # Extract URLs from the direct 'urls' field if available
+            if 'urls' in analysis_data:
+                response_data['urls'] = analysis_data['urls']
+                print(f"DEBUG: Found URLs in analysis_data: {analysis_data['urls']}")
             
             # For bias research, we need the full article content from each URL
             from scraper import NewsContentScraper
@@ -239,7 +405,64 @@ def load_session_for_bias(session_id):
             response_data['total_facts'] = len(all_facts)
             response_data['total_opinions'] = len(all_opinions)
         
+        # Handle sessions with multiple URLs but no multiple_results (individual analysis mode)
+        elif 'urls' in analysis_data and len(analysis_data.get('urls', [])) > 1:
+            print(f"DEBUG: Loading multi-URL session without multiple_results")
+            print(f"DEBUG: Found URLs: {analysis_data['urls']}")
+            
+            response_data['is_multiple'] = True
+            response_data['urls'] = analysis_data['urls']
+            response_data['title'] = f"Multi-Source Analysis ({len(analysis_data['urls'])} URLs)"
+            
+            # For this type of session, the results are in the regular 'results' array
+            # but they represent analysis from multiple sources
+            if 'results' in analysis_data and len(analysis_data['results']) > 0:
+                results = analysis_data['results']
+                
+                # Extract facts and opinions with detailed information
+                for result in results:
+                    sentence_data = {
+                        'sentence': result.get('sentence', ''),
+                        'confidence': result.get('consensus_confidence', 0),
+                        'reasoning': result.get('consensus_reasoning', ''),
+                        'citations': result.get('citations', []),
+                        'citation': result.get('citation', {}),
+                        'source_url': result.get('source_url', ''),
+                        'source_name': result.get('source_name', '')
+                    }
+                    
+                    if result.get('final_classification') == 'FACT':
+                        response_data['facts'].append(sentence_data)
+                    elif result.get('final_classification') == 'OPINION':
+                        response_data['opinions'].append(sentence_data)
+                
+                response_data['total_facts'] = len(response_data['facts'])
+                response_data['total_opinions'] = len(response_data['opinions'])
+        
         return jsonify(response_data)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/debug_session/<session_id>', methods=['GET'])
+def debug_session(session_id):
+    """Debug endpoint to see raw session data"""
+    try:
+        # Force reload sessions from disk
+        load_analysis_sessions()
+        
+        if session_id not in analysis_sessions:
+            return jsonify({'error': 'Session not found', 'available_sessions': list(analysis_sessions.keys())}), 404
+        
+        session_data = analysis_sessions[session_id]
+        return jsonify({
+            'session_id': session_id,
+            'session_data': session_data,
+            'analysis_data_keys': list(session_data.get('analysis_data', {}).keys()) if 'analysis_data' in session_data else [],
+            'has_multiple_results': 'multiple_results' in session_data.get('analysis_data', {}),
+            'multiple_results_count': len(session_data.get('analysis_data', {}).get('multiple_results', [])),
+            'multiple_results_sample': session_data.get('analysis_data', {}).get('multiple_results', [])[:1] if session_data.get('analysis_data', {}).get('multiple_results') else []
+        })
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -385,6 +608,7 @@ def analyze():
             'analysis_data': analysis_data,
             'timestamp': datetime.now().isoformat()
         }
+        save_analysis_sessions()  # Persist to disk
         
         # Calculate confidence for single URL analysis
         confidence = 0
@@ -540,6 +764,7 @@ def analyze_multiple():
                 },
                 'timestamp': datetime.now().isoformat()
             }
+            save_analysis_sessions()  # Persist to disk
             
             # Calculate average confidence
             confidence = 0
@@ -603,18 +828,21 @@ def analyze_multiple():
                         },
                         'timestamp': datetime.now().isoformat()
                     }
+                    save_analysis_sessions()  # Persist to disk
                 else:
                     # Handle case where all URLs failed
                     analysis_sessions[session_id] = {
                         'analysis_data': { 'multiple_results': individual_results, 'urls': urls },
                         'timestamp': datetime.now().isoformat()
                     }
+                    save_analysis_sessions()  # Persist to disk
             else:
                 # Fallback if no results at all
                 analysis_sessions[session_id] = {
                     'analysis_data': { 'urls': urls },
                     'timestamp': datetime.now().isoformat()
                 }
+                save_analysis_sessions()  # Persist to disk
 
             # Get the domain and specialists from the first successful result
             first_successful_result = next((r for r in individual_results if r.get('domain') != 'error'), None)

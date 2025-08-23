@@ -213,58 +213,70 @@ const BiasResearch: React.FC = () => {
                         title={
                           <Space>
                             <LinkOutlined />
-                            Research Sources ({selectedSession.multiple_results.length})
+                            Source URLs ({selectedSession.multiple_results.length})
                           </Space>
                         }
                         style={{ height: '100%' }}
-                        bodyStyle={{ padding: 0, height: 'calc(100% - 57px)', overflow: 'auto' }}
+                        bodyStyle={{ padding: 16, height: 'calc(100% - 57px)', overflow: 'auto' }}
                       >
-                        {selectedSession.multiple_results.map((result, index) => (
-                          <div key={index} style={{ padding: 16, borderBottom: '1px solid #f0f0f0' }}>
-                            <div style={{ marginBottom: 12 }}>
-                              <Title level={5} style={{ margin: 0, marginBottom: 8 }}>
-                                {result.title || result.scraped_title}
-                              </Title>
-                              <Space wrap style={{ marginBottom: 8 }}>
-                                <Tag color="blue">{result.domain}</Tag>
-                                <Tag color="green">{result.facts_count} Facts</Tag>
-                                <Tag color="orange">{result.opinions_count} Opinions</Tag>
-                              </Space>
-                            </div>
-                            
-                            <div
-                              style={{
-                                background: '#f8f9fa',
-                                padding: 12,
-                                borderRadius: 6,
-                                border: '1px solid #e9ecef'
-                              }}
-                            >
-                              <div style={{ marginBottom: 8 }}>
-                                <Text strong style={{ fontSize: '13px', color: '#495057' }}>Source URL:</Text>
-                              </div>
-                              <a
-                                href={result.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                  fontSize: '14px',
-                                  wordBreak: 'break-all',
-                                  display: 'block',
-                                  padding: '8px 12px',
-                                  background: 'white',
-                                  border: '1px solid #dee2e6',
-                                  borderRadius: '4px',
-                                  textDecoration: 'none',
-                                  color: '#0066cc'
-                                }}
-                              >
-                                <LinkOutlined style={{ marginRight: 8 }} />
-                                {result.url}
-                              </a>
-                            </div>
+                        {selectedSession.multiple_results && selectedSession.multiple_results.length > 0 ? (
+                          <List
+                            dataSource={selectedSession.multiple_results}
+                            renderItem={(result, index) => (
+                              <List.Item style={{ padding: '12px 0', borderBottom: '1px solid #f0f0f0' }}>
+                                <div style={{ width: '100%' }}>
+                                  <div style={{ marginBottom: 8 }}>
+                                    <Text strong style={{ fontSize: '14px', color: '#1890ff', display: 'block', marginBottom: 4 }}>
+                                      Source {index + 1}
+                                    </Text>
+                                    <Text style={{ fontSize: '13px', color: '#333', display: 'block', marginBottom: 8, lineHeight: 1.4 }}>
+                                      {result.title || result.scraped_title || 'Unknown Title'}
+                                    </Text>
+                                  </div>
+                                  
+                                  <a
+                                    href={result.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                      fontSize: '13px',
+                                      wordBreak: 'break-all',
+                                      display: 'block',
+                                      padding: '12px 16px',
+                                      background: '#f8f9fa',
+                                      border: '1px solid #dee2e6',
+                                      borderRadius: '6px',
+                                      textDecoration: 'none',
+                                      color: '#0066cc',
+                                      width: '100%',
+                                      transition: 'all 0.2s ease'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.background = '#e9ecef';
+                                      e.currentTarget.style.borderColor = '#adb5bd';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.background = '#f8f9fa';
+                                      e.currentTarget.style.borderColor = '#dee2e6';
+                                    }}
+                                  >
+                                    <LinkOutlined style={{ marginRight: 8 }} />
+                                    {result.url}
+                                  </a>
+                                </div>
+                              </List.Item>
+                            )}
+                          />
+                        ) : (
+                          <div style={{
+                            padding: 20,
+                            textAlign: 'center',
+                            color: '#999',
+                            fontStyle: 'italic'
+                          }}>
+                            <Text>No source URLs found in this session.</Text>
                           </div>
-                        ))}
+                        )}
                       </Card>
                     </div>
 
@@ -360,29 +372,58 @@ const BiasResearch: React.FC = () => {
                 {/* Single Source Analysis */}
                 {!selectedSession.is_multiple && (
                   <div style={{ display: 'flex', height: 'calc(100vh - 400px)', gap: 24 }}>
-                    {/* Original Article */}
+                    {/* Source URL */}
                     <div style={{ flex: 1, overflow: 'auto' }}>
-                      <Card 
+                      <Card
                         title={
                           <Space>
-                            <FileTextOutlined />
-                            Original Article
+                            <LinkOutlined />
+                            Source URL
                           </Space>
                         }
                         style={{ height: '100%' }}
                         bodyStyle={{ padding: 16, height: 'calc(100% - 57px)', overflow: 'auto' }}
                       >
-                        <div 
-                          style={{ 
-                            background: '#fafafa',
+                        {selectedSession.url ? (
+                          <a
+                            href={selectedSession.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              fontSize: '14px',
+                              wordBreak: 'break-all',
+                              display: 'block',
+                              padding: '12px 16px',
+                              background: '#f8f9fa',
+                              border: '1px solid #dee2e6',
+                              borderRadius: '6px',
+                              textDecoration: 'none',
+                              color: '#0066cc',
+                              width: '100%',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = '#e9ecef';
+                              e.currentTarget.style.borderColor = '#adb5bd';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = '#f8f9fa';
+                              e.currentTarget.style.borderColor = '#dee2e6';
+                            }}
+                          >
+                            <LinkOutlined style={{ marginRight: 8 }} />
+                            {selectedSession.url}
+                          </a>
+                        ) : (
+                          <div style={{
                             padding: 16,
-                            borderRadius: 8,
-                            fontSize: '14px',
-                            lineHeight: 1.6
-                          }}
-                        >
-                          {selectedSession.content || 'Content not available'}
-                        </div>
+                            textAlign: 'center',
+                            color: '#999',
+                            fontStyle: 'italic'
+                          }}>
+                            No source URL available
+                          </div>
+                        )}
                       </Card>
                     </div>
 
