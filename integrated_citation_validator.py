@@ -78,19 +78,21 @@ class IntegratedCitationValidator:
                         facts_with_verified_sources += 1
                         print(f"     ✅ Fact verified with {len(validated_citations)} working sources")
                     else:
-                        # No working sources found - exclude from Facts section
-                        print(f"     ❌ No working sources found - excluding from Facts section")
+                        # No working sources found - reclassify as OPINION
+                        print(f"     ❌ No working sources found - reclassifying as OPINION")
                         enhanced_result['excluded_reason'] = "No comprehensively verified working sources found"
                         enhanced_result['original_classification'] = 'FACT'
-                        enhanced_result['final_classification'] = 'EXCLUDED_FACT'  # Mark as excluded
+                        enhanced_result['final_classification'] = 'OPINION'  # Reclassify as OPINION
                         enhanced_result['all_urls_comprehensively_verified'] = False
+                        enhanced_result['consensus_reasoning'] = f"{enhanced_result.get('consensus_reasoning', '')} However, no verifiable citations with working URLs were found, so this is reclassified as OPINION per verification standards."
                 else:
-                    # No citations found - exclude from Facts section
-                    print(f"     ❌ No citations found - excluding from Facts section")
+                    # No citations found - reclassify as OPINION
+                    print(f"     ❌ No citations found - reclassifying as OPINION")
                     enhanced_result['excluded_reason'] = "No citations found"
                     enhanced_result['original_classification'] = 'FACT'
-                    enhanced_result['final_classification'] = 'EXCLUDED_FACT'
+                    enhanced_result['final_classification'] = 'OPINION'  # Reclassify as OPINION
                     enhanced_result['all_urls_comprehensively_verified'] = False
+                    enhanced_result['consensus_reasoning'] = f"{enhanced_result.get('consensus_reasoning', '')} However, no verifiable citations were found, so this is reclassified as OPINION per verification standards."
             
             enhanced_results.append(enhanced_result)
         
@@ -101,19 +103,19 @@ class IntegratedCitationValidator:
         
         # Calculate statistics
         verified_facts = [r for r in enhanced_results if r.get('final_classification') == 'FACT' and r.get('all_urls_comprehensively_verified')]
-        excluded_facts = [r for r in enhanced_results if r.get('final_classification') == 'EXCLUDED_FACT']
+        reclassified_facts = [r for r in enhanced_results if r.get('original_classification') == 'FACT' and r.get('final_classification') == 'OPINION']
         
         enhanced_analysis_data['facts_validation_summary'] = {
             'total_facts_processed': facts_processed,
             'facts_with_verified_sources': len(verified_facts),
-            'facts_excluded_no_sources': len(excluded_facts),
+            'facts_reclassified_as_opinion': len(reclassified_facts),
             'verification_success_rate': (len(verified_facts) / facts_processed * 100) if facts_processed > 0 else 0,
             'only_verified_sources_included': True
         }
         
         print(f"✅ Facts processing complete!")
         print(f"   📊 {len(verified_facts)}/{facts_processed} facts have comprehensively verified sources")
-        print(f"   🚫 {len(excluded_facts)} facts excluded due to no working sources")
+        print(f"   🔄 {len(reclassified_facts)} facts reclassified as opinions due to no working sources")
         
         return enhanced_analysis_data
     
@@ -159,18 +161,18 @@ class IntegratedCitationValidator:
             return "No analysis data available."
         
         # Get only facts with verified sources
-        verified_facts = [r for r in enhanced_analysis_data['results'] 
+        verified_facts = [r for r in enhanced_analysis_data['results']
                          if r.get('final_classification') == 'FACT' and r.get('all_urls_comprehensively_verified')]
         
-        excluded_facts = [r for r in enhanced_analysis_data['results'] 
-                         if r.get('final_classification') == 'EXCLUDED_FACT']
+        reclassified_facts = [r for r in enhanced_analysis_data['results']
+                             if r.get('original_classification') == 'FACT' and r.get('final_classification') == 'OPINION']
         
         if not verified_facts:
             return """# Facts Section
 
 *No facts with comprehensively verified working sources found.*
 
-All potential facts were excluded due to:
+All potential facts were reclassified as opinions due to:
 - No working source URLs found
 - URLs failed comprehensive validation (404, 500, SSL errors, etc.)
 - Content not accessible or readable
@@ -187,7 +189,7 @@ Only facts with fully verified, accessible sources are included in this section.
 
 ## Summary
 - **Total Facts with Verified Sources:** {len(verified_facts)}
-- **Facts Excluded (No Working Sources):** {len(excluded_facts)}
+- **Facts Reclassified as Opinions:** {len(reclassified_facts)}
 - **Verification Success Rate:** {enhanced_analysis_data.get('facts_validation_summary', {}).get('verification_success_rate', 0):.1f}%
 - **All URLs Comprehensively Tested:** ✅ Yes
 
@@ -231,20 +233,20 @@ Only facts with fully verified, accessible sources are included in this section.
 
 - **Total Facts Processed:** {validation_summary.get('total_facts_processed', 0)}
 - **Facts with Verified Sources:** {validation_summary.get('facts_with_verified_sources', 0)}
-- **Facts Excluded:** {validation_summary.get('facts_excluded_no_sources', 0)}
+- **Facts Reclassified as Opinions:** {validation_summary.get('facts_reclassified_as_opinion', 0)}
 - **Success Rate:** {validation_summary.get('verification_success_rate', 0):.1f}%
 
 """
         
-        if excluded_facts:
-            facts_section += f"""## ⚠️ Excluded Facts (No Working Sources)
+        if reclassified_facts:
+            facts_section += f"""## 🔄 Facts Reclassified as Opinions (No Working Sources)
 
-The following {len(excluded_facts)} facts were excluded from the Facts section due to no comprehensively verified working sources:
+The following {len(reclassified_facts)} facts were reclassified as opinions due to no comprehensively verified working sources:
 
 """
-            for i, excluded_fact in enumerate(excluded_facts, 1):
-                sentence = excluded_fact.get('sentence', '')
-                reason = excluded_fact.get('excluded_reason', 'Unknown reason')
+            for i, reclassified_fact in enumerate(reclassified_facts, 1):
+                sentence = reclassified_fact.get('sentence', '')
+                reason = reclassified_fact.get('excluded_reason', 'Unknown reason')
                 facts_section += f"{i}. \"{sentence[:100]}...\"\n"
                 facts_section += f"   - Reason: {reason}\n\n"
         
