@@ -78,21 +78,21 @@ class IntegratedCitationValidator:
                         facts_with_verified_sources += 1
                         print(f"     ✅ Fact verified with {len(validated_citations)} working sources")
                     else:
-                        # No working sources found - reclassify as OPINION
-                        print(f"     ❌ No working sources found - reclassifying as OPINION")
-                        enhanced_result['excluded_reason'] = "No comprehensively verified working sources found"
+                        # No working sources found - trust the LLM's original intelligent classification
+                        print(f"     ⚠️  No working sources found, but maintaining LLM's original classification")
+                        enhanced_result['excluded_reason'] = "No comprehensively verified working sources found, but maintaining original LLM classification"
                         enhanced_result['original_classification'] = 'FACT'
-                        enhanced_result['final_classification'] = 'OPINION'  # Reclassify as OPINION
+                        enhanced_result['final_classification'] = 'FACT'  # Keep LLM's original classification
                         enhanced_result['all_urls_comprehensively_verified'] = False
-                        enhanced_result['consensus_reasoning'] = f"{enhanced_result.get('consensus_reasoning', '')} However, no verifiable citations with working URLs were found, so this is reclassified as OPINION per verification standards."
+                        enhanced_result['consensus_reasoning'] = f"{enhanced_result.get('consensus_reasoning', '')} Note: No working citation URLs found, but maintaining original classification based on LLM's intelligent analysis of statement nature and context."
                 else:
-                    # No citations found - reclassify as OPINION
-                    print(f"     ❌ No citations found - reclassifying as OPINION")
-                    enhanced_result['excluded_reason'] = "No citations found"
+                    # No citations found - trust the LLM's original intelligent classification
+                    print(f"     ⚠️  No citations found, but maintaining LLM's original classification")
+                    enhanced_result['excluded_reason'] = "No citations found, but maintaining original LLM classification"
                     enhanced_result['original_classification'] = 'FACT'
-                    enhanced_result['final_classification'] = 'OPINION'  # Reclassify as OPINION
+                    enhanced_result['final_classification'] = 'FACT'  # Keep LLM's original classification
                     enhanced_result['all_urls_comprehensively_verified'] = False
-                    enhanced_result['consensus_reasoning'] = f"{enhanced_result.get('consensus_reasoning', '')} However, no verifiable citations were found, so this is reclassified as OPINION per verification standards."
+                    enhanced_result['consensus_reasoning'] = f"{enhanced_result.get('consensus_reasoning', '')} Note: No citations found, but maintaining original classification based on LLM's intelligent analysis of statement nature and context."
             
             enhanced_results.append(enhanced_result)
         
@@ -103,19 +103,19 @@ class IntegratedCitationValidator:
         
         # Calculate statistics
         verified_facts = [r for r in enhanced_results if r.get('final_classification') == 'FACT' and r.get('all_urls_comprehensively_verified')]
-        reclassified_facts = [r for r in enhanced_results if r.get('original_classification') == 'FACT' and r.get('final_classification') == 'OPINION']
+        facts_without_citations = [r for r in enhanced_results if r.get('final_classification') == 'FACT' and not r.get('all_urls_comprehensively_verified')]
         
         enhanced_analysis_data['facts_validation_summary'] = {
             'total_facts_processed': facts_processed,
             'facts_with_verified_sources': len(verified_facts),
-            'facts_reclassified_as_opinion': len(reclassified_facts),
+            'facts_without_working_citations': len(facts_without_citations),
             'verification_success_rate': (len(verified_facts) / facts_processed * 100) if facts_processed > 0 else 0,
-            'only_verified_sources_included': True
+            'llm_classification_maintained': True
         }
         
         print(f"✅ Facts processing complete!")
         print(f"   📊 {len(verified_facts)}/{facts_processed} facts have comprehensively verified sources")
-        print(f"   🔄 {len(reclassified_facts)} facts reclassified as opinions due to no working sources")
+        print(f"   ⚠️  {len(facts_without_citations)} facts maintained as FACT without working citations (based on LLM intelligence)")
         
         return enhanced_analysis_data
     
@@ -164,8 +164,8 @@ class IntegratedCitationValidator:
         verified_facts = [r for r in enhanced_analysis_data['results']
                          if r.get('final_classification') == 'FACT' and r.get('all_urls_comprehensively_verified')]
         
-        reclassified_facts = [r for r in enhanced_analysis_data['results']
-                             if r.get('original_classification') == 'FACT' and r.get('final_classification') == 'OPINION']
+        facts_without_citations = [r for r in enhanced_analysis_data['results']
+                                   if r.get('final_classification') == 'FACT' and not r.get('all_urls_comprehensively_verified')]
         
         if not verified_facts:
             return """# Facts Section

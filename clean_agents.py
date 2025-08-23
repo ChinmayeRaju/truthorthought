@@ -414,23 +414,71 @@ class Agent:
         self.agent_name = name
         self.role = role
     
-    def analyze(self, content: str) -> AnalysisResult:
-        """Analyze content with web grounding"""
+    def analyze(self, content: str, full_article_context: str = "") -> AnalysisResult:
+        """Analyze content with web grounding and full article context"""
+        
+        # Prepare context section if full article is provided
+        context_section = ""
+        if full_article_context and len(full_article_context.strip()) > 0:
+            context_section = f"""
+
+FULL ARTICLE CONTEXT (for better understanding):
+{full_article_context[:2000]}...
+
+IMPORTANT: Use this context to better understand the sentence being analyzed. For example:
+- If the sentence is "Trump said he will increase tariffs" and the article context shows this is a quote from a credible source, classify it as FACT
+- If the sentence is "This policy is good" without attribution, classify it as OPINION
+- Consider who said what, when, and in what context based on the full article
+"""
+
         prompt = f"""As a {self.role}, analyze this text and classify it as either FACT or OPINION.
 
 Use web search to verify any factual claims and provide SPECIFIC, DIRECT source citations.
 
-Text: {content[:500]}
+SENTENCE TO ANALYZE: {content[:500]}
+{context_section}
 
 CLASSIFICATION RULES:
-- FACT: Verifiable information that can be confirmed through web search, documented data, or objective evidence. Examples: dates, names, locations, statistics, documented events, scientific measurements.
+- FACT: Verifiable information that can be confirmed through web search, documented data, or objective evidence. Examples: dates, names, locations, statistics, documented events, scientific measurements, ATTRIBUTED QUOTES from credible sources.
 - OPINION: Subjective statements, personal views, interpretations, predictions, evaluations, or value judgments. Examples: "good", "bad", "should", "might", personal beliefs, preferences.
 
-CRITICAL RULE: If you cannot find right/verifiable citations for a claim, it should AUTOMATICALLY be classified as OPINION, regardless of how factual it appears.
+SPECIAL RULES FOR QUOTES AND STATEMENTS:
+- "Trump said X" = FACT (if verifiable that Trump actually said X)
+- "Officials announced Y" = FACT (if verifiable that officials announced Y)
+- "The report states Z" = FACT (if the report actually states Z)
+- "This is good/bad" = OPINION (unless it's an attributed quote)
+- "I think/believe" = OPINION
+- "Should/might/could" = Usually OPINION
+
+INTELLIGENT CLASSIFICATION GUIDELINES:
+When you cannot find working citations, use your intelligence to distinguish between:
+
+1. **CLEARLY FACTUAL STATEMENTS** (should remain FACT even without citations):
+   - Official announcements by governments, military, organizations
+   - Statements by named officials in their official capacity
+   - Documented actions or events that are verifiable in nature
+   - Direct quotes from credible sources within the article context
+   - Objective descriptions of events, policies, or actions
+   
+2. **AMBIGUOUS OR SUBJECTIVE CLAIMS** (should be reclassified as OPINION):
+   - Interpretations, evaluations, or judgments
+   - Predictions about future events
+   - Subjective assessments or characterizations
+   - Claims that could be disputed or are matters of perspective
+
+EXAMPLES:
+✅ FACT (even without citations): "The IDF warned medical officials to prepare for evacuation"
+✅ FACT (even without citations): "President Biden announced new sanctions"
+✅ FACT (even without citations): "The court ruled in favor of the plaintiff"
+❌ OPINION (if no citations): "The policy will be effective"
+❌ OPINION (if no citations): "This represents a significant threat"
+❌ OPINION (if no citations): "The situation is deteriorating rapidly"
+
+Use your understanding of the full article context to make intelligent decisions about what constitutes a verifiable factual statement versus a subjective claim.
 
 IMPORTANT: You must choose either FACT or OPINION. Do not use MIXED. If a statement contains both, classify based on the primary intent.
 
-FOR FACTS: You MUST provide SPECIFIC, DIRECT source URLs that verify the factual claims. If you cannot find proper citations, classify as OPINION instead. 
+FOR FACTS: You MUST provide SPECIFIC, DIRECT source URLs that verify the factual claims. If you cannot find proper citations, classify as OPINION instead.
 
 SOURCE REQUIREMENTS:
 - Use COMPLETE, SPECIFIC URLs that link directly to the actual article/page (not just domain names)
@@ -449,7 +497,7 @@ Respond with ONLY valid JSON. No other text before or after:
     "evidence": ["key evidence verified across sources"],
     "key_phrases": ["important phrases from the text"],
     "sources": [
-        {{"title": "BBC News - Full Specific Article Title", "url": "https://www.bbc.co.uk/news/world-europe-67845123"}}, 
+        {{"title": "BBC News - Full Specific Article Title", "url": "https://www.bbc.co.uk/news/world-europe-67845123"}},
         {{"title": "Reuters - Complete Article Headline", "url": "https://www.reuters.com/world/europe/specific-story-2024-01-15/"}},
         {{"title": "Associated Press - Detailed Coverage", "url": "https://apnews.com/article/specific-article-id-12345"}}
     ]
@@ -721,8 +769,8 @@ class CleanAnalysisSystem:
             self.agents = self._create_agents_for_domain(domain)
             print(f"Loaded {len(self.agents)} {domain} specialists: {[agent.agent_name for agent in self.agents]}")
     
-    def analyze_single_content(self, content: str, domain: str = 'GENERAL') -> ConsensusResult:
-        """Analyze content with domain-specific agents"""
+    def analyze_single_content(self, content: str, domain: str = 'GENERAL', full_article_context: str = "") -> ConsensusResult:
+        """Analyze content with domain-specific agents and full article context"""
         self._update_agents_for_domain(domain)
         
         print(f"Analyzing content with {len(self.agents)} {domain} specialists...")
@@ -730,7 +778,7 @@ class CleanAnalysisSystem:
         results = []
         for i, agent in enumerate(self.agents, 1):
             print(f"  Agent {i}/{len(self.agents)}: {agent.agent_name}...")
-            result = agent.analyze(content)
+            result = agent.analyze(content, full_article_context)
             results.append(result)
             time.sleep(1)  # Rate limiting
         
@@ -854,7 +902,8 @@ class CleanAnalysisSystem:
         
         for i, sentence in enumerate(sentences[:analysis_limit], 1):
             print(f"   Analyzing sentence {i}/{analysis_limit}...")
-            consensus = self.analyze_single_content(sentence, domain)
+            # Pass the full article content as context for better classification
+            consensus = self.analyze_single_content(sentence, domain, data['content'])
             consensus_results.append(consensus)
             time.sleep(1)  # Rate limiting between sentences
         
@@ -909,11 +958,10 @@ class CleanAnalysisSystem:
                         citations = citations[:2]
                         
                 else:
-                    print(f"⚠️  No verified citations found for fact using Gemini, automatically reclassifying as OPINION")
-                    # If no valid citations, automatically classify as OPINION instead of FACT
-                    consensus.final_classification = 'OPINION'
-                    consensus.confidence = min(consensus.confidence * 0.8, 0.9)  # Slightly reduce confidence but keep reasonable
-                    consensus.consensus_reasoning = f"{consensus.consensus_reasoning} However, no verifiable citations were found using Google Search grounding, so this is reclassified as OPINION per verification standards."
+                    print(f"⚠️  No verified citations found for fact using Gemini, but keeping original LLM classification")
+                    # Let the LLM's intelligent classification stand - it already considered the context and nature of the statement
+                    # The enhanced prompt should have guided the LLM to classify appropriately based on factual vs subjective nature
+                    consensus.consensus_reasoning = f"{consensus.consensus_reasoning} Note: No working citation URLs found, but maintaining original classification based on LLM's intelligent analysis of statement nature and context."
             
             # Create a result object that matches what the frontend expects
             formatted_result = {
