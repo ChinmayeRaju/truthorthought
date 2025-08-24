@@ -7,7 +7,29 @@ from bs4 import BeautifulSoup
 import time
 import logging
 from typing import Dict, List, Optional, Any
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
+
+def route_through_proxy(url: str) -> str:
+    """
+    Route URL through yazzy.carter.works proxy bypasser for better article access
+    
+    Args:
+        url: Original URL to route through proxy
+        
+    Returns:
+        Proxied URL in format: https://yazzy.carter.works/[original_url]
+    """
+    # Validate URL format
+    parsed = urlparse(url)
+    if not parsed.scheme or not parsed.netloc:
+        # If URL doesn't have scheme, assume https
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+    
+    # Route through proxy
+    proxy_url = f"https://yazzy.carter.works/{url}"
+    print(f"🔄 Routing URL through proxy: {url} -> {proxy_url}")
+    return proxy_url
 # Configuration constants
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -32,11 +54,13 @@ class NewsContentScraper:
     
     def scrape_url(self, url: str) -> Optional[Dict[str, Any]]:
         """
-        Scrape content from a single URL
+        Scrape content from a single URL using proxy bypasser
         Returns dict with title, content, and metadata
         """
         try:
-            response = self.session.get(url, timeout=10)
+            # Route through proxy for better article access
+            proxied_url = route_through_proxy(url)
+            response = self.session.get(proxied_url, timeout=15)
             response.raise_for_status()
             
             soup = BeautifulSoup(response.text, 'html.parser')

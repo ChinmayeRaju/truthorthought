@@ -348,10 +348,11 @@ Response:"""
             return False
 
     def _check_url_accessibility(self, url: str) -> bool:
-        """Check if URL is accessible with both HEAD and GET requests"""
+        """Check if URL is accessible with both HEAD and GET requests using proxy"""
         try:
             import requests
             from urllib.parse import urlparse
+            from scraper import route_through_proxy
             
             # Basic URL format validation
             parsed = urlparse(url)
@@ -359,9 +360,12 @@ Response:"""
                 print(f"🔍 URL format invalid: {url}")
                 return False
             
+            # Route through proxy for better accessibility
+            proxied_url = route_through_proxy(url)
+            
             # Try HEAD request first (faster)
             try:
-                response = requests.head(url, timeout=10, allow_redirects=True)
+                response = requests.head(proxied_url, timeout=15, allow_redirects=True)
                 # Only accept 200 as truly accessible for HEAD requests
                 if response.status_code == 200:
                     return True
@@ -375,7 +379,7 @@ Response:"""
             
             # Try GET request as fallback or if HEAD returned 405
             try:
-                response = requests.get(url, timeout=10, allow_redirects=True)
+                response = requests.get(proxied_url, timeout=15, allow_redirects=True)
                 # Be more strict - only 200 is acceptable
                 if response.status_code == 200:
                     # Additional check: ensure we got actual content, not just a redirect page
@@ -435,12 +439,19 @@ IMPORTANT: Use this context to better understand the sentence being analyzed. Fo
 
 Use web search to verify any factual claims and provide SPECIFIC, DIRECT source citations.
 
-SENTENCE TO ANALYZE: {content[:500]}
+TEXT TO ANALYZE: {content[:500]}
 {context_section}
+
+IMPORTANT: This text may contain one or multiple related sentences. Analyze the complete text as a cohesive unit for fact-checking purposes. Ensure your analysis considers the full context and meaning of all sentences together.
 
 CLASSIFICATION RULES:
 - FACT: Verifiable information that can be confirmed through web search, documented data, or objective evidence. Examples: dates, names, locations, statistics, documented events, scientific measurements, ATTRIBUTED QUOTES from credible sources.
 - OPINION: Subjective statements, personal views, interpretations, predictions, evaluations, or value judgments. Examples: "good", "bad", "should", "might", personal beliefs, preferences.
+
+WELL-FORMED SENTENCE REQUIREMENTS:
+- Ensure the text being analyzed forms complete, grammatically correct sentences
+- If analyzing multiple sentences, consider their combined meaning and factual content
+- Focus on the substantive claims rather than minor grammatical imperfections
 
 SPECIAL RULES FOR QUOTES AND STATEMENTS:
 - "Trump said X" = FACT (if verifiable that Trump actually said X)
@@ -1020,60 +1031,180 @@ class CleanAnalysisSystem:
         return sources
     
     def _split_sentences(self, text: str) -> List[str]:
-        """Split text into sentences and filter out media references and metadata"""
-        sentences = re.split(r'[.!?]+', text)
+        """Use LLM to extract the first 5 valid sentences that make sense from the content"""
+        print("🤖 Using LLM to extract valid sentences...")
         
-        # Filter sentences
+        try:
+            prompt = f"""
+Extract the first 5 valid, meaningful sentences from this article content that would be suitable for fact-checking analysis.
+
+REQUIREMENTS:
+1. Extract EXACTLY 5 sentences (or fewer if less than 5 valid sentences exist)
+2. Sentences must be complete, well-formed, and grammatically correct
+3. Skip any metadata, timestamps, photo captions, navigation text, or promotional content
+4. Focus on substantive news content that contains factual claims or statements
+5. Ensure sentences make sense and contain meaningful information
+6. Preserve original wording but ensure proper capitalization and punctuation
+
+ARTICLE CONTENT:
+{text[:3000]}
+
+Respond with ONLY a JSON array of the extracted sentences. No other text:
+
+["sentence 1", "sentence 2", "sentence 3", "sentence 4", "sentence 5"]
+"""
+            
+            response = self.client.generate_content(prompt)
+            response_text = response.strip()
+            
+            # Parse JSON response - handle markdown formatting
+            import json
+            try:
+                # Clean up response text - remove markdown formatting
+                clean_response = response_text.strip()
+                if clean_response.startswith('```json'):
+                    clean_response = clean_response[7:]  # Remove ```json
+                if clean_response.endswith('```'):
+                    clean_response = clean_response[:-3]  # Remove ```
+                clean_response = clean_response.strip()
+                
+                sentences = json.loads(clean_response)
+                if isinstance(sentences, list):
+                    # Ensure we have at most 5 sentences
+                    valid_sentences = sentences[:5]
+                    
+                    # Ensure each sentence is well-formed
+                    processed_sentences = []
+                    for sentence in valid_sentences:
+                        if isinstance(sentence, str) and len(sentence.strip()) > 10:
+                            processed_sentence = self._ensure_well_formed_sentence(sentence.strip())
+                            processed_sentences.append(processed_sentence)
+                            print(f"✅ Extracted: {processed_sentence[:100]}...")
+                    
+                    print(f"🎯 LLM extracted {len(processed_sentences)} valid sentences")
+                    return processed_sentences
+                else:
+                    print("❌ LLM response was not a list")
+                    return self._fallback_sentence_extraction(text)
+            except json.JSONDecodeError as e:
+                print(f"❌ Failed to parse LLM JSON response: {e}")
+                print(f"Raw response: {response_text[:200]}...")
+                return self._fallback_sentence_extraction(text)
+                
+        except Exception as e:
+            print(f"❌ LLM sentence extraction failed: {e}")
+            return self._fallback_sentence_extraction(text)
+    
+    def _fallback_sentence_extraction(self, text: str) -> List[str]:
+        """Fallback method using rule-based extraction if LLM fails"""
+        print("🔄 Using fallback rule-based sentence extraction...")
+        
+        # Basic sentence splitting
+        sentences = re.split(r'(?<=[.!?])\s+(?=[A-Z])', text)
+        
+        # Simple filtering
         filtered_sentences = []
         for s in sentences:
             s = s.strip()
-            if len(s) <= 10:  # Too short
+            if len(s) <= 10:
                 continue
                 
             s_lower = s.lower()
             
-            # Skip sentences with media references
-            if any(word in s_lower for word in [
-                'photograph:', 'image:', 'video:', 'getty images', 'afp', 'reuters',
-                'view image', 'fullscreen', 'screenshot', 'photo by', 'credit:',
-                'shutterstock', 'associated press', 'ap photo', 'picture:',
-                'images/view image', 'photograph', 'photo credit'
+            # Skip obvious metadata/timestamps
+            if any(pattern in s_lower for pattern in [
+                'published', 'updated', 'photo', 'image', 'video', 'getty', 'reuters',
+                'share', 'follow', 'subscribe', 'click here', 'read more'
             ]):
-                print(f"🚫 Filtered media reference: {s[:100]}...")
                 continue
             
-            # Skip timestamp and metadata sentences
-            if any(pattern in s_lower for pattern in [
-                'bst', 'gmt', 'published on', 'last modified', 'first published',
-                'updated on', 'posted on', 'edited on', ':30', ':45', ':00', ':15',
-                'am', 'pm', 'sharelikecomment', 'share', 'like', 'comment',
-                'follow us', 'subscribe', 'newsletter', 'email alerts'
-            ]):
-                print(f"🚫 Filtered timestamp/metadata: {s[:100]}...")
-                continue
-                
-            # Skip sentences that are mostly numbers/dates/times
-            if re.match(r'^[\d\s:/-]+$', s) or len(re.findall(r'\d', s)) > len(s) * 0.5:
-                print(f"🚫 Filtered numeric/date content: {s[:100]}...")
-                continue
-                
-            # Skip very short sentences that might be captions or metadata
-            if len(s) < 30 and any(word in s_lower for word in [
-                'photo', 'image', 'video', 'source:', 'by:', 'via:', 'read more',
-                'click here', 'see also', 'related:', 'tags:', 'category:'
-            ]):
-                print(f"🚫 Filtered short metadata: {s}")
-                continue
-                
-            # Skip navigation and social media text
-            if any(phrase in s_lower for phrase in [
-                'explore more', 'reuse this content', 'share on', 'follow on',
-                'sign up', 'log in', 'register', 'terms of service', 'privacy policy'
-            ]):
-                print(f"🚫 Filtered navigation/social: {s[:100]}...")
-                continue
-                
+            # Ensure well-formed
+            s = self._ensure_well_formed_sentence(s)
             filtered_sentences.append(s)
+            
+            # Limit to 5 sentences
+            if len(filtered_sentences) >= 5:
+                break
+        
+        return filtered_sentences[:5]
+    
+    def _ensure_well_formed_sentence(self, sentence: str) -> str:
+        """Ensure sentence is well-formed with proper punctuation and capitalization"""
+        sentence = sentence.strip()
+        
+        # Capitalize first letter
+        if sentence and sentence[0].islower():
+            sentence = sentence[0].upper() + sentence[1:]
+        
+        # Ensure proper ending punctuation
+        if sentence and sentence[-1] not in '.!?':
+            sentence += '.'
+        
+        return sentence
+    
+    def _group_related_sentences(self, sentences: List[str]) -> List[str]:
+        """Group related sentences for multi-sentence fact checking where appropriate"""
+        if len(sentences) <= 1:
+            return sentences
+        
+        grouped_sentences = []
+        i = 0
+        
+        while i < len(sentences):
+            current_sentence = sentences[i]
+            
+            # Check if next sentence should be grouped with current one
+            if i + 1 < len(sentences):
+                next_sentence = sentences[i + 1]
+                
+                # Group sentences if they are related (same topic, continuation, etc.)
+                if self._should_group_sentences(current_sentence, next_sentence):
+                    # Combine sentences for fact checking
+                    combined = f"{current_sentence} {next_sentence}"
+                    grouped_sentences.append(combined)
+                    print(f"📝 Grouped related sentences: {combined[:100]}...")
+                    i += 2  # Skip next sentence as it's been combined
+                    continue
+            
+            # Add single sentence
+            grouped_sentences.append(current_sentence)
+            i += 1
+        
+        return grouped_sentences
+    
+    def _should_group_sentences(self, sentence1: str, sentence2: str) -> bool:
+        """Determine if two sentences should be grouped for fact checking"""
+        # Convert to lowercase for comparison
+        s1_lower = sentence1.lower()
+        s2_lower = sentence2.lower()
+        
+        # Group if second sentence starts with connecting words
+        connecting_words = [
+            'this', 'that', 'these', 'those', 'it', 'they', 'he', 'she',
+            'however', 'moreover', 'furthermore', 'additionally', 'meanwhile',
+            'consequently', 'therefore', 'thus', 'as a result'
+        ]
+        
+        first_word = s2_lower.split()[0] if s2_lower.split() else ""
+        if first_word in connecting_words:
+            return True
+        
+        # Group if sentences are short and likely part of same fact
+        if len(sentence1) < 80 and len(sentence2) < 80:
+            # Check for shared keywords (names, places, numbers)
+            words1 = set(s1_lower.split())
+            words2 = set(s2_lower.split())
+            
+            # Look for proper nouns, numbers, or specific terms
+            shared_important = words1.intersection(words2)
+            important_words = [w for w in shared_important if
+                             len(w) > 3 and (w[0].isupper() or w.isdigit() or
+                             w in ['said', 'reported', 'announced', 'confirmed'])]
+            
+            if len(important_words) >= 1:
+                return True
+        
+        return False
         
         print(f"Debug: Original sentences: {len(sentences)}, Filtered: {len(filtered_sentences)}")
         print(f"Debug: First 3 filtered sentences: {filtered_sentences[:3] if filtered_sentences else 'None'}")
