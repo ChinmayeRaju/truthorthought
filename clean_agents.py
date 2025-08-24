@@ -747,7 +747,29 @@ class CleanAnalysisSystem:
             'wsj.com': 'The Wall Street Journal',
             'bloomberg.com': 'Bloomberg',
             'politico.com': 'Politico',
-            'huffpost.com': 'HuffPost'
+            'huffpost.com': 'HuffPost',
+            'economictimes.com': 'Economic Times',
+            'economictimes.indiatimes.com': 'Economic Times',
+            'timesofindia.indiatimes.com': 'Times of India',
+            'hindustantimes.com': 'Hindustan Times',
+            'indianexpress.com': 'The Indian Express',
+            'ndtv.com': 'NDTV',
+            'news18.com': 'News18',
+            'zeenews.india.com': 'Zee News',
+            'firstpost.com': 'Firstpost',
+            'livemint.com': 'Mint',
+            'business-standard.com': 'Business Standard',
+            'financialexpress.com': 'The Financial Express',
+            'moneycontrol.com': 'Moneycontrol',
+            'cnbc.com': 'CNBC',
+            'marketwatch.com': 'MarketWatch',
+            'fortune.com': 'Fortune',
+            'forbes.com': 'Forbes',
+            'techcrunch.com': 'TechCrunch',
+            'theverge.com': 'The Verge',
+            'engadget.com': 'Engadget',
+            'wired.com': 'Wired',
+            'arstechnica.com': 'Ars Technica'
         }
         
         # Check for exact domain matches
@@ -760,6 +782,93 @@ class CleanAnalysisSystem:
             return base_domain.capitalize()
         
         return "News Source"
+    
+    def _create_source_tag(self, url: str) -> Dict[str, str]:
+        """Create source tag metadata for UI rendering"""
+        if not url:
+            return {
+                'name': 'Unknown Source',
+                'display_name': 'Unknown Source',
+                'tag_color': '#6B7280',  # Gray
+                'tag_style': 'secondary',
+                'domain': '',
+                'url': ''
+            }
+        
+        source_name = self._extract_source_name_from_url(url)
+        from urllib.parse import urlparse
+        parsed = urlparse(url.lower())
+        domain = parsed.netloc
+        
+        # Remove 'www.' prefix if present
+        if domain.startswith('www.'):
+            domain = domain[4:]
+        
+        # Define color schemes for different outlet types
+        outlet_colors = {
+            # Major International News
+            'bbc.co.uk': {'color': '#BB1919', 'style': 'primary'},
+            'bbc.com': {'color': '#BB1919', 'style': 'primary'},
+            'cnn.com': {'color': '#CC0000', 'style': 'primary'},
+            'reuters.com': {'color': '#FF6600', 'style': 'primary'},
+            'theguardian.com': {'color': '#052962', 'style': 'primary'},
+            'nytimes.com': {'color': '#000000', 'style': 'primary'},
+            'washingtonpost.com': {'color': '#002244', 'style': 'primary'},
+            'independent.co.uk': {'color': '#DC143C', 'style': 'primary'},
+            
+            # Indian News Outlets
+            'economictimes.indiatimes.com': {'color': '#FF8C00', 'style': 'warning'},
+            'economictimes.com': {'color': '#FF8C00', 'style': 'warning'},
+            'timesofindia.indiatimes.com': {'color': '#1E3A8A', 'style': 'info'},
+            'hindustantimes.com': {'color': '#0066CC', 'style': 'info'},
+            'indianexpress.com': {'color': '#8B0000', 'style': 'primary'},
+            'ndtv.com': {'color': '#FF4500', 'style': 'warning'},
+            
+            # Business & Finance
+            'bloomberg.com': {'color': '#000000', 'style': 'dark'},
+            'wsj.com': {'color': '#0274B6', 'style': 'info'},
+            'financialexpress.com': {'color': '#1B4F72', 'style': 'info'},
+            'moneycontrol.com': {'color': '#2E8B57', 'style': 'success'},
+            
+            # Technology
+            'techcrunch.com': {'color': '#0F7B0F', 'style': 'success'},
+            'theverge.com': {'color': '#FA4616', 'style': 'warning'},
+            'wired.com': {'color': '#000000', 'style': 'dark'},
+            
+            # Default fallback
+            'default': {'color': '#6B7280', 'style': 'secondary'}
+        }
+        
+        # Get color scheme for this outlet
+        color_scheme = outlet_colors.get(domain, outlet_colors['default'])
+        
+        return {
+            'name': source_name,
+            'display_name': source_name,
+            'tag_color': color_scheme['color'],
+            'tag_style': color_scheme['style'],
+            'domain': domain,
+            'url': url,
+            'short_name': self._get_short_name(source_name)
+        }
+    
+    def _get_short_name(self, source_name: str) -> str:
+        """Get abbreviated name for compact display"""
+        short_names = {
+            'The Independent': 'Independent',
+            'Economic Times': 'ET',
+            'Times of India': 'TOI',
+            'Hindustan Times': 'HT',
+            'The Indian Express': 'Indian Express',
+            'The New York Times': 'NYT',
+            'The Washington Post': 'WaPo',
+            'The Guardian': 'Guardian',
+            'The Wall Street Journal': 'WSJ',
+            'The Financial Express': 'FE',
+            'Associated Press': 'AP',
+            'Business Standard': 'BS'
+        }
+        return short_names.get(source_name, source_name)
     
     def _create_agents_for_domain(self, domain: str) -> List[Agent]:
         """Create specialized agents based on domain"""
@@ -977,12 +1086,16 @@ class CleanAnalysisSystem:
                     # The enhanced prompt should have guided the LLM to classify appropriately based on factual vs subjective nature
                     consensus.consensus_reasoning = f"{consensus.consensus_reasoning} Note: No working citation URLs found, but maintaining original classification based on LLM's intelligent analysis of statement nature and context."
             
+            # Create source tag metadata for UI rendering
+            source_tag = self._create_source_tag(source_url)
+            
             # Create a result object that matches what the frontend expects
             formatted_result = {
                 'sentence': attributed_sentence,  # Use source-attributed sentence for facts
                 'original_sentence': sentence_text,  # Keep original for reference
                 'source_url': source_url,  # Add source URL for reference
-                'source_name': self._extract_source_name_from_url(source_url) if source_url else 'Unknown Source',  # Add source name
+                'source_name': source_tag['name'],  # Use normalized source name from tag
+                'source_tag': source_tag,  # Complete source tag metadata for UI rendering
                 'final_classification': consensus.final_classification if hasattr(consensus, 'final_classification') else 'MIXED',
                 'consensus_confidence': consensus.confidence if hasattr(consensus, 'confidence') else 0.5,
                 'citation': citations[0] if citations else None,  # Primary citation for backward compatibility

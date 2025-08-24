@@ -159,16 +159,54 @@ const MainAnalysis: React.FC = () => {
           {/* Extract and highlight source attribution */}
           {(() => {
             const sentence = statement.sentence || '';
-            const sourceMatch = sentence.match(/^(BBC|CNN|Reuters|Guardian|The Guardian|The New York Times|Washington Post|NPR|Sky News|Associated Press|Metro|Al Jazeera|Fox News|NBC News|ABC News|CBS News|The Independent|Daily Mail|The Telegraph|USA Today|The Wall Street Journal|Bloomberg|Politico|HuffPost) reported (.+)$/);
+            
+            // Check if we have source_tag metadata from backend
+            if (statement.source_tag) {
+              const sourceTag = statement.source_tag;
+              // Extract the sentence content after "SourceName reported"
+              const reportedMatch = sentence.match(/^(.+?) reported (.+)$/);
+              
+              if (reportedMatch) {
+                const [, sourceName, restOfSentence] = reportedMatch;
+                return (
+                  <>
+                    <Tag
+                      color={sourceTag.tag_style === 'primary' ? 'blue' :
+                             sourceTag.tag_style === 'warning' ? 'orange' :
+                             sourceTag.tag_style === 'info' ? 'cyan' :
+                             sourceTag.tag_style === 'success' ? 'green' :
+                             sourceTag.tag_style === 'dark' ? 'default' : 'blue'}
+                      style={{
+                        marginRight: 8,
+                        marginBottom: 4,
+                        fontWeight: 'bold',
+                        fontSize: '12px',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        backgroundColor: sourceTag.tag_color,
+                        borderColor: sourceTag.tag_color,
+                        color: sourceTag.tag_style === 'dark' || sourceTag.tag_color === '#000000' ? 'white' : undefined
+                      }}
+                    >
+                      📰 {sourceTag.short_name}
+                    </Tag>
+                    <span>{restOfSentence}</span>
+                  </>
+                );
+              }
+            }
+            
+            // Fallback: try to match with expanded regex for outlets not yet using source_tag
+            const sourceMatch = sentence.match(/^(BBC|CNN|Reuters|Guardian|The Guardian|The New York Times|Washington Post|NPR|Sky News|Associated Press|Metro|Al Jazeera|Fox News|NBC News|ABC News|CBS News|The Independent|Daily Mail|The Telegraph|USA Today|The Wall Street Journal|Bloomberg|Politico|HuffPost|Economic Times|Times of India|Hindustan Times|The Indian Express|NDTV|News18|Zee News|Firstpost|Mint|Business Standard|The Financial Express|Moneycontrol|CNBC|MarketWatch|Fortune|Forbes|TechCrunch|The Verge|Engadget|Wired|Ars Technica) reported (.+)$/);
             
             if (sourceMatch) {
               const [, sourceName, restOfSentence] = sourceMatch;
               return (
                 <>
-                  <Tag 
-                    color="blue" 
-                    style={{ 
-                      marginRight: 8, 
+                  <Tag
+                    color="blue"
+                    style={{
+                      marginRight: 8,
                       marginBottom: 4,
                       fontWeight: 'bold',
                       fontSize: '12px',

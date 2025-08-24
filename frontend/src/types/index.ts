@@ -7,6 +7,16 @@ export interface Citation {
   reasoning?: string;
 }
 
+export interface SourceTag {
+  name: string;
+  display_name: string;
+  tag_color: string;
+  tag_style: string;
+  domain: string;
+  url: string;
+  short_name: string;
+}
+
 export interface Statement {
   sentence: string;
   confidence?: number;
@@ -16,6 +26,7 @@ export interface Statement {
   source_url?: string;
   source_title?: string;
   source_name?: string;
+  source_tag?: SourceTag;
   original_sentence?: string;
 }
 
