@@ -38,7 +38,7 @@ class GeminiCitationService:
         
         # Initialize the new GenAI client
         self.client = genai.Client(api_key=api_key)
-        self.model_name = "gemini-2.5-flash"
+        self.model_name = "gemini-2.5-flash-lite"
         
         # Authoritative domains for citation credibility
         self.authoritative_domains = {

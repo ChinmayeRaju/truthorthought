@@ -64,7 +64,7 @@ class ContentSummarizer:
             raise ValueError("GEMINI_API_KEY environment variable is required")
         
         self.client = genai.Client(api_key=api_key)
-        self.model_name = "gemini-2.5-flash"
+        self.model_name = "gemini-2.5-flash-lite"
     
     def summarize_content(self, content: str, title: str = "", domain: str = "GENERAL") -> ContentSummary:
         """

@@ -901,18 +901,21 @@ class CleanAnalysisSystem:
             return f"# {title}\n\n{content[:1000]}...\n\n*Error formatting content: {str(e)}*"
     
     def _analyze_content(self, data: Dict, domain: str = 'GENERAL') -> str:
-        """Analyze content and store data for later access"""
+        """Analyze content and store data for later access - extracts exactly 5 sentences per URL"""
         sentences = self._split_sentences(data['content'])
-        print(f"Found {len(sentences)} sentences to analyze")
+        print(f"Found {len(sentences)} sentences to analyze from this URL")
         
         if not sentences:
             return "ERROR: No sentences found to analyze"
         
         consensus_results = []
-        analysis_limit = min(len(sentences), 5)  # Analyze up to 5 sentences for research
+        # Always analyze exactly 5 sentences per URL (not 5 total across all URLs)
+        analysis_limit = min(len(sentences), 5)
+        
+        print(f"📊 Analyzing {analysis_limit} sentences from this URL (5 sentences per URL policy)")
         
         for i, sentence in enumerate(sentences[:analysis_limit], 1):
-            print(f"   Analyzing sentence {i}/{analysis_limit}...")
+            print(f"   Analyzing sentence {i}/{analysis_limit} from this URL...")
             # Pass the full article content as context for better classification
             consensus = self.analyze_single_content(sentence, domain, data['content'])
             consensus_results.append(consensus)
