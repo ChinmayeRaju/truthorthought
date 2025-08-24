@@ -77,13 +77,32 @@ const ComprehensivePreQuestionnaire: React.FC = () => {
         sessionId: currentSessionId
       };
       
-      // Submit to backend (saves to Excel)
+      // Submit to backend using new comprehensive data system
       const response = await apiService.submitQuestionnaire(dataToSave);
       
       if (response.success) {
         // Also save to localStorage as backup
         const questionnaireKey = `comprehensive_pre_questionnaire_${currentSessionId}`;
         localStorage.setItem(questionnaireKey, JSON.stringify(dataToSave));
+        
+        // Log the questionnaire completion interaction
+        try {
+          await fetch('/api/log_interaction', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              session_id: currentSessionId,
+              type: 'questionnaire_completion',
+              data: {
+                questionnaire_type: 'comprehensive_pre',
+                completion_time: new Date().toISOString(),
+                total_questions: Object.keys(dataToSave).length
+              }
+            })
+          });
+        } catch (error) {
+          console.warn('Failed to log interaction:', error);
+        }
         
         message.success('Comprehensive pre-study questionnaire completed and saved! Redirecting to the analysis tool...');
         setTimeout(() => {

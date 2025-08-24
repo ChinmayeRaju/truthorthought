@@ -69,12 +69,31 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
         sessionId: currentSessionId
       };
       
-      // Submit to backend (saves to Excel)
+      // Submit to backend using comprehensive data system
       const response = await apiService.submitQuestionnaire(dataToSave);
       
       if (response.success) {
         // Also save to localStorage as backup
         localStorage.setItem(questionnaireKey, JSON.stringify(dataToSave));
+        
+        // Log the questionnaire completion interaction
+        try {
+          await fetch('/api/log_interaction', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              session_id: currentSessionId,
+              type: 'questionnaire_completion',
+              data: {
+                questionnaire_type: 'research_post',
+                completion_time: new Date().toISOString(),
+                total_questions: Object.keys(dataToSave).length
+              }
+            })
+          });
+        } catch (error) {
+          console.warn('Failed to log interaction:', error);
+        }
         
         message.success('Post-study questionnaire completed and saved! Thank you for your participation.');
         setTimeout(() => {

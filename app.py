@@ -14,6 +14,7 @@ import uuid
 from dotenv import load_dotenv
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment
+from study_data_manager import study_data_manager
 
 # Load environment variables
 load_dotenv()
@@ -1244,43 +1245,360 @@ def save_questionnaire_to_excel(questionnaire_data, questionnaire_type):
 
 @app.route('/submit_questionnaire', methods=['POST'])
 def submit_questionnaire():
-    """Submit questionnaire data and save to Excel"""
+    """Enhanced questionnaire submission endpoint using study data manager"""
     try:
         data = request.get_json()
-        questionnaire_type = data.get('type', 'unknown')
+        session_id = data.get('sessionId')
+        questionnaire_type = data.get('type')
         
-        if not data:
+        if not session_id:
             return jsonify({
                 'success': False,
-                'error': 'No questionnaire data provided'
+                'error': 'Session ID is required'
             }), 400
         
-        # Save to Excel
-        success, result = save_questionnaire_to_excel(data, questionnaire_type)
+        if not questionnaire_type:
+            return jsonify({
+                'success': False,
+                'error': 'Questionnaire type is required'
+            }), 400
+        
+        # Save using study data manager
+        success = study_data_manager.save_questionnaire_data(session_id, questionnaire_type, data)
         
         if success:
+            # Also save to Excel for backward compatibility
+            try:
+                save_questionnaire_to_excel(data, questionnaire_type)
+            except Exception as e:
+                print(f"Warning: Failed to save to Excel: {e}")
+            
             return jsonify({
                 'success': True,
-                'message': f'{questionnaire_type.title()} questionnaire data saved successfully',
-                'file_path': result,
-                'session_id': data.get('sessionId', f"session_{int(time.time())}")
+                'message': 'Questionnaire data saved successfully',
+                'session_id': session_id,
+                'file_path': f'research_data/participants.json'
             })
         else:
             return jsonify({
                 'success': False,
-                'error': f'Failed to save questionnaire data: {result}'
+                'error': 'Failed to save questionnaire data'
             }), 500
             
     except Exception as e:
         return jsonify({
             'success': False,
-            'error': f'Error processing questionnaire submission: {str(e)}'
+            'error': f'Failed to submit questionnaire: {str(e)}'
         }), 500
+
+@app.route('/api/submit_questionnaire', methods=['POST'])
+def api_submit_questionnaire():
+    """API version of questionnaire submission endpoint"""
+    return submit_questionnaire()
+
+@app.route('/api/analyze_multiple', methods=['POST'])
+def api_analyze_multiple():
+    """API version of analyze_multiple endpoint"""
+    return analyze_multiple()
+
+@app.route('/api/analyze', methods=['POST'])
+def api_analyze():
+    """API version of analyze endpoint"""
+    return analyze()
+
+@app.route('/api/analyze_for_bias', methods=['POST'])
+def api_analyze_for_bias():
+    """API version of analyze_for_bias endpoint"""
+    return analyze_for_bias()
+
+@app.route('/api/get_analyzed_sessions', methods=['GET'])
+def api_get_analyzed_sessions():
+    """API version of get_analyzed_sessions endpoint"""
+    return get_analyzed_sessions()
+
+@app.route('/api/load_session_for_bias/<session_id>', methods=['GET'])
+def api_load_session_for_bias(session_id):
+    """API version of load_session_for_bias endpoint"""
+    return load_session_for_bias(session_id)
+
+@app.route('/api/submit_research_data', methods=['POST'])
+def api_submit_research_data():
+    """API version of submit_research_data endpoint"""
+    return submit_research_data()
+
+@app.route('/api/chat', methods=['POST'])
+def api_chat():
+    """API version of chat endpoint"""
+    return chat()
+
+@app.route('/api/summarize_content', methods=['POST'])
+def api_summarize_content():
+    """API version of summarize_content endpoint"""
+    return summarize_content()
+
+@app.route('/api/summarize_session/<session_id>', methods=['POST'])
+def api_summarize_session(session_id):
+    """API version of summarize_session endpoint"""
+    return summarize_session(session_id)
+
+@app.route('/api/health', methods=['GET'])
+def api_health():
+    """API version of health endpoint"""
+    return health()
 
 @app.route('/health')
 def health():
     """Health check endpoint"""
     return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
+
+# Study data manager imported at top of file
+
+@app.route('/api/get_study_data', methods=['GET'])
+def get_study_data():
+    """Get all study data for research dashboard"""
+    try:
+        participants = study_data_manager.get_all_participants()
+        stats = study_data_manager.get_study_statistics()
+        
+        # Convert participants to serializable format
+        participants_data = []
+        for participant in participants:
+            participant_dict = {
+                'session_id': participant.session_id,
+                'participant_id': participant.participant_id,
+                'start_time': participant.start_time,
+                'end_time': participant.end_time,
+                'has_comprehensive_pre': participant.comprehensive_pre is not None,
+                'has_research_pre': participant.research_pre is not None,
+                'has_research_post': participant.research_post is not None,
+                'has_exit_questionnaire': participant.exit_questionnaire is not None,
+                'comprehensive_pre': participant.comprehensive_pre,
+                'research_pre': participant.research_pre,
+                'research_post': participant.research_post,
+                'exit_questionnaire': participant.exit_questionnaire,
+                'analysis_sessions': participant.analysis_sessions,
+                'num_interactions': len(participant.interactions)
+            }
+            participants_data.append(participant_dict)
+        
+        return jsonify({
+            'success': True,
+            'participants': participants_data,
+            'statistics': stats
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Failed to get study data: {str(e)}'
+        }), 500
+
+@app.route('/api/export_study_data', methods=['POST'])
+def export_study_data():
+    """Export study data to CSV files based on export type"""
+    try:
+        data = request.get_json()
+        export_type = data.get('export_type', 'all')  # 'all', 'pre_questionnaires', 'post_questionnaires', 'exit_questionnaires', 'sessions', 'interactions'
+        
+        # Choose the appropriate export method based on type
+        if export_type == 'pre_questionnaires':
+            exported_files = study_data_manager.export_pre_questionnaires_only()
+        elif export_type == 'post_questionnaires':
+            exported_files = study_data_manager.export_post_questionnaires_only()
+        elif export_type == 'exit_questionnaires':
+            exported_files = study_data_manager.export_exit_questionnaires_only()
+        elif export_type == 'sessions':
+            exported_files = study_data_manager.export_sessions_only()
+        elif export_type == 'interactions':
+            exported_files = study_data_manager.export_interactions_only()
+        else:  # 'all' or any other value
+            exported_files = study_data_manager.export_to_csv()
+        
+        if exported_files:
+            return jsonify({
+                'success': True,
+                'message': f'{export_type.replace("_", " ").title()} data exported successfully',
+                'files': exported_files
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'No {export_type.replace("_", " ")} data to export'
+            }), 400
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Failed to export {export_type.replace("_", " ")} data: {str(e)}'
+        }), 500
+
+@app.route('/api/download_export/<filename>', methods=['GET'])
+def download_export(filename):
+    """Download exported CSV file"""
+    try:
+        # Security: Only allow downloading from the research_data directory
+        safe_filename = os.path.basename(filename)  # Remove any path traversal attempts
+        file_path = os.path.join('research_data', safe_filename)
+        
+        if not os.path.exists(file_path):
+            return jsonify({'error': 'File not found'}), 404
+        
+        # Send file as attachment
+        from flask import send_file
+        return send_file(
+            file_path,
+            as_attachment=True,
+            download_name=safe_filename,
+            mimetype='text/csv'
+        )
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to download file: {str(e)}'}), 500
+
+@app.route('/api/log_interaction', methods=['POST'])
+def log_interaction():
+    """Log user interaction for research purposes"""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id')
+        interaction_type = data.get('type')
+        interaction_data = data.get('data', {})
+        
+        if not session_id or not interaction_type:
+            return jsonify({
+                'success': False,
+                'error': 'Session ID and interaction type are required'
+            }), 400
+        
+        success = study_data_manager.log_interaction(session_id, interaction_type, interaction_data)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Interaction logged successfully'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to log interaction'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Failed to log interaction: {str(e)}'
+        }), 500
+
+@app.route('/api/get_participant_data/<session_id>', methods=['GET'])
+def get_participant_data(session_id):
+    """Get specific participant data"""
+    try:
+        participant = study_data_manager.get_participant(session_id)
+        
+        if not participant:
+            return jsonify({
+                'success': False,
+                'error': 'Participant not found'
+            }), 404
+        
+        participant_data = {
+            'session_id': participant.session_id,
+            'participant_id': participant.participant_id,
+            'start_time': participant.start_time,
+            'end_time': participant.end_time,
+            'comprehensive_pre': participant.comprehensive_pre,
+            'research_pre': participant.research_pre,
+            'research_post': participant.research_post,
+            'exit_questionnaire': participant.exit_questionnaire,
+            'analysis_sessions': participant.analysis_sessions,
+            'interactions': participant.interactions
+        }
+        
+        return jsonify({
+            'success': True,
+            'participant': participant_data
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Failed to get participant data: {str(e)}'
+        }), 500
+
+# Enhanced analysis endpoint that integrates with study data manager
+@app.route('/api/analyze_with_tracking', methods=['POST'])
+def analyze_with_tracking():
+    """Analyze content and track in study data manager"""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id')
+        content = data.get('content')
+        content_type = data.get('type', 'url')
+        
+        if not session_id or not content:
+            return jsonify({
+                'success': False,
+                'error': 'Session ID and content are required'
+            }), 400
+        
+        system = get_system()
+        
+        # Perform analysis
+        if content_type == 'url':
+            result = system.analyze_url(content)
+        else:
+            result = system.analyze_text(content)
+        
+        analysis_data = system.last_analysis_data
+        
+        if analysis_data:
+            # Save analysis session to study data manager
+            study_data_manager.save_analysis_session(session_id, analysis_data)
+            
+            # Log the analysis interaction
+            study_data_manager.log_interaction(session_id, 'analysis', {
+                'content_type': content_type,
+                'content': content[:200] + '...' if len(content) > 200 else content,
+                'analysis_result': {
+                    'total_facts': len([r for r in analysis_data.get('results', []) if r.get('final_classification') == 'FACT']),
+                    'total_opinions': len([r for r in analysis_data.get('results', []) if r.get('final_classification') == 'OPINION']),
+                    'domain': analysis_data.get('domain'),
+                    'title': analysis_data.get('title')
+                }
+            })
+            
+            # Format response similar to existing analyze endpoint
+            facts = [{'sentence': r['sentence'], 'citation': r.get('citation', {}), 'citations': r.get('citations', [])}
+                    for r in analysis_data['results'] if r['final_classification'] == 'FACT']
+            opinions = [{'sentence': r['sentence']}
+                       for r in analysis_data['results'] if r['final_classification'] == 'OPINION']
+            
+            return jsonify({
+                'success': True,
+                'facts': facts,
+                'opinions': opinions,
+                'domain': analysis_data['domain'],
+                'title': analysis_data['title'],
+                'content': analysis_data['content'],
+                'specialists': [agent.agent_name for agent in system.agents],
+                'confidence': analysis_data.get('confidence', 0),
+                'session_id': session_id,
+                'total_facts': len(facts),
+                'total_opinions': len(opinions),
+                'total_sentences': len(analysis_data['results'])
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to analyze content'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Failed to analyze content: {str(e)}'
+        }), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

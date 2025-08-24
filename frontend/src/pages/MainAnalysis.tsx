@@ -98,6 +98,30 @@ const MainAnalysis: React.FC = () => {
         setResults(result);
         setShowChat(true);
         
+        // Log the analysis interaction
+        if (sessionId && result.session_id) {
+          try {
+            await fetch('/api/log_interaction', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                session_id: sessionId,
+                type: 'analysis_completion',
+                data: {
+                  analysis_session_id: result.session_id,
+                  urls_analyzed: urlList,
+                  facts_count: result.facts?.length || 0,
+                  opinions_count: result.opinions?.length || 0,
+                  total_sentences: result.total_sentences || 0,
+                  completion_time: new Date().toISOString()
+                }
+              })
+            });
+          } catch (error) {
+            console.warn('Failed to log analysis interaction:', error);
+          }
+        }
+        
         // Generate summary after successful analysis
         if (result.session_id) {
           handleGenerateSummary(result.session_id);

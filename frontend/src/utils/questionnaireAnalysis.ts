@@ -548,4 +548,160 @@ export class QuestionnaireAnalyzer {
 
     return [headers.join(','), ...rows].join('\n');
   }
+
+  /**
+   * Get all study data from the backend (with fallback to direct file reading)
+   */
+  static async getAllStudyData(): Promise<{
+    success: boolean;
+    participants: any[];
+    statistics: any;
+  }> {
+    try {
+      console.log('Making API request to /api/get_study_data...');
+      const response = await fetch('/api/get_study_data');
+      console.log('API Response status:', response.status);
+      
+      if (!response.ok) {
+        console.warn('API request failed with status:', response.status, '- falling back to direct file reading');
+        return await this.getStudyDataFromFile();
+      }
+      
+      const data = await response.json();
+      console.log('API Response data:', data);
+      return data;
+    } catch (error) {
+      console.warn('API request failed:', error, '- falling back to direct file reading');
+      return await this.getStudyDataFromFile();
+    }
+  }
+
+  /**
+   * Read study data directly from the participants.json file
+   */
+  static async getStudyDataFromFile(): Promise<{
+    success: boolean;
+    participants: any[];
+    statistics: any;
+  }> {
+    try {
+      console.log('Reading participants data directly from file...');
+      const response = await fetch('/research_data/participants.json');
+      
+      if (!response.ok) {
+        console.error('Could not fetch participants.json:', response.status);
+        return { success: false, participants: [], statistics: {} };
+      }
+      
+      const participantsData = await response.json();
+      console.log('Loaded participants data from file:', participantsData);
+      
+      // Convert the data structure to match what the API would return
+      const participants = Object.values(participantsData).map((participant: any) => ({
+        session_id: participant.session_id,
+        participant_id: participant.participant_id,
+        start_time: participant.start_time,
+        end_time: participant.end_time,
+        has_comprehensive_pre: participant.comprehensive_pre !== null,
+        has_research_pre: participant.research_pre !== null,
+        has_research_post: participant.research_post !== null,
+        has_exit_questionnaire: participant.exit_questionnaire !== null,
+        comprehensive_pre: participant.comprehensive_pre,
+        research_pre: participant.research_pre,
+        research_post: participant.research_post,
+        exit_questionnaire: participant.exit_questionnaire,
+        analysis_sessions: participant.analysis_sessions || [],
+        num_interactions: participant.interactions ? participant.interactions.length : 0
+      }));
+      
+      // Calculate basic statistics
+      const stats = {
+        total_participants: participants.length,
+        completed_comprehensive_pre: participants.filter(p => p.has_comprehensive_pre).length,
+        completed_research_pre: participants.filter(p => p.has_research_pre).length,
+        completed_research_post: participants.filter(p => p.has_research_post).length,
+        completed_exit: participants.filter(p => p.has_exit_questionnaire).length,
+        completed_full_study: participants.filter(p => (p.has_comprehensive_pre || p.has_research_pre) && p.has_research_post).length,
+        total_analysis_sessions: participants.reduce((sum, p) => sum + p.analysis_sessions.length, 0),
+        total_interactions: participants.reduce((sum, p) => sum + p.num_interactions, 0),
+        avg_analysis_sessions_per_participant: participants.length > 0 ? participants.reduce((sum, p) => sum + p.analysis_sessions.length, 0) / participants.length : 0,
+        avg_interactions_per_participant: participants.length > 0 ? participants.reduce((sum, p) => sum + p.num_interactions, 0) / participants.length : 0
+      };
+      
+      console.log('Calculated statistics from file data:', stats);
+      
+      return {
+        success: true,
+        participants: participants,
+        statistics: stats
+      };
+      
+    } catch (error) {
+      console.error('Failed to read data from file:', error);
+      return { success: false, participants: [], statistics: {} };
+    }
+  }
+
+  /**
+   * Export study data to CSV files
+   */
+  static async exportStudyData(exportType: string = 'all'): Promise<{
+    success: boolean;
+    message: string;
+    files: Record<string, string>;
+  }> {
+    try {
+      const response = await fetch('/api/export_study_data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ export_type: exportType })
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Error exporting study data:', error);
+      return { success: false, message: 'Export failed', files: {} };
+    }
+  }
+
+  /**
+   * Get specific participant data
+   */
+  static async getParticipantData(sessionId: string): Promise<{
+    success: boolean;
+    participant: any;
+  }> {
+    try {
+      const response = await fetch(`/api/get_participant_data/${sessionId}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching participant data:', error);
+      return { success: false, participant: null };
+    }
+  }
+
+  /**
+   * Log user interaction
+   */
+  static async logInteraction(sessionId: string, interactionType: string, data: any): Promise<boolean> {
+    try {
+      const response = await fetch('/api/log_interaction', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          type: interactionType,
+          data: data
+        })
+      });
+      const result = await response.json();
+      return result.success;
+    } catch (error) {
+      console.error('Error logging interaction:', error);
+      return false;
+    }
+  }
 }

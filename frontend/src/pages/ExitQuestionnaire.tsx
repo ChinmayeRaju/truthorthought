@@ -55,7 +55,7 @@ const ExitQuestionnaire: React.FC = () => {
 
       console.log('Exit questionnaire data:', exitData);
       
-      // Submit to backend (saves to Excel)
+      // Submit to backend using comprehensive data system
       const response = await apiService.submitQuestionnaire(exitData);
       
       if (response.success) {
@@ -63,6 +63,25 @@ const ExitQuestionnaire: React.FC = () => {
         const existingData = JSON.parse(localStorage.getItem('exitQuestionnaires') || '[]');
         existingData.push(exitData);
         localStorage.setItem('exitQuestionnaires', JSON.stringify(existingData));
+
+        // Log the questionnaire completion interaction
+        try {
+          await fetch('/api/log_interaction', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              session_id: exitData.sessionId,
+              type: 'questionnaire_completion',
+              data: {
+                questionnaire_type: 'exit',
+                completion_time: new Date().toISOString(),
+                total_questions: Object.keys(exitData).length
+              }
+            })
+          });
+        } catch (error) {
+          console.warn('Failed to log interaction:', error);
+        }
 
         console.log('Exit questionnaire submitted successfully:', exitData);
         

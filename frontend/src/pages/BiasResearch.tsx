@@ -12,7 +12,15 @@ import {
   Space,
   Statistic,
   Alert,
-  Select
+  Select,
+  Form,
+  Steps,
+  Radio,
+  Checkbox,
+  Slider,
+  Input,
+  Rate,
+  Divider
 } from 'antd';
 import { 
   ExperimentOutlined, 
@@ -20,13 +28,21 @@ import {
   FileTextOutlined,
   LinkOutlined,
   SearchOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  CheckCircleOutlined,
+  BulbOutlined,
+  RobotOutlined,
+  EyeOutlined,
+  ThunderboltOutlined,
+  TrophyOutlined,
+  UserOutlined
 } from '@ant-design/icons';
 import AppLayout from '../components/AppLayout';
 import { apiService } from '../services/api';
 import type { SessionInfo, BiasAnalysisSession, IndividualResult } from '../types';
 
 const { Title, Text, Paragraph } = Typography;
+const { TextArea } = Input;
 const { Option } = Select;
 
 const BiasResearch: React.FC = () => {
@@ -34,6 +50,11 @@ const BiasResearch: React.FC = () => {
   const [selectedSession, setSelectedSession] = useState<BiasAnalysisSession | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
+  
+  // Post-questionnaire state
+  const [form] = Form.useForm();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [questionnaireLoading, setQuestionnaireLoading] = useState(false);
 
   // Load sessions on component mount
   useEffect(() => {
@@ -79,13 +100,862 @@ const BiasResearch: React.FC = () => {
     return result.formatted_content || result.full_content || result.raw_content || 'Content not available';
   };
 
+  // Post-questionnaire submission handler
+  const handleQuestionnaireSubmit = async () => {
+    try {
+      setQuestionnaireLoading(true);
+      
+      const allFormFields = form.getFieldsValue(true);
+      console.log('Post-questionnaire part 2 data:', allFormFields);
+      
+      try {
+        await form.validateFields();
+        console.log('All fields validated successfully');
+      } catch (validationError) {
+        console.error('Validation failed for some fields:', validationError);
+      }
+      
+      const values = allFormFields;
+      const currentSessionId = selectedSession?.session_id || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const questionnaireKey = `bias_analysis_post_questionnaire2_${currentSessionId}`;
+      
+      const dataToSave = {
+        ...values,
+        timestamp: new Date().toISOString(),
+        type: 'post_experiment_questionnaire2',
+        sessionId: currentSessionId,
+        biasSessionData: selectedSession
+      };
+      
+      // Submit to backend using comprehensive data system
+      const response = await apiService.submitQuestionnaire(dataToSave);
+      
+      if (response.success) {
+        // Also save to localStorage as backup
+        localStorage.setItem(questionnaireKey, JSON.stringify(dataToSave));
+        
+        // Log the questionnaire completion interaction
+        try {
+          await fetch('/api/log_interaction', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              session_id: currentSessionId,
+              type: 'questionnaire_completion',
+              data: {
+                questionnaire_type: 'post_experiment_questionnaire2',
+                completion_time: new Date().toISOString(),
+                total_questions: Object.keys(dataToSave).length
+              }
+            })
+          });
+        } catch (error) {
+          console.warn('Failed to log interaction:', error);
+        }
+        
+        message.success('Post-Experiment Questionnaire 2 completed and saved! Thank you for your participation.');
+        form.resetFields();
+        setCurrentStep(0);
+      } else {
+        throw new Error(response.message || 'Failed to save questionnaire data');
+      }
+      
+    } catch (error) {
+      console.error('Submission failed:', error);
+      message.error('Failed to save questionnaire data. Please try again.');
+    } finally {
+      setQuestionnaireLoading(false);
+    }
+  };
+
+  // Questionnaire navigation functions
+  const nextStep = () => {
+    setCurrentStep(currentStep + 1);
+  };
+
+  const prevStep = () => {
+    setCurrentStep(currentStep - 1);
+  };
+
+  // Complete Post-Experiment Questionnaire steps (from EnhancedQuestionnaires.tsx)
+  const postQuestionnaireSteps = [
+    {
+      title: 'Task Difficulty',
+      icon: <ExperimentOutlined />,
+      content: (
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Title level={4}>Task Experience (NASA-TLX)</Title>
+          
+          <Form.Item
+            name="mentalDemand"
+            label="How mentally demanding was the task?"
+            rules={[{ required: true, message: 'Please rate the mental demand' }]}
+            initialValue={0}
+          >
+            <div>
+              <Slider
+                min={0}
+                max={100}
+                marks={{
+                  0: 'Very Low',
+                  25: 'Low',
+                  50: 'Medium',
+                  75: 'High',
+                  100: 'Very High'
+                }}
+                step={1}
+                defaultValue={0}
+                tooltip={{ formatter: (value) => `${value}/100` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="effortRequired"
+            label="How much effort did you need to classify statements?"
+            rules={[{ required: true, message: 'Please rate the effort required' }]}
+            initialValue={0}
+          >
+            <div>
+              <Slider
+                min={0}
+                max={100}
+                marks={{
+                  0: 'Very Low',
+                  25: 'Low',
+                  50: 'Medium',
+                  75: 'High',
+                  100: 'Very High'
+                }}
+                step={1}
+                defaultValue={0}
+                tooltip={{ formatter: (value) => `${value}/100` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="frustrationLevel"
+            label="How frustrated were you while using Truth or Thought?"
+            rules={[{ required: true, message: 'Please rate your frustration level' }]}
+            initialValue={0}
+          >
+            <div>
+              <Slider
+                min={0}
+                max={100}
+                marks={{
+                  0: 'Not at all',
+                  25: 'Slightly',
+                  50: 'Moderately',
+                  75: 'Very',
+                  100: 'Extremely'
+                }}
+                step={1}
+                defaultValue={0}
+                tooltip={{ formatter: (value) => `${value}/100` }}
+              />
+            </div>
+          </Form.Item>
+        </Space>
+      ),
+    },
+    {
+      title: 'System Clarity',
+      icon: <BarChartOutlined />,
+      content: (
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Title level={4}>System Understanding</Title>
+          
+          <Form.Item
+            name="factOpinionClarity"
+            label="How clear were fact–opinion distinctions?"
+            rules={[{ required: true, message: 'Please rate the clarity' }]}
+            initialValue={1}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Very unclear',
+                  2: 'Unclear',
+                  3: 'Neutral',
+                  4: 'Clear',
+                  5: 'Very clear'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="sourceInfluence"
+            label="How much did the source labels (BBC, CNN, Guardian) influence your trust in the system?"
+            rules={[{ required: true, message: 'Please rate the influence' }]}
+            initialValue={1}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Not at all',
+                  2: 'Slightly',
+                  3: 'Moderately',
+                  4: 'Significantly',
+                  5: 'Completely'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="explanationHelpfulness"
+            label="Did the citations/sources help you understand classifications?"
+            rules={[{ required: true, message: 'Please rate the helpfulness' }]}
+            initialValue={1}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Not helpful',
+                  2: 'Slightly helpful',
+                  3: 'Moderately helpful',
+                  4: 'Very helpful',
+                  5: 'Extremely helpful'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+        </Space>
+      ),
+    },
+    {
+      title: 'Perspective & Understanding',
+      icon: <BulbOutlined />,
+      content: (
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Title level={4}>Truth or Thought Model Impact</Title>
+          
+          <Form.Item
+            name="perspectiveAwareness"
+            label="To what extent did Truth or Thought make you aware of different perspectives in the articles?"
+            rules={[{ required: true, message: 'Please rate the perspective awareness' }]}
+            initialValue={1}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Strongly Disagree',
+                  2: 'Disagree',
+                  3: 'Neutral',
+                  4: 'Agree',
+                  5: 'Strongly Agree'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="objectiveSubjectiveClarity"
+            label="How easy was it to understand what information was objective versus subjective using Truth or Thought?"
+            rules={[{ required: true, message: 'Please rate the clarity' }]}
+            initialValue={1}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={7}
+                marks={{
+                  1: 'Very Difficult',
+                  2: 'Difficult',
+                  3: 'Somewhat Difficult',
+                  4: 'Neutral',
+                  5: 'Somewhat Easy',
+                  6: 'Easy',
+                  7: 'Very Easy'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/7` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="biasDetectionImprovement"
+            label="Truth or Thought helped me better detect bias in news articles"
+            rules={[{ required: true, message: 'Please rate your agreement' }]}
+            initialValue={1}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Strongly Disagree',
+                  2: 'Disagree',
+                  3: 'Neutral',
+                  4: 'Agree',
+                  5: 'Strongly Agree'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+        </Space>
+      ),
+    },
+    {
+      title: 'Efficiency & Speed',
+      icon: <BarChartOutlined />,
+      content: (
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Title level={4}>Truth or Thought Efficiency</Title>
+          
+          <Form.Item
+            name="quickEvaluation"
+            label="It was quick to evaluate the article using Truth or Thought"
+            rules={[{ required: true, message: 'Please rate your agreement' }]}
+            initialValue={1}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Strongly Disagree',
+                  2: 'Disagree',
+                  3: 'Neutral',
+                  4: 'Agree',
+                  5: 'Strongly Agree'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="lessEffortThanExpected"
+            label="The process required less effort than I expected"
+            rules={[{ required: true, message: 'Please rate your agreement' }]}
+            initialValue={1}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Strongly Disagree',
+                  2: 'Disagree',
+                  3: 'Neutral',
+                  4: 'Agree',
+                  5: 'Strongly Agree'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="quickJudgment"
+            label="I could reach a judgment without spending too much time"
+            rules={[{ required: true, message: 'Please rate your agreement' }]}
+            initialValue={1}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Strongly Disagree',
+                  2: 'Disagree',
+                  3: 'Neutral',
+                  4: 'Agree',
+                  5: 'Strongly Agree'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="focusedReading"
+            label="I was able to focus on what mattered without unnecessary reading"
+            rules={[{ required: true, message: 'Please rate your agreement' }]}
+            initialValue={1}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Strongly Disagree',
+                  2: 'Disagree',
+                  3: 'Neutral',
+                  4: 'Agree',
+                  5: 'Strongly Agree'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+        </Space>
+      ),
+    },
+    {
+      title: 'Usability Assessment',
+      icon: <ExperimentOutlined />,
+      content: (
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Title level={4}>Truth or Thought Usability</Title>
+          
+          <Form.Item
+            name="timeConsumingQuick"
+            label="Using Truth or Thought was:"
+            rules={[{ required: true, message: 'Please rate the time factor' }]}
+            initialValue={1}
+          >
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <Text>Time-consuming</Text>
+                <Text>Quick</Text>
+              </div>
+              <Slider
+                min={1}
+                max={7}
+                marks={{
+                  1: '1',
+                  2: '2',
+                  3: '3',
+                  4: '4',
+                  5: '5',
+                  6: '6',
+                  7: '7'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/7` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="effortfulEffortless"
+            label="Using Truth or Thought was:"
+            rules={[{ required: true, message: 'Please rate the effort factor' }]}
+            initialValue={1}
+          >
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <Text>Effortful</Text>
+                <Text>Effortless</Text>
+              </div>
+              <Slider
+                min={1}
+                max={7}
+                marks={{
+                  1: '1',
+                  2: '2',
+                  3: '3',
+                  4: '4',
+                  5: '5',
+                  6: '6',
+                  7: '7'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/7` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="slowFastJudgment"
+            label="Reaching judgment with Truth or Thought was:"
+            rules={[{ required: true, message: 'Please rate the judgment speed' }]}
+            initialValue={1}
+          >
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <Text>Slow to reach judgment</Text>
+                <Text>Fast to reach judgment</Text>
+              </div>
+              <Slider
+                min={1}
+                max={7}
+                marks={{
+                  1: '1',
+                  2: '2',
+                  3: '3',
+                  4: '4',
+                  5: '5',
+                  6: '6',
+                  7: '7'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/7` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="confusingClear"
+            label="Truth or Thought was:"
+            rules={[{ required: true, message: 'Please rate the clarity' }]}
+            initialValue={1}
+          >
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <Text>Confusing</Text>
+                <Text>Clear</Text>
+              </div>
+              <Slider
+                min={1}
+                max={7}
+                marks={{
+                  1: '1',
+                  2: '2',
+                  3: '3',
+                  4: '4',
+                  5: '5',
+                  6: '6',
+                  7: '7'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/7` }}
+              />
+            </div>
+          </Form.Item>
+        </Space>
+      ),
+    },
+    {
+      title: 'Future Usage Intent',
+      icon: <BulbOutlined />,
+      content: (
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Title level={4}>Truth or Thought Adoption</Title>
+          
+          <Form.Item
+            name="futureUsage"
+            label="I would consider using Truth or Thought in the future"
+            rules={[{ required: true, message: 'Please rate your agreement' }]}
+            initialValue={1}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Strongly Disagree',
+                  2: 'Disagree',
+                  3: 'Neutral',
+                  4: 'Agree',
+                  5: 'Strongly Agree'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="likelyToUse"
+            label="If Truth or Thought were available, I would likely use it"
+            rules={[{ required: true, message: 'Please rate your agreement' }]}
+            initialValue={1}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Strongly Disagree',
+                  2: 'Disagree',
+                  3: 'Neutral',
+                  4: 'Agree',
+                  5: 'Strongly Agree'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="recommendToOthers"
+            label="I would recommend Truth or Thought to others who read similar articles"
+            rules={[{ required: true, message: 'Please rate your agreement' }]}
+            initialValue={1}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Strongly Disagree',
+                  2: 'Disagree',
+                  3: 'Neutral',
+                  4: 'Agree',
+                  5: 'Strongly Agree'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="comparedToTraditional"
+            label="Truth or Thought is more effective than traditional news reading methods"
+            rules={[{ required: true, message: 'Please rate your agreement' }]}
+            initialValue={1}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Strongly Disagree',
+                  2: 'Disagree',
+                  3: 'Neutral',
+                  4: 'Agree',
+                  5: 'Strongly Agree'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="trustInAnalysis"
+            label="I trust the analysis provided by Truth or Thought"
+            rules={[{ required: true, message: 'Please rate your agreement' }]}
+            initialValue={1}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Strongly Disagree',
+                  2: 'Disagree',
+                  3: 'Neutral',
+                  4: 'Agree',
+                  5: 'Strongly Agree'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+        </Space>
+      ),
+    },
+    {
+      title: 'Features & Issues',
+      icon: <BulbOutlined />,
+      content: (
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Title level={4}>System Features</Title>
+          
+          <Form.Item
+            name="mostHelpfulFeature"
+            label="Which feature did you find most helpful?"
+            rules={[{ required: true, message: 'Please select at least one feature' }]}
+          >
+            <Checkbox.Group>
+              <Checkbox value="sourceLabel">Source label</Checkbox>
+              <Checkbox value="relevantPersonnel">Relevant personnel</Checkbox>
+              <Checkbox value="citationsSources">Citations/Sources</Checkbox>
+              <Checkbox value="impactfulQuotes">Impactful Quotes</Checkbox>
+              <Checkbox value="none">None</Checkbox>
+            </Checkbox.Group>
+          </Form.Item>
+
+          <Form.Item
+            name="otherHelpfulFeature"
+            label="If other, please specify:"
+            dependencies={['mostHelpfulFeature']}
+          >
+            <Input placeholder="Describe the other helpful feature..." />
+          </Form.Item>
+
+          <Form.Item
+            name="issuesEncountered"
+            label="Were there any issues you encountered?"
+            rules={[{ required: true, message: 'Please describe any issues or write "None"' }]}
+          >
+            <TextArea rows={3} placeholder="Describe any issues you encountered or write 'None'..." />
+          </Form.Item>
+
+          <Form.Item
+            name="missedFacts"
+            label="Did we miss any facts or information in the articles?"
+            rules={[{ required: true, message: 'Please rate if facts were missed' }]}
+            initialValue={1}
+          >
+            <div>
+              <Slider
+                min={1}
+                max={5}
+                marks={{
+                  1: 'Not at all',
+                  2: 'A few',
+                  3: 'Some',
+                  4: 'Many',
+                  5: 'Very many'
+                }}
+                step={1}
+                defaultValue={1}
+                tooltip={{ formatter: (value) => `${value}/5` }}
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="missedFactsSpecify"
+            label="If yes, please specify what facts were missed:"
+            dependencies={['missedFacts']}
+          >
+            <TextArea rows={3} placeholder="Describe what facts or information were missed..." />
+          </Form.Item>
+        </Space>
+      ),
+    },
+    {
+      title: 'Article Familiarity',
+      icon: <ExperimentOutlined />,
+      content: (
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Title level={4}>Prior Knowledge Assessment</Title>
+          
+          <Form.Item
+            name="articleFamiliarity"
+            label="Were you familiar with the article content before using Truth or Thought?"
+            rules={[{ required: true, message: 'Please select an option' }]}
+          >
+            <Radio.Group>
+              <Radio value="yes">Yes, I was familiar with this article/topic</Radio>
+              <Radio value="no">No, this was new content for me</Radio>
+            </Radio.Group>
+          </Form.Item>
+
+          <Form.Item
+            name="familiarityBiasImpact"
+            label="If you were familiar with the article, do you think that prior knowledge was a bias factor in analyzing facts and opinions?"
+            dependencies={['articleFamiliarity']}
+            rules={[
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (getFieldValue('articleFamiliarity') === 'yes' && !value) {
+                    return Promise.reject(new Error('Please rate the bias impact'));
+                  }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
+          >
+            <Radio.Group>
+              <Space direction="vertical">
+                <Radio value={1}>1 - Not a bias factor at all</Radio>
+                <Radio value={2}>2 - Minimal bias factor</Radio>
+                <Radio value={3}>3 - Moderate bias factor</Radio>
+                <Radio value={4}>4 - Significant bias factor</Radio>
+                <Radio value={5}>5 - Major bias factor</Radio>
+              </Space>
+            </Radio.Group>
+          </Form.Item>
+
+          <Form.Item
+            name="modelEffectivenessNewContent"
+            label="If the content was new to you, do you think Truth or Thought did a good job helping you capture the facts and opinions in the article?"
+            dependencies={['articleFamiliarity']}
+            rules={[
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (getFieldValue('articleFamiliarity') === 'no' && !value) {
+                    return Promise.reject(new Error('Please rate the model effectiveness'));
+                  }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
+          >
+            <Radio.Group>
+              <Space direction="vertical">
+                <Radio value={1}>1 - Poor job, didn't help much</Radio>
+                <Radio value={2}>2 - Below average, some help</Radio>
+                <Radio value={3}>3 - Average, moderately helpful</Radio>
+                <Radio value={4}>4 - Good job, quite helpful</Radio>
+                <Radio value={5}>5 - Excellent job, very helpful</Radio>
+              </Space>
+            </Radio.Group>
+          </Form.Item>
+        </Space>
+      ),
+    },
+    {
+      title: 'Final Comments',
+      icon: <UserOutlined />,
+      content: (
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Title level={4}>Additional Feedback</Title>
+          
+          <Form.Item
+            name="additionalComments"
+            label="Any additional comments or suggestions?"
+            rules={[{ required: true, message: 'Please provide feedback or write "None"' }]}
+          >
+            <TextArea rows={4} placeholder="Share any additional thoughts, suggestions, or feedback..." />
+          </Form.Item>
+        </Space>
+      ),
+    },
+  ];
+
   return (
     <AppLayout>
       <Row gutter={[24, 24]} style={{ height: '100%' }}>
         <Col span={24}>
           <Card
-            style={{ 
-              borderRadius: 15, 
+            style={{
+              borderRadius: 15,
               boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
               background: 'white'
             }}
@@ -124,8 +994,8 @@ const BiasResearch: React.FC = () => {
                       </Option>
                     ))}
                   </Select>
-                  <Button 
-                    icon={<ReloadOutlined />} 
+                  <Button
+                    icon={<ReloadOutlined />}
                     onClick={loadSessions}
                     loading={loadingSessions}
                   >
@@ -152,7 +1022,7 @@ const BiasResearch: React.FC = () => {
             {selectedSession && !loading && (
               <>
                 {/* Session Overview */}
-                <Card 
+                <Card
                   title={
                     <Space>
                       <BarChartOutlined style={{ color: '#3498db' }} />
@@ -282,7 +1152,7 @@ const BiasResearch: React.FC = () => {
 
                     {/* Analysis Panel */}
                     <div style={{ flex: 1, overflow: 'auto' }}>
-                      <Card 
+                      <Card
                         title={
                           <Space>
                             <SearchOutlined />
@@ -295,7 +1165,7 @@ const BiasResearch: React.FC = () => {
                         <div style={{ padding: 16 }}>
                           <Row gutter={[16, 16]}>
                             <Col span={12}>
-                              <Card 
+                              <Card
                                 title={
                                   <Space>
                                     <Text style={{ color: '#52c41a' }}>✓ Facts</Text>
@@ -333,7 +1203,7 @@ const BiasResearch: React.FC = () => {
                             </Col>
 
                             <Col span={12}>
-                              <Card 
+                              <Card
                                 title={
                                   <Space>
                                     <Text style={{ color: '#faad14' }}>💭 Opinions</Text>
@@ -429,7 +1299,7 @@ const BiasResearch: React.FC = () => {
 
                     {/* Analysis Results */}
                     <div style={{ flex: 1, overflow: 'auto' }}>
-                      <Card 
+                      <Card
                         title={
                           <Space>
                             <SearchOutlined />
@@ -442,7 +1312,7 @@ const BiasResearch: React.FC = () => {
                         <div style={{ padding: 16 }}>
                           <Row gutter={[16, 16]}>
                             <Col span={12}>
-                              <Card 
+                              <Card
                                 title={
                                   <Space>
                                     <Text style={{ color: '#52c41a' }}>✓ Facts</Text>
@@ -475,7 +1345,7 @@ const BiasResearch: React.FC = () => {
                             </Col>
 
                             <Col span={12}>
-                              <Card 
+                              <Card
                                 title={
                                   <Space>
                                     <Text style={{ color: '#faad14' }}>💭 Opinions</Text>
@@ -502,6 +1372,72 @@ const BiasResearch: React.FC = () => {
                       </Card>
                     </div>
                   </div>
+                )}
+
+                {/* Post-Experiment Questionnaire 2 */}
+                {selectedSession && (
+                  <Card
+                    title={
+                      <Space>
+                        <ExperimentOutlined style={{ color: '#722ed1' }} />
+                        Post-Experiment Questionnaire 2
+                      </Space>
+                    }
+                    style={{ marginTop: 24 }}
+                  >
+                    <div style={{ marginBottom: 24 }}>
+                      <Title level={4} style={{ marginBottom: 8 }}>
+                        Post-Experiment Questionnaire 2
+                      </Title>
+                      <Paragraph style={{ color: '#666' }}>
+                        This questionnaire measures the outcomes and changes resulting from your use of the AI bias analysis tool.
+                        Your responses help us understand the effectiveness of AI assistance across all our research questions.
+                      </Paragraph>
+                    </div>
+                    
+                    <Steps current={currentStep} style={{ marginBottom: 32 }}>
+                      {postQuestionnaireSteps.map((step, index) => (
+                        <Steps.Step key={index} title={step.title} icon={step.icon} />
+                      ))}
+                    </Steps>
+
+                    <Form form={form} layout="vertical" style={{ minHeight: '400px' }}>
+                      <div>{postQuestionnaireSteps[currentStep].content}</div>
+                    </Form>
+
+                    <Divider />
+
+                    <div style={{ marginTop: 32, textAlign: 'center' }}>
+                      <Space>
+                        {currentStep > 0 && (
+                          <Button onClick={prevStep} size="large">
+                            Previous
+                          </Button>
+                        )}
+                        {currentStep < postQuestionnaireSteps.length - 1 && (
+                          <Button type="primary" onClick={nextStep} size="large">
+                            Next
+                          </Button>
+                        )}
+                        {currentStep === postQuestionnaireSteps.length - 1 && (
+                          <Button
+                            type="primary"
+                            onClick={handleQuestionnaireSubmit}
+                            loading={questionnaireLoading}
+                            size="large"
+                          >
+                            Complete Post-Experiment Questionnaire 2
+                          </Button>
+                        )}
+                      </Space>
+                    </div>
+
+                    <div style={{ marginTop: 24, textAlign: 'center' }}>
+                      <Text type="secondary">
+                        Step {currentStep + 1} of {postQuestionnaireSteps.length} | Complete Post-Experiment Assessment
+                      </Text>
+                    </div>
+                  </Card>
                 )}
               </>
             )}
