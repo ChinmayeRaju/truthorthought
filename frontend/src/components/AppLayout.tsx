@@ -22,12 +22,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       onClick: () => navigate('/'),
     },
     {
-      key: '/questionnaires',
-      icon: <ExperimentOutlined />,
-      label: 'Research Study',
-      onClick: () => navigate('/questionnaires'),
-    },
-    {
       key: '/bias_research',
       icon: <BarChartOutlined />,
       label: 'Bias Analysis',
