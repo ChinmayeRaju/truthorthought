@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   Form,
@@ -11,8 +11,6 @@ import {
   Slider,
   Input,
   message,
-  Row,
-  Col
 } from 'antd';
 import {
   UserOutlined,
@@ -36,6 +34,7 @@ const EnhancedQuestionnaires: React.FC = () => {
   
   const sessionId = searchParams.get('sessionId');
   const isPostQuestionnaire = searchParams.get('type') === 'post';
+  const fromBiasResearch = searchParams.get('fromBiasResearch') === 'true';
 
   const handleSubmit = async () => {
     try {
@@ -84,10 +83,17 @@ const EnhancedQuestionnaires: React.FC = () => {
         localStorage.setItem(questionnaireKey, JSON.stringify(dataToSave));
         
         if (isPostQuestionnaire) {
-          message.success('Post-study questionnaire completed and saved! Thank you for your participation.');
-          setTimeout(() => {
-            navigate('/');
-          }, 1500);
+          if (fromBiasResearch) {
+            message.success('Post-study questionnaire completed! Proceeding to exit questionnaire.');
+            setTimeout(() => {
+              navigate(`/exit-questionnaire?sessionId=${currentSessionId}`);
+            }, 1500);
+          } else {
+            message.success('Post-study questionnaire completed and saved! Thank you for your participation.');
+            setTimeout(() => {
+              navigate('/');
+            }, 1500);
+          }
         } else {
           message.success('Pre-study questionnaire completed and saved! Redirecting to the analysis tool...');
           setTimeout(() => {

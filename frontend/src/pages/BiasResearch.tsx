@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Button, 
-  Row, 
-  Col, 
-  Typography, 
-  message, 
-  Spin, 
+import {
+  Card,
+  Button,
+  Row,
+  Col,
+  Typography,
+  message,
+  Spin,
   List,
   Tag,
   Space,
@@ -22,6 +22,7 @@ import {
   Rate,
   Divider
 } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import { 
   ExperimentOutlined, 
   BarChartOutlined, 
@@ -46,6 +47,7 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 const BiasResearch: React.FC = () => {
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [selectedSession, setSelectedSession] = useState<BiasAnalysisSession | null>(null);
   const [loading, setLoading] = useState(false);
@@ -153,9 +155,10 @@ const BiasResearch: React.FC = () => {
           console.warn('Failed to log interaction:', error);
         }
         
-        message.success('Post-Experiment Questionnaire 2 completed and saved! Thank you for your participation.');
-        form.resetFields();
-        setCurrentStep(0);
+        message.success('Bias analysis questionnaire completed! Proceeding to post-study questionnaire.');
+        
+        // Navigate to post questionnaire with session ID and bias research flag
+        navigate(`/post-questionnaire?type=post&sessionId=${currentSessionId}&fromBiasResearch=true`);
       } else {
         throw new Error(response.message || 'Failed to save questionnaire data');
       }
