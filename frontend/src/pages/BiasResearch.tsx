@@ -124,7 +124,7 @@ const BiasResearch: React.FC = () => {
       const dataToSave = {
         ...values,
         timestamp: new Date().toISOString(),
-        type: 'post_experiment_questionnaire2',
+        type: 'bias_analysis',
         sessionId: currentSessionId,
         biasSessionData: selectedSession
       };
@@ -145,7 +145,7 @@ const BiasResearch: React.FC = () => {
               session_id: currentSessionId,
               type: 'questionnaire_completion',
               data: {
-                questionnaire_type: 'post_experiment_questionnaire2',
+                questionnaire_type: 'bias_analysis',
                 completion_time: new Date().toISOString(),
                 total_questions: Object.keys(dataToSave).length
               }

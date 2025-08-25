@@ -284,7 +284,15 @@ const ResearchDashboard: React.FC = () => {
               loading={exportLoading}
               disabled={participants.length === 0}
             >
-              Export Post-Questionnaires
+              Export Post Questionnaires
+            </Button>
+            <Button
+              icon={<DownloadOutlined />}
+              onClick={() => exportSpecificData('bias_analysis_questionnaires')}
+              loading={exportLoading}
+              disabled={participants.length === 0}
+            >
+              Export Bias Analysis Questionnaires
             </Button>
             <Button
               icon={<DownloadOutlined />}

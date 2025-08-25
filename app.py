@@ -1405,6 +1405,8 @@ def export_study_data():
             exported_files = study_data_manager.export_pre_questionnaires_only()
         elif export_type == 'post_questionnaires':
             exported_files = study_data_manager.export_post_questionnaires_only()
+        elif export_type == 'bias_analysis_questionnaires':
+            exported_files = study_data_manager.export_bias_analysis_questionnaires_only()
         elif export_type == 'exit_questionnaires':
             exported_files = study_data_manager.export_exit_questionnaires_only()
         elif export_type == 'sessions':

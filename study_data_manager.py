@@ -30,6 +30,9 @@ class StudyParticipant:
     # Post-questionnaire data
     research_post: Optional[Dict[str, Any]] = None
     
+    # Bias analysis questionnaire data
+    bias_analysis: Optional[Dict[str, Any]] = None
+    
     # Exit questionnaire data
     exit_questionnaire: Optional[Dict[str, Any]] = None
     
@@ -148,6 +151,8 @@ class StudyDataManager:
                 participant.research_pre = data_with_metadata
             elif questionnaire_type == 'research_post':
                 participant.research_post = data_with_metadata
+            elif questionnaire_type == 'bias_analysis':
+                participant.bias_analysis = data_with_metadata
             elif questionnaire_type == 'exit':
                 participant.exit_questionnaire = data_with_metadata
                 participant.end_time = datetime.now().isoformat()
@@ -378,6 +383,11 @@ class StudyDataManager:
                 df = pd.DataFrame(rows)
                 df.to_csv(filepath, index=False, encoding='utf-8')
                 exported_files['research_post_questionnaire'] = filepath
+            else:
+                # Create an empty file to indicate no data available
+                with open(filepath, 'w', encoding='utf-8') as f:
+                    f.write('No post-questionnaire data available\n')
+                exported_files['research_post_questionnaire'] = filepath
             
             return exported_files
             
@@ -385,6 +395,49 @@ class StudyDataManager:
             print(f"Error exporting post-questionnaire data: {e}")
             return {}
     
+    def export_bias_analysis_questionnaires_only(self, output_dir: Optional[str] = None) -> Dict[str, str]:
+        """Export only bias analysis questionnaire data to CSV files"""
+        if output_dir is None:
+            output_dir = self.data_dir
+        
+        os.makedirs(output_dir, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        exported_files = {}
+        
+        try:
+            # Export bias analysis questionnaire (post_experiment_questionnaire2 type)
+            filename = f"bias_analysis_questionnaire_{timestamp}.csv"
+            filepath = os.path.join(output_dir, filename)
+            rows = []
+            for participant in self.participants.values():
+                if participant.bias_analysis:
+                    # Extract only the questionnaire responses, exclude biasSessionData and other analysis data
+                    questionnaire_data = participant.bias_analysis.copy()
+                    
+                    # Remove analysis-related data, keep only questionnaire responses
+                    fields_to_remove = ['biasSessionData', 'content', 'domain', 'facts', 'opinions', 'url', 'urls', 'title']
+                    for field in fields_to_remove:
+                        questionnaire_data.pop(field, None)
+                    
+                    rows.append(questionnaire_data)
+            
+            if rows:
+                df = pd.DataFrame(rows)
+                df.to_csv(filepath, index=False, encoding='utf-8')
+                exported_files['bias_analysis_questionnaire'] = filepath
+            else:
+                # Create an empty file to indicate no data available
+                with open(filepath, 'w', encoding='utf-8') as f:
+                    f.write('No bias analysis questionnaire data available\n')
+                exported_files['bias_analysis_questionnaire'] = filepath
+            
+            return exported_files
+            
+        except Exception as e:
+            print(f"Error exporting bias analysis questionnaire data: {e}")
+            return {}
+
     def export_exit_questionnaires_only(self, output_dir: Optional[str] = None) -> Dict[str, str]:
         """Export only exit questionnaire data to CSV files"""
         if output_dir is None:
