@@ -150,24 +150,21 @@ const ResearchAlignedPreQuestionnaire: React.FC = () => {
             name="technologyComfort"
             label="How comfortable are you with using digital technology and AI tools?"
             rules={[{ required: true, message: 'Please rate your technology comfort' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
-                min={1}
-                max={5}
-                marks={{
-                  1: 'Very uncomfortable',
-                  2: 'Uncomfortable',
-                  3: 'Neutral',
-                  4: 'Comfortable',
-                  5: 'Very comfortable'
-                }}
-                step={1}
-                defaultValue={1}
-                tooltip={{ formatter: (value) => `${value}/5` }}
-              />
-            </div>
+            <Slider
+              min={1}
+              max={5}
+              marks={{
+                1: 'Very uncomfortable',
+                2: 'Uncomfortable',
+                3: 'Neutral',
+                4: 'Comfortable',
+                5: 'Very comfortable'
+              }}
+              step={1}
+              defaultValue={1}
+              tooltip={{ formatter: (value) => `${value}/5` }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -214,24 +211,21 @@ const ResearchAlignedPreQuestionnaire: React.FC = () => {
             name="factOpinionConfidence"
             label="How confident are you in your ability to distinguish facts from opinions in news articles?"
             rules={[{ required: true, message: 'Please rate your confidence' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
-                min={1}
-                max={5}
-                marks={{
-                  1: 'Not confident',
-                  2: 'Slightly confident',
-                  3: 'Moderately confident',
-                  4: 'Very confident',
-                  5: 'Extremely confident'
-                }}
-                step={1}
-                defaultValue={1}
-                tooltip={{ formatter: (value) => `${value}/5` }}
-              />
-            </div>
+            <Slider
+              min={1}
+              max={5}
+              marks={{
+                1: 'Not confident',
+                2: 'Slightly confident',
+                3: 'Moderately confident',
+                4: 'Very confident',
+                5: 'Extremely confident'
+              }}
+              step={1}
+              defaultValue={1}
+              tooltip={{ formatter: (value) => `${value}/5` }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -257,24 +251,21 @@ const ResearchAlignedPreQuestionnaire: React.FC = () => {
             name="factOpinionAccuracy"
             label="How accurate do you think you are at distinguishing facts from opinions?"
             rules={[{ required: true, message: 'Please estimate your accuracy' }]}
-            initialValue={0}
           >
-            <div>
-              <Slider
-                min={0}
-                max={100}
-                marks={{
-                  0: '0%',
-                  25: '25%',
-                  50: '50%',
-                  75: '75%',
-                  100: '100%'
-                }}
-                step={5}
-                defaultValue={0}
-                tooltip={{ formatter: (value) => `${value}%` }}
-              />
-            </div>
+            <Slider
+              min={0}
+              max={100}
+              marks={{
+                0: '0%',
+                25: '25%',
+                50: '50%',
+                75: '75%',
+                100: '100%'
+              }}
+              step={5}
+              defaultValue={0}
+              tooltip={{ formatter: (value) => `${value}%` }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -304,24 +295,21 @@ const ResearchAlignedPreQuestionnaire: React.FC = () => {
             name="biasDetectionConfidence"
             label="How confident are you in your ability to detect bias in news reporting?"
             rules={[{ required: true, message: 'Please rate your confidence' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
-                min={1}
-                max={5}
-                marks={{
-                  1: 'Not confident',
-                  2: 'Slightly confident',
-                  3: 'Moderately confident',
-                  4: 'Very confident',
-                  5: 'Extremely confident'
-                }}
-                step={1}
-                defaultValue={1}
-                tooltip={{ formatter: (value) => `${value}/5` }}
-              />
-            </div>
+            <Slider
+              min={1}
+              max={5}
+              marks={{
+                1: 'Not confident',
+                2: 'Slightly confident',
+                3: 'Moderately confident',
+                4: 'Very confident',
+                5: 'Extremely confident'
+              }}
+              step={1}
+              defaultValue={1}
+              tooltip={{ formatter: (value) => `${value}/5` }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -398,48 +386,42 @@ const ResearchAlignedPreQuestionnaire: React.FC = () => {
             name="automationPreference"
             label="In general, do you prefer automated tools or manual processes for analyzing information?"
             rules={[{ required: true, message: 'Please indicate your preference' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
-                min={1}
-                max={5}
-                marks={{
-                  1: 'Strongly prefer manual',
-                  2: 'Prefer manual',
-                  3: 'No preference',
-                  4: 'Prefer automated',
-                  5: 'Strongly prefer automated'
-                }}
-                step={1}
-                defaultValue={1}
-                tooltip={{ formatter: (value) => `${value}/5` }}
-              />
-            </div>
+            <Slider
+              min={1}
+              max={5}
+              marks={{
+                1: 'Strongly prefer manual',
+                2: 'Prefer manual',
+                3: 'No preference',
+                4: 'Prefer automated',
+                5: 'Strongly prefer automated'
+              }}
+              step={1}
+              defaultValue={1}
+              tooltip={{ formatter: (value) => `${value}/5` }}
+            />
           </Form.Item>
 
           <Form.Item
             name="aiTrustLevel"
             label="How much do you trust AI systems to make accurate judgments about information?"
             rules={[{ required: true, message: 'Please rate your trust level' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
-                min={1}
-                max={5}
-                marks={{
-                  1: 'Strongly distrust',
-                  2: 'Somewhat distrust',
-                  3: 'Neutral',
-                  4: 'Somewhat trust',
-                  5: 'Strongly trust'
-                }}
-                step={1}
-                defaultValue={1}
-                tooltip={{ formatter: (value) => `${value}/5` }}
-              />
-            </div>
+            <Slider
+              min={1}
+              max={5}
+              marks={{
+                1: 'Strongly distrust',
+                2: 'Somewhat distrust',
+                3: 'Neutral',
+                4: 'Somewhat trust',
+                5: 'Strongly trust'
+              }}
+              step={1}
+              defaultValue={1}
+              tooltip={{ formatter: (value) => `${value}/5` }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -543,24 +525,21 @@ const ResearchAlignedPreQuestionnaire: React.FC = () => {
             name="mentalEffortNews"
             label="How much mental effort does it typically take you to analyze a news article for bias and accuracy?"
             rules={[{ required: true, message: 'Please rate the mental effort required' }]}
-            initialValue={0}
           >
-            <div>
-              <Slider
-                min={0}
-                max={100}
-                marks={{
-                  0: 'Very low effort',
-                  25: 'Low effort',
-                  50: 'Moderate effort',
-                  75: 'High effort',
-                  100: 'Very high effort'
-                }}
-                step={5}
-                defaultValue={0}
-                tooltip={{ formatter: (value) => `${value}/100` }}
-              />
-            </div>
+            <Slider
+              min={0}
+              max={100}
+              marks={{
+                0: 'Very low effort',
+                25: 'Low effort',
+                50: 'Moderate effort',
+                75: 'High effort',
+                100: 'Very high effort'
+              }}
+              step={5}
+              defaultValue={0}
+              tooltip={{ formatter: (value) => `${value}/100` }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -594,24 +573,21 @@ const ResearchAlignedPreQuestionnaire: React.FC = () => {
             name="generalMediaTrust"
             label="What is your general confidence level in the accuracy, objectivity, and reliability of mainstream news reporting across different outlets and platforms?"
             rules={[{ required: true, message: 'Please rate your confidence in mainstream media' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
-                min={1}
-                max={5}
-                marks={{
-                  1: 'Very low confidence',
-                  2: 'Low confidence',
-                  3: 'Moderate confidence',
-                  4: 'High confidence',
-                  5: 'Very high confidence'
-                }}
-                step={1}
-                defaultValue={1}
-                tooltip={{ formatter: (value) => `${value}/5` }}
-              />
-            </div>
+            <Slider
+              min={1}
+              max={5}
+              marks={{
+                1: 'Very low confidence',
+                2: 'Low confidence',
+                3: 'Moderate confidence',
+                4: 'High confidence',
+                5: 'Very high confidence'
+              }}
+              step={1}
+              defaultValue={1}
+              tooltip={{ formatter: (value) => `${value}/5` }}
+            />
           </Form.Item>
 
           <div style={{ marginBottom: '24px' }}>
@@ -695,24 +671,21 @@ const ResearchAlignedPreQuestionnaire: React.FC = () => {
             name="newsEmotionalImpact"
             label="Rate the typical emotional impact and psychological burden you experience when consuming news content, particularly regarding political events, social issues, and crisis reporting"
             rules={[{ required: true, message: 'Please rate the emotional impact' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
-                min={1}
-                max={10}
-                marks={{
-                  1: 'Completely unaffected',
-                  3: 'Mildly affected',
-                  5: 'Moderately affected',
-                  7: 'Significantly affected',
-                  10: 'Severely distressing'
-                }}
-                step={1}
-                defaultValue={1}
-                tooltip={{ formatter: (value) => `${value}/10` }}
-              />
-            </div>
+            <Slider
+              min={1}
+              max={10}
+              marks={{
+                1: 'Completely unaffected',
+                3: 'Mildly affected',
+                5: 'Moderately affected',
+                7: 'Significantly affected',
+                10: 'Severely distressing'
+              }}
+              step={1}
+              defaultValue={1}
+              tooltip={{ formatter: (value) => `${value}/10` }}
+            />
           </Form.Item>
 
           <Form.Item

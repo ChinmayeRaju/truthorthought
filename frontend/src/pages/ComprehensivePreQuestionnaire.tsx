@@ -135,10 +135,8 @@ const ComprehensivePreQuestionnaire: React.FC = () => {
             name="mediaTrustGeneral"
             label="Regarding politics and war coverage, do you trust news media in general?"
             rules={[{ required: true, message: 'Please indicate your level of trust' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -152,7 +150,6 @@ const ComprehensivePreQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
@@ -303,10 +300,8 @@ const ComprehensivePreQuestionnaire: React.FC = () => {
             name="biasDetectionConfidence"
             label="How confident are you in your ability to detect bias in news reporting?"
             rules={[{ required: true, message: 'Please rate your confidence' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -320,7 +315,6 @@ const ComprehensivePreQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
         </Space>
       ),
@@ -339,10 +333,8 @@ const ComprehensivePreQuestionnaire: React.FC = () => {
             name="newsEmotionalDraining"
             label="Do you find news consumption emotionally draining or depressing?"
             rules={[{ required: true, message: 'Please indicate how news affects you emotionally' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -356,7 +348,6 @@ const ComprehensivePreQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
@@ -508,10 +499,8 @@ const ComprehensivePreQuestionnaire: React.FC = () => {
             name="crisisInformationSpeed"
             label="During a crisis, how important is the speed of information versus accuracy?"
             rules={[{ required: true, message: 'Please indicate your preference' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -525,7 +514,6 @@ const ComprehensivePreQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
@@ -543,10 +531,8 @@ const ComprehensivePreQuestionnaire: React.FC = () => {
             name="misinformationConcern"
             label="How concerned are you about misinformation during crisis situations?"
             rules={[{ required: true, message: 'Please rate your concern level' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -560,7 +546,6 @@ const ComprehensivePreQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
         </Space>
       ),
@@ -607,10 +592,8 @@ const ComprehensivePreQuestionnaire: React.FC = () => {
             name="politicalInterest"
             label="How interested are you in politics and current affairs?"
             rules={[{ required: true, message: 'Please rate your interest level' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -624,17 +607,14 @@ const ComprehensivePreQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="techComfort"
             label="How comfortable are you with using digital technology and online tools?"
             rules={[{ required: true, message: 'Please rate your comfort level' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -648,7 +628,6 @@ const ComprehensivePreQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item

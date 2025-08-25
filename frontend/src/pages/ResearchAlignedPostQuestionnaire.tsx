@@ -126,24 +126,21 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="aiAccuracyPerception"
             label="How accurate do you think the AI system was at distinguishing facts from opinions?"
             rules={[{ required: true, message: 'Please rate the AI accuracy' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
-                min={1}
-                max={5}
-                marks={{
-                  1: 'Very inaccurate',
-                  2: 'Somewhat inaccurate',
-                  3: 'Moderately accurate',
-                  4: 'Very accurate',
-                  5: 'Extremely accurate'
-                }}
-                step={1}
-                defaultValue={1}
-                tooltip={{ formatter: (value) => `${value}/5` }}
-              />
-            </div>
+            <Slider
+              min={1}
+              max={5}
+              marks={{
+                1: 'Very inaccurate',
+                2: 'Somewhat inaccurate',
+                3: 'Moderately accurate',
+                4: 'Very accurate',
+                5: 'Extremely accurate'
+              }}
+              step={1}
+              defaultValue={1}
+              tooltip={{ formatter: (value) => `${value}/5` }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -178,24 +175,21 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="aiClassificationAgreement"
             label="How often did you agree with the AI's fact/opinion classifications?"
             rules={[{ required: true, message: 'Please estimate agreement frequency' }]}
-            initialValue={0}
           >
-            <div>
-              <Slider
-                min={0}
-                max={100}
-                marks={{
-                  0: '0%',
-                  25: '25%',
-                  50: '50%',
-                  75: '75%',
-                  100: '100%'
-                }}
-                step={5}
-                defaultValue={0}
-                tooltip={{ formatter: (value) => `${value}%` }}
-              />
-            </div>
+            <Slider
+              min={0}
+              max={100}
+              marks={{
+                0: '0%',
+                25: '25%',
+                50: '50%',
+                75: '75%',
+                100: '100%'
+              }}
+              step={5}
+              defaultValue={0}
+              tooltip={{ formatter: (value) => `${value}%` }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -247,10 +241,9 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="mentalDemand"
             label="How mentally demanding was it to use the AI-assisted analysis tool?"
             rules={[{ required: true, message: 'Please rate mental demand' }]}
-            initialValue={0}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={0}
                 max={100}
                 marks={{
@@ -264,17 +257,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={0}
                 tooltip={{ formatter: (value) => `${value}/100` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="effortRequired"
             label="How much effort was required to understand and use the AI classifications?"
             rules={[{ required: true, message: 'Please rate effort required' }]}
-            initialValue={0}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={0}
                 max={100}
                 marks={{
@@ -288,17 +279,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={0}
                 tooltip={{ formatter: (value) => `${value}/100` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="frustrationLevel"
             label="How frustrated were you while using the AI analysis tool?"
             rules={[{ required: true, message: 'Please rate frustration level' }]}
-            initialValue={0}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={0}
                 max={100}
                 marks={{
@@ -312,17 +301,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={0}
                 tooltip={{ formatter: (value) => `${value}/100` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="interfaceUsability"
             label="How would you rate the overall usability of the interface?"
             rules={[{ required: true, message: 'Please rate interface usability' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -336,17 +323,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="learningSupport"
             label="How well did the interface support your learning about fact/opinion distinction?"
             rules={[{ required: true, message: 'Please rate learning support' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -360,7 +345,6 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
@@ -402,10 +386,9 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="decisionMakingConfidence"
             label="How confident were you in forming your own judgment after reading the article?"
             rules={[{ required: true, message: 'Please rate your confidence' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={7}
                 marks={{
@@ -421,17 +404,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/7` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="informationInfluence"
             label="To what extent did the information influence how you evaluated the article?"
             rules={[{ required: true, message: 'Please rate the influence' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={7}
                 marks={{
@@ -447,14 +428,13 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/7` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="claritySemanticDifferential"
             label="Rate the overall clarity of the information presentation:"
             rules={[{ required: true, message: 'Please rate clarity' }]}
-            initialValue={1}
+            
           >
             <div>
               <Text>Confusing</Text>
@@ -483,10 +463,9 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="factOpinionDistinction"
             label="How clearly could you distinguish between facts and opinions in the article?"
             rules={[{ required: true, message: 'Please rate distinction clarity' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={7}
                 marks={{
@@ -502,17 +481,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/7` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="objectiveSubjectiveUnderstanding"
             label="How easy was it to understand what information was objective versus subjective?"
             rules={[{ required: true, message: 'Please rate understanding ease' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={7}
                 marks={{
@@ -528,7 +505,6 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/7` }}
               />
-            </div>
           </Form.Item>
 
           <Divider>Efficiency & Cognitive Load Assessment</Divider>
@@ -537,10 +513,9 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="evaluationSpeed"
             label="It was quick to evaluate the article using this approach."
             rules={[{ required: true, message: 'Please rate agreement' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={7}
                 marks={{
@@ -556,17 +531,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/7` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="effortRequiredSanitized"
             label="The process required less effort than I expected."
             rules={[{ required: true, message: 'Please rate agreement' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={7}
                 marks={{
@@ -582,17 +555,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/7` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="judgmentSpeed"
             label="I could reach a judgment without spending too much time."
             rules={[{ required: true, message: 'Please rate agreement' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={7}
                 marks={{
@@ -608,17 +579,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/7` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="focusEfficiency"
             label="I was able to focus on what mattered without unnecessary reading."
             rules={[{ required: true, message: 'Please rate agreement' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={7}
                 marks={{
@@ -634,14 +603,13 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/7` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="timeSemanticDifferential"
             label="Rate the time required for the evaluation process:"
             rules={[{ required: true, message: 'Please rate time requirement' }]}
-            initialValue={1}
+            
           >
             <div>
               <Text>Time-consuming</Text>
@@ -670,7 +638,7 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="effortSemanticDifferential"
             label="Rate the effort required for the evaluation process:"
             rules={[{ required: true, message: 'Please rate effort' }]}
-            initialValue={1}
+            
           >
             <div>
               <Text>Effortful</Text>
@@ -699,7 +667,7 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="judgmentSpeedSemanticDifferential"
             label="Rate the speed of reaching judgment:"
             rules={[{ required: true, message: 'Please rate judgment speed' }]}
-            initialValue={1}
+            
           >
             <div>
               <Text>Slow to reach judgment</Text>
@@ -730,10 +698,9 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="informationBalance"
             label="How balanced did you find the information presented in the article?"
             rules={[{ required: true, message: 'Please rate balance perception' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={7}
                 marks={{
@@ -749,17 +716,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/7` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="perspectiveAwareness"
             label="To what extent did the article make you aware of different perspectives?"
             rules={[{ required: true, message: 'Please rate perspective awareness' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={7}
                 marks={{
@@ -775,7 +740,6 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/7` }}
               />
-            </div>
           </Form.Item>
         </Space>
       ),
@@ -808,10 +772,9 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="skillDevelopmentPerception"
             label="Do you feel your fact/opinion analysis skills improved through using the AI tool?"
             rules={[{ required: true, message: 'Please assess skill development' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -825,7 +788,6 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
@@ -851,10 +813,9 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="skillTransferConfidence"
             label="How confident are you that you could apply what you learned to analyze news without AI assistance?"
             rules={[{ required: true, message: 'Please rate transfer confidence' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -868,7 +829,6 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
@@ -937,10 +897,9 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="effectivenessComparison"
             label="How effective was AI assistance compared to traditional methods you've used?"
             rules={[{ required: true, message: 'Please compare effectiveness' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -954,7 +913,6 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
@@ -1025,10 +983,9 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="trustBalancePreference"
             label="What balance of trust between AI and human judgment feels most comfortable?"
             rules={[{ required: true, message: 'Please indicate trust balance preference' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -1042,17 +999,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="controlSatisfaction"
             label="How satisfied were you with the level of control you had over the AI's decisions?"
             rules={[{ required: true, message: 'Please rate control satisfaction' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -1066,7 +1021,6 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
@@ -1084,10 +1038,9 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="overrideFrequency"
             label="How often did you feel the need to override or disagree with the AI's classifications?"
             rules={[{ required: true, message: 'Please estimate override frequency' }]}
-            initialValue={0}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={0}
                 max={100}
                 marks={{
@@ -1101,17 +1054,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={0}
                 tooltip={{ formatter: (value) => `${value}%` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="agencyFeeling"
             label="How much did you feel like you maintained agency and decision-making power while using the AI tool?"
             rules={[{ required: true, message: 'Please rate sense of agency' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -1125,7 +1076,6 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
         </Space>
       ),
@@ -1144,10 +1094,9 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="agencyAndInfluence"
             label="To what extent did you experience agency and influence over the automated classification and analytical processes during your interaction with the system?"
             rules={[{ required: true, message: 'Please rate your sense of agency' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -1161,17 +1110,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="citationEffectiveness"
             label="How effectively did the provided citations, source attributions, and reference materials enhance your comprehension of the system's classification logic and analytical reasoning?"
             rules={[{ required: true, message: 'Please rate citation effectiveness' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -1185,7 +1132,6 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
@@ -1206,10 +1152,9 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="comprehensiveCoverage"
             label="Rate your confidence that you encountered all critical factual information, key stakeholder perspectives, and relevant context necessary for comprehensive understanding of the article's subject matter"
             rules={[{ required: true, message: 'Please rate comprehensiveness' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -1223,7 +1168,6 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
@@ -1269,10 +1213,9 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="continuedUseIntention"
             label="How likely are you to continue using AI-assisted news analysis tools in the future?"
             rules={[{ required: true, message: 'Please rate likelihood of continued use' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -1286,17 +1229,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="perceivedUtility"
             label="How useful do you find AI assistance for news analysis?"
             rules={[{ required: true, message: 'Please rate perceived utility' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -1310,17 +1251,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="recommendationLikelihood"
             label="How likely are you to recommend this AI tool to others?"
             rules={[{ required: true, message: 'Please rate recommendation likelihood' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -1334,7 +1273,6 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
@@ -1382,10 +1320,9 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="futureUseConsideration"
             label="I would consider using this tool in the future."
             rules={[{ required: true, message: 'Please rate your agreement' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={7}
                 marks={{
@@ -1401,17 +1338,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/7` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="likelyToUse"
             label="If this tool were available, I would likely use it."
             rules={[{ required: true, message: 'Please rate your agreement' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={7}
                 marks={{
@@ -1427,17 +1362,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/7` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="recommendToOthers"
             label="I would recommend this tool to others who read similar articles."
             rules={[{ required: true, message: 'Please rate your agreement' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={7}
                 marks={{
@@ -1453,17 +1386,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/7` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="toolUsefulness"
             label="Using this tool would be useful for me."
             rules={[{ required: true, message: 'Please rate your agreement' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={7}
                 marks={{
@@ -1479,14 +1410,13 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/7` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="useLikelihoodSemanticDifferential"
             label="Rate your likelihood of using this tool:"
             rules={[{ required: true, message: 'Please rate use likelihood' }]}
-            initialValue={1}
+            
           >
             <div>
               <Text>Unlikely to use</Text>
@@ -1515,7 +1445,7 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="interestSemanticDifferential"
             label="Rate your interest in this tool:"
             rules={[{ required: true, message: 'Please rate interest level' }]}
-            initialValue={1}
+            
           >
             <div>
               <Text>Not interested</Text>
@@ -1544,7 +1474,7 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="recommendationSemanticDifferential"
             label="Rate your likelihood of recommending this tool:"
             rules={[{ required: true, message: 'Please rate recommendation likelihood' }]}
-            initialValue={1}
+            
           >
             <div>
               <Text>Would not recommend</Text>
@@ -1573,10 +1503,9 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="overallSatisfaction"
             label="Overall, how satisfied were you with your experience using the AI news analysis tool?"
             rules={[{ required: true, message: 'Please rate overall satisfaction' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -1590,7 +1519,6 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
@@ -1619,10 +1547,9 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
             name="personnelRelevanceAccuracy"
             label="How accurately did the AI identify the most relevant personnel in the article?"
             rules={[{ required: true, message: 'Please rate personnel identification accuracy' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -1636,17 +1563,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="personnelHelpfulness"
             label="How helpful was the 'Most Relevant Personnel' section for understanding the article?"
             rules={[{ required: true, message: 'Please rate personnel section helpfulness' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -1660,17 +1585,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="quotesRelevanceAccuracy"
             label="How accurately did the AI identify the most impactful quotes from the article?"
             rules={[{ required: true, message: 'Please rate quote identification accuracy' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -1684,17 +1607,15 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="quotesHelpfulness"
             label="How helpful was the 'Most Impactful Quotes' section for understanding key messages?"
             rules={[{ required: true, message: 'Please rate quotes section helpfulness' }]}
-            initialValue={1}
+            
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -1708,7 +1629,6 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item

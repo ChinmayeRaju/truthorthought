@@ -190,10 +190,8 @@ const BiasResearch: React.FC = () => {
             name="mentalDemand"
             label="How mentally demanding was the task?"
             rules={[{ required: true, message: 'Please rate the mental demand' }]}
-            initialValue={0}
           >
-            <div>
-              <Slider
+            <Slider
                 min={0}
                 max={100}
                 marks={{
@@ -207,17 +205,14 @@ const BiasResearch: React.FC = () => {
                 defaultValue={0}
                 tooltip={{ formatter: (value) => `${value}/100` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="effortRequired"
             label="How much effort did you need to classify statements?"
             rules={[{ required: true, message: 'Please rate the effort required' }]}
-            initialValue={0}
           >
-            <div>
-              <Slider
+            <Slider
                 min={0}
                 max={100}
                 marks={{
@@ -231,17 +226,14 @@ const BiasResearch: React.FC = () => {
                 defaultValue={0}
                 tooltip={{ formatter: (value) => `${value}/100` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="frustrationLevel"
             label="How frustrated were you while using Truth or Thought?"
             rules={[{ required: true, message: 'Please rate your frustration level' }]}
-            initialValue={0}
           >
-            <div>
-              <Slider
+            <Slider
                 min={0}
                 max={100}
                 marks={{
@@ -255,7 +247,6 @@ const BiasResearch: React.FC = () => {
                 defaultValue={0}
                 tooltip={{ formatter: (value) => `${value}/100` }}
               />
-            </div>
           </Form.Item>
         </Space>
       ),
@@ -271,10 +262,8 @@ const BiasResearch: React.FC = () => {
             name="factOpinionClarity"
             label="How clear were fact–opinion distinctions?"
             rules={[{ required: true, message: 'Please rate the clarity' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -288,17 +277,14 @@ const BiasResearch: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="sourceInfluence"
             label="How much did the source labels (BBC, CNN, Guardian) influence your trust in the system?"
             rules={[{ required: true, message: 'Please rate the influence' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -312,17 +298,14 @@ const BiasResearch: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="explanationHelpfulness"
             label="Did the citations/sources help you understand classifications?"
             rules={[{ required: true, message: 'Please rate the helpfulness' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -336,7 +319,6 @@ const BiasResearch: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
         </Space>
       ),
@@ -352,10 +334,8 @@ const BiasResearch: React.FC = () => {
             name="perspectiveAwareness"
             label="To what extent did Truth or Thought make you aware of different perspectives in the articles?"
             rules={[{ required: true, message: 'Please rate the perspective awareness' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -369,17 +349,14 @@ const BiasResearch: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="objectiveSubjectiveClarity"
             label="How easy was it to understand what information was objective versus subjective using Truth or Thought?"
             rules={[{ required: true, message: 'Please rate the clarity' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={7}
                 marks={{
@@ -395,17 +372,14 @@ const BiasResearch: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/7` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="biasDetectionImprovement"
             label="Truth or Thought helped me better detect bias in news articles"
             rules={[{ required: true, message: 'Please rate your agreement' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -419,7 +393,6 @@ const BiasResearch: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
         </Space>
       ),
@@ -435,10 +408,8 @@ const BiasResearch: React.FC = () => {
             name="quickEvaluation"
             label="It was quick to evaluate the article using Truth or Thought"
             rules={[{ required: true, message: 'Please rate your agreement' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -452,17 +423,14 @@ const BiasResearch: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="lessEffortThanExpected"
             label="The process required less effort than I expected"
             rules={[{ required: true, message: 'Please rate your agreement' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -476,17 +444,14 @@ const BiasResearch: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="quickJudgment"
             label="I could reach a judgment without spending too much time"
             rules={[{ required: true, message: 'Please rate your agreement' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -500,17 +465,14 @@ const BiasResearch: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="focusedReading"
             label="I was able to focus on what mattered without unnecessary reading"
             rules={[{ required: true, message: 'Please rate your agreement' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -524,7 +486,6 @@ const BiasResearch: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
         </Space>
       ),
@@ -540,7 +501,6 @@ const BiasResearch: React.FC = () => {
             name="timeConsumingQuick"
             label="Using Truth or Thought was:"
             rules={[{ required: true, message: 'Please rate the time factor' }]}
-            initialValue={1}
           >
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -570,7 +530,6 @@ const BiasResearch: React.FC = () => {
             name="effortfulEffortless"
             label="Using Truth or Thought was:"
             rules={[{ required: true, message: 'Please rate the effort factor' }]}
-            initialValue={1}
           >
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -600,7 +559,6 @@ const BiasResearch: React.FC = () => {
             name="slowFastJudgment"
             label="Reaching judgment with Truth or Thought was:"
             rules={[{ required: true, message: 'Please rate the judgment speed' }]}
-            initialValue={1}
           >
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -630,7 +588,6 @@ const BiasResearch: React.FC = () => {
             name="confusingClear"
             label="Truth or Thought was:"
             rules={[{ required: true, message: 'Please rate the clarity' }]}
-            initialValue={1}
           >
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -669,10 +626,8 @@ const BiasResearch: React.FC = () => {
             name="futureUsage"
             label="I would consider using Truth or Thought in the future"
             rules={[{ required: true, message: 'Please rate your agreement' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -686,17 +641,14 @@ const BiasResearch: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="likelyToUse"
             label="If Truth or Thought were available, I would likely use it"
             rules={[{ required: true, message: 'Please rate your agreement' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -710,17 +662,14 @@ const BiasResearch: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="recommendToOthers"
             label="I would recommend Truth or Thought to others who read similar articles"
             rules={[{ required: true, message: 'Please rate your agreement' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -734,17 +683,14 @@ const BiasResearch: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="comparedToTraditional"
             label="Truth or Thought is more effective than traditional news reading methods"
             rules={[{ required: true, message: 'Please rate your agreement' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -758,17 +704,14 @@ const BiasResearch: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
             name="trustInAnalysis"
             label="I trust the analysis provided by Truth or Thought"
             rules={[{ required: true, message: 'Please rate your agreement' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -782,7 +725,6 @@ const BiasResearch: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
         </Space>
       ),
@@ -828,10 +770,8 @@ const BiasResearch: React.FC = () => {
             name="missedFacts"
             label="Did we miss any facts or information in the articles?"
             rules={[{ required: true, message: 'Please rate if facts were missed' }]}
-            initialValue={1}
           >
-            <div>
-              <Slider
+            <Slider
                 min={1}
                 max={5}
                 marks={{
@@ -845,7 +785,6 @@ const BiasResearch: React.FC = () => {
                 defaultValue={1}
                 tooltip={{ formatter: (value) => `${value}/5` }}
               />
-            </div>
           </Form.Item>
 
           <Form.Item
