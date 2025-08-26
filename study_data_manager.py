@@ -371,16 +371,59 @@ class StudyDataManager:
         exported_files = {}
         
         try:
+            # Get post questionnaire column structure
+            post_questionnaire_columns = set()
+            for participant in self.participants.values():
+                if participant.research_post:
+                    # Remove metadata from sample to get clean column structure
+                    sample = participant.research_post.copy()
+                    metadata_fields = ['timestamp', 'type', 'sessionId', 'session_id', 'analysisSessionData']
+                    for field in metadata_fields:
+                        sample.pop(field, None)
+                    post_questionnaire_columns.update(sample.keys())
+            
+            # Collect ALL unique columns from ALL bias analysis records
+            bias_analysis_columns = set()
+            for participant in self.participants.values():
+                if participant.bias_analysis:
+                    sample = participant.bias_analysis.copy()
+                    # Remove analysis-related data and metadata, keep only questionnaire responses
+                    fields_to_remove = ['biasSessionData', 'content', 'domain', 'facts', 'opinions', 'url', 'urls', 'title', 'timestamp', 'type', 'sessionId', 'session_id']
+                    for field in fields_to_remove:
+                        sample.pop(field, None)
+                    bias_analysis_columns.update(sample.keys())
+            
+            # Combine post questionnaire columns with bias-specific columns for identical structure
+            all_columns = post_questionnaire_columns.union(bias_analysis_columns)
+            
             # Export research post-questionnaire
             filename = f"research_post_questionnaire_{timestamp}.csv"
             filepath = os.path.join(output_dir, filename)
             rows = []
             for participant in self.participants.values():
                 if participant.research_post:
-                    rows.append(participant.research_post)
+                    # Remove metadata fields, keep only questionnaire responses
+                    clean_data = participant.research_post.copy()
+                    metadata_fields = ['timestamp', 'type', 'sessionId', 'session_id', 'analysisSessionData']
+                    for field in metadata_fields:
+                        clean_data.pop(field, None)
+                    
+                    # Create aligned data structure with ALL columns (same as bias analysis)
+                    aligned_data = {}
+                    for column in all_columns:
+                        # Use post questionnaire value if available, otherwise empty string
+                        aligned_data[column] = clean_data.get(column, '')
+                    
+                    rows.append(aligned_data)
             
             if rows:
                 df = pd.DataFrame(rows)
+                # Ensure all columns are present, even if empty
+                for column in all_columns:
+                    if column not in df.columns:
+                        df[column] = ''
+                # Reorder columns alphabetically for consistency (same as bias analysis)
+                df = df[sorted(all_columns)]
                 df.to_csv(filepath, index=False, encoding='utf-8')
                 exported_files['research_post_questionnaire'] = filepath
             else:
