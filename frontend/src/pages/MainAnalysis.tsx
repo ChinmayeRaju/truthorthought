@@ -57,7 +57,7 @@ const MainAnalysis: React.FC = () => {
     if (results && fromQuestionnaire) {
       const timer = setTimeout(() => {
         setShowPostQuestionnaire(true);
-      }, 30000); // Show after 30 seconds of analysis interaction
+      }, 5000); // Show after 5 seconds of analysis interaction
       
       return () => clearTimeout(timer);
     }

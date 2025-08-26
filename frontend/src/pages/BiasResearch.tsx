@@ -147,7 +147,7 @@ const BiasResearch: React.FC = () => {
               data: {
                 questionnaire_type: 'bias_analysis',
                 completion_time: new Date().toISOString(),
-                total_questions: Object.keys(dataToSave).length
+                total_questions: Object.keys(dataToSave).filter(key => !['timestamp', 'type', 'sessionId', 'biasSessionData'].includes(key)).length
               }
             })
           });

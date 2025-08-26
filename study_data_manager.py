@@ -406,6 +406,13 @@ class StudyDataManager:
         exported_files = {}
         
         try:
+            # Get post questionnaire column structure to align bias analysis export
+            post_questionnaire_columns = set()
+            for participant in self.participants.values():
+                if participant.research_post:
+                    post_questionnaire_columns.update(participant.research_post.keys())
+                    break
+            
             # Export bias analysis questionnaire (post_experiment_questionnaire2 type)
             filename = f"bias_analysis_questionnaire_{timestamp}.csv"
             filepath = os.path.join(output_dir, filename)
@@ -419,6 +426,14 @@ class StudyDataManager:
                     fields_to_remove = ['biasSessionData', 'content', 'domain', 'facts', 'opinions', 'url', 'urls', 'title']
                     for field in fields_to_remove:
                         questionnaire_data.pop(field, None)
+                    
+                    # Filter to only include columns that exist in post questionnaire
+                    if post_questionnaire_columns:
+                        filtered_data = {}
+                        for key, value in questionnaire_data.items():
+                            if key in post_questionnaire_columns:
+                                filtered_data[key] = value
+                        questionnaire_data = filtered_data
                     
                     rows.append(questionnaire_data)
             

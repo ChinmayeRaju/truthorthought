@@ -62,11 +62,23 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
       const currentSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const questionnaireKey = `research_post_questionnaire_${currentSessionId}`;
       
+      // Get analysis session data from localStorage if available
+      let analysisSessionData = null;
+      try {
+        const storedAnalysisData = localStorage.getItem(`analysis_session_${currentSessionId}`);
+        if (storedAnalysisData) {
+          analysisSessionData = JSON.parse(storedAnalysisData);
+        }
+      } catch (error) {
+        console.warn('Could not retrieve analysis session data:', error);
+      }
+      
       const dataToSave = {
         ...values,
         timestamp: new Date().toISOString(),
         type: 'research_post',
-        sessionId: currentSessionId
+        sessionId: currentSessionId,
+        ...(analysisSessionData && { analysisSessionData })
       };
       
       // Submit to backend using comprehensive data system
@@ -87,7 +99,7 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
               data: {
                 questionnaire_type: 'research_post',
                 completion_time: new Date().toISOString(),
-                total_questions: Object.keys(dataToSave).length
+                total_questions: Object.keys(dataToSave).filter(key => !['timestamp', 'type', 'sessionId', 'analysisSessionData'].includes(key)).length
               }
             })
           });
@@ -301,6 +313,50 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
                 defaultValue={0}
                 tooltip={{ formatter: (value) => `${value}/100` }}
               />
+          </Form.Item>
+
+          <Form.Item
+            name="factOpinionClarity"
+            label="How clear were fact–opinion distinctions?"
+            rules={[{ required: true, message: 'Please rate fact-opinion clarity' }]}
+          >
+            <Slider
+              min={1}
+              max={7}
+              marks={{
+                1: 'Very unclear',
+                2: 'Unclear',
+                3: 'Somewhat unclear',
+                4: 'Neutral',
+                5: 'Somewhat clear',
+                6: 'Clear',
+                7: 'Very clear'
+              }}
+              step={1}
+              defaultValue={4}
+              tooltip={{ formatter: (value) => `${value}/7` }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="sourceInfluence"
+            label="How much did the source labels (BBC, CNN, Guardian) influence your trust in the system?"
+            rules={[{ required: true, message: 'Please rate source influence' }]}
+          >
+            <Slider
+              min={1}
+              max={5}
+              marks={{
+                1: 'Not at all',
+                2: 'Slightly',
+                3: 'Moderately',
+                4: 'Considerably',
+                5: 'Extremely'
+              }}
+              step={1}
+              defaultValue={3}
+              tooltip={{ formatter: (value) => `${value}/5` }}
+            />
           </Form.Item>
 
           <Form.Item
