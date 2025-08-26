@@ -406,12 +406,30 @@ class StudyDataManager:
         exported_files = {}
         
         try:
-            # Get post questionnaire column structure to align bias analysis export
+            # Get post questionnaire column structure for reference
             post_questionnaire_columns = set()
             for participant in self.participants.values():
                 if participant.research_post:
-                    post_questionnaire_columns.update(participant.research_post.keys())
-                    break
+                    # Remove metadata from sample to get clean column structure
+                    sample = participant.research_post.copy()
+                    metadata_fields = ['timestamp', 'type', 'sessionId', 'session_id', 'analysisSessionData']
+                    for field in metadata_fields:
+                        sample.pop(field, None)
+                    post_questionnaire_columns.update(sample.keys())
+            
+            # Collect ALL unique columns from ALL bias analysis records
+            bias_analysis_columns = set()
+            for participant in self.participants.values():
+                if participant.bias_analysis:
+                    sample = participant.bias_analysis.copy()
+                    # Remove analysis-related data and metadata, keep only questionnaire responses
+                    fields_to_remove = ['biasSessionData', 'content', 'domain', 'facts', 'opinions', 'url', 'urls', 'title', 'timestamp', 'type', 'sessionId', 'session_id']
+                    for field in fields_to_remove:
+                        sample.pop(field, None)
+                    bias_analysis_columns.update(sample.keys())
+            
+            # Combine post questionnaire columns with bias-specific columns
+            all_columns = post_questionnaire_columns.union(bias_analysis_columns)
             
             # Export bias analysis questionnaire (post_experiment_questionnaire2 type)
             filename = f"bias_analysis_questionnaire_{timestamp}.csv"
@@ -422,23 +440,28 @@ class StudyDataManager:
                     # Extract only the questionnaire responses, exclude biasSessionData and other analysis data
                     questionnaire_data = participant.bias_analysis.copy()
                     
-                    # Remove analysis-related data, keep only questionnaire responses
-                    fields_to_remove = ['biasSessionData', 'content', 'domain', 'facts', 'opinions', 'url', 'urls', 'title']
+                    # Remove analysis-related data and metadata, keep only questionnaire responses
+                    fields_to_remove = ['biasSessionData', 'content', 'domain', 'facts', 'opinions', 'url', 'urls', 'title', 'timestamp', 'type', 'sessionId', 'session_id']
                     for field in fields_to_remove:
                         questionnaire_data.pop(field, None)
                     
-                    # Filter to only include columns that exist in post questionnaire
-                    if post_questionnaire_columns:
-                        filtered_data = {}
-                        for key, value in questionnaire_data.items():
-                            if key in post_questionnaire_columns:
-                                filtered_data[key] = value
-                        questionnaire_data = filtered_data
+                    # Create aligned data structure with ALL columns (post + bias-specific)
+                    aligned_data = {}
+                    for column in all_columns:
+                        # Use bias analysis value if available, otherwise empty string
+                        aligned_data[column] = questionnaire_data.get(column, '')
+                    questionnaire_data = aligned_data
                     
                     rows.append(questionnaire_data)
             
             if rows:
                 df = pd.DataFrame(rows)
+                # Ensure all columns are present, even if empty
+                for column in all_columns:
+                    if column not in df.columns:
+                        df[column] = ''
+                # Reorder columns alphabetically for consistency
+                df = df[sorted(all_columns)]
                 df.to_csv(filepath, index=False, encoding='utf-8')
                 exported_files['bias_analysis_questionnaire'] = filepath
             else:

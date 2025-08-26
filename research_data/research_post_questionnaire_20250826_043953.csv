@@ -1,0 +1,4 @@
+aiAccuracyPerception,aiVsHumanAccuracy,aiTrustChange,mentalDemand,effortRequired,frustrationLevel,factOpinionClarity,sourceInfluence,test_field,aiClassificationAgreement,aiAccuracyExpectationComparison,aiErrorTypes,interfaceUsability,learningSupport,cognitiveLoadComparison,interfaceFeatureHelpfulness,decisionMakingConfidence,informationInfluence,claritySemanticDifferential,factOpinionDistinction,objectiveSubjectiveUnderstanding
+4,better,increasedSlightly,50,60,30,5.0,4.0,test_value,,,,,,,,,,,,
+4,better,increasedSlightly,50,60,30,,,,75.0,asExpected,['factsAsOpinions'],4.0,4.0,somewhatLess,"['highlighting', 'explanations']",5.0,4.0,6.0,5.0,5.0
+4,better,increasedSlightly,60,70,40,5.0,4.0,,,,,4.0,4.0,somewhatLess,"['highlighting', 'explanations']",4.0,4.0,5.0,4.0,5.0
