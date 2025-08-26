@@ -262,15 +262,6 @@ const ResearchDashboard: React.FC = () => {
           
           <Space style={{ marginBottom: 16 }} wrap>
             <Button
-              type="primary"
-              icon={<DownloadOutlined />}
-              onClick={exportData}
-              loading={exportLoading}
-              disabled={sessions.length === 0 && participants.length === 0}
-            >
-              Export All Data
-            </Button>
-            <Button
               icon={<DownloadOutlined />}
               onClick={() => exportSpecificData('pre_questionnaires')}
               loading={exportLoading}
@@ -302,21 +293,6 @@ const ResearchDashboard: React.FC = () => {
             >
               Export Exit Questionnaires
             </Button>
-            <Button
-              icon={<DownloadOutlined />}
-              onClick={() => exportSpecificData('sessions')}
-              loading={exportLoading}
-              disabled={stats.total_analysis_sessions === 0}
-            >
-              Export Analysis Sessions
-            </Button>
-            <Button
-              icon={<DownloadOutlined />}
-              onClick={exportExitData}
-              disabled={exitAnalysis.totalResponses === 0}
-            >
-              Export Legacy Exit Data
-            </Button>
             <Button onClick={loadAllData} loading={loading}>
               Refresh Data
             </Button>
@@ -347,97 +323,6 @@ const ResearchDashboard: React.FC = () => {
           ))}
         </Row>
 
-        {/* Comprehensive Participant Data Table */}
-        {participants.length > 0 && (
-          <Card title="Comprehensive Participant Data" style={{ marginBottom: 24 }}>
-            <Table
-              dataSource={participants.map((participant: any, index: number) => ({
-                key: participant.session_id,
-                ...participant,
-                index: index + 1
-              }))}
-              columns={[
-                { 
-                  title: '#', 
-                  dataIndex: 'index', 
-                  key: 'index',
-                  width: 50
-                },
-                { 
-                  title: 'Session ID', 
-                  dataIndex: 'session_id', 
-                  key: 'session_id',
-                  render: (text: string) => <Text code>{text.slice(-8)}</Text>,
-                  width: 120
-                },
-                { 
-                  title: 'Start Time', 
-                  dataIndex: 'start_time', 
-                  key: 'start_time',
-                  render: (text: string) => text ? new Date(text).toLocaleDateString() : 'N/A',
-                  width: 100
-                },
-                { 
-                  title: 'Pre-Quest', 
-                  key: 'pre_questionnaire',
-                  render: (_: any, record: any) => (
-                    <Space>
-                      {record.has_comprehensive_pre && <Tag color="blue">Comp</Tag>}
-                      {record.has_research_pre && <Tag color="green">Research</Tag>}
-                      {!record.has_comprehensive_pre && !record.has_research_pre && <Tag color="red">None</Tag>}
-                    </Space>
-                  ),
-                  width: 120
-                },
-                { 
-                  title: 'Post-Quest', 
-                  key: 'post_questionnaire',
-                  render: (_: any, record: any) => (
-                    record.has_research_post ? 
-                      <Tag color="green">✓</Tag> : 
-                      <Tag color="red">✗</Tag>
-                  ),
-                  width: 100
-                },
-                { 
-                  title: 'Exit Quest', 
-                  key: 'exit_questionnaire',
-                  render: (_: any, record: any) => (
-                    record.has_exit_questionnaire ? 
-                      <Tag color="green">✓</Tag> : 
-                      <Tag color="red">✗</Tag>
-                  ),
-                  width: 100
-                },
-                { 
-                  title: 'Analysis Sessions', 
-                  dataIndex: 'analysis_sessions', 
-                  key: 'analysis_sessions',
-                  render: (sessions: any[]) => sessions ? sessions.length : 0,
-                  width: 120
-                },
-                { 
-                  title: 'Actions', 
-                  key: 'actions',
-                  render: (_: any, record: any) => (
-                    <Space>
-                      <Button 
-                        size="small" 
-                        onClick={() => viewParticipantDetails(record)}
-                      >
-                        View Details
-                      </Button>
-                    </Space>
-                  ),
-                  width: 120
-                }
-              ]}
-              scroll={{ x: 1000 }}
-              pagination={{ pageSize: 10 }}
-              loading={loading}
-            />
-          </Card>
-        )}
 
         {/* Study Statistics Summary */}
         {Object.keys(stats).length > 0 && (
@@ -503,55 +388,6 @@ const ResearchDashboard: React.FC = () => {
           </Card>
         )}
 
-        {/* Legacy Session Details Table */}
-        {sessions.length > 0 && (
-          <Card title="Legacy Session Details" style={{ marginBottom: 24 }}>
-            <Table
-              dataSource={sessions.map((session) => ({
-                key: session.sessionId,
-                sessionId: session.sessionId,
-                preCompleted: !!session.preQuestionnaire,
-                postCompleted: !!session.postQuestionnaire,
-                preTimestamp: session.preQuestionnaire?.timestamp,
-                postTimestamp: session.postQuestionnaire?.timestamp,
-                clarity: session.postQuestionnaire?.factOpinionClarity || 'N/A',
-                session: session
-              }))}
-              columns={[
-                { 
-                  title: 'Session ID', 
-                  dataIndex: 'sessionId', 
-                  key: 'sessionId',
-                  render: (text: string) => <Text code>{text.slice(-8)}</Text>
-                },
-                { 
-                  title: 'Pre-Questionnaire', 
-                  dataIndex: 'preCompleted', 
-                  key: 'preCompleted',
-                  render: (completed: boolean) => (
-                    completed ? <Tag color="green">✓</Tag> : <Tag color="red">✗</Tag>
-                  )
-                },
-                { 
-                  title: 'Post-Questionnaire', 
-                  dataIndex: 'postCompleted', 
-                  key: 'postCompleted',
-                  render: (completed: boolean) => (
-                    completed ? <Tag color="green">✓</Tag> : <Tag color="red">✗</Tag>
-                  )
-                },
-                { 
-                  title: 'Clarity Rating', 
-                  dataIndex: 'clarity', 
-                  key: 'clarity',
-                  render: (clarity: any) => clarity !== 'N/A' ? `${clarity}/5` : 'N/A'
-                }
-              ]}
-              pagination={{ pageSize: 10 }}
-              loading={loading}
-            />
-          </Card>
-        )}
       </div>
     </AppLayout>
   );
