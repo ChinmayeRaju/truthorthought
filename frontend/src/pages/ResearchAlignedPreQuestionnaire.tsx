@@ -73,7 +73,6 @@ const ResearchAlignedPreQuestionnaire: React.FC = () => {
       const response = await apiService.submitQuestionnaire(dataToSave);
       
       if (response.success) {
-        // Also save to localStorage as backup
         localStorage.setItem(questionnaireKey, JSON.stringify(dataToSave));
         
         message.success('Pre-study questionnaire completed and saved! Redirecting to the analysis tool...');

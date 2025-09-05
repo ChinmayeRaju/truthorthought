@@ -40,25 +40,20 @@ const EnhancedQuestionnaires: React.FC = () => {
     try {
       setLoading(true);
       
-      // Get ALL form fields regardless of current step
       const allFormFields = form.getFieldsValue(true);
       console.log('All form fields (all steps):', allFormFields);
       console.log('All form field names:', Object.keys(allFormFields));
       console.log('Total field count:', Object.keys(allFormFields).length);
       
-      // Validate all fields across all steps
       try {
         await form.validateFields();
         console.log('All fields validated successfully');
       } catch (validationError) {
         console.error('Validation failed for some fields:', validationError);
-        // Continue with submission using all available data
       }
       
-      // Use all form data, not just validated fields
       const values = allFormFields;
       
-      // Debug: Log what data is being collected
       console.log('Final form data to save:', values);
       console.log('Final field count:', Object.keys(values).length);
       
@@ -71,14 +66,12 @@ const EnhancedQuestionnaires: React.FC = () => {
         type: isPostQuestionnaire ? 'post' : 'pre'
       };
       
-      // Debug: Log what's being saved
       console.log('Data being sent to backend:', dataToSave);
       
       // Submit questionnaire data to backend (which saves to Excel)
       const response = await apiService.submitQuestionnaire(dataToSave);
       
       if (response.success) {
-        // Also store in localStorage as backup
         const questionnaireKey = isPostQuestionnaire ? `post_questionnaire_${currentSessionId}` : `pre_questionnaire_${currentSessionId}`;
         localStorage.setItem(questionnaireKey, JSON.stringify(dataToSave));
         

@@ -260,7 +260,6 @@ export interface ComprehensivePreQuestionnaireData {
   techComfort: number;
   additionalComments?: string;
   
-  // Metadata
   sessionId: string;
   timestamp: string;
   type: 'comprehensive_pre';
@@ -315,7 +314,6 @@ export interface ResearchAlignedPreQuestionnaireData {
   successMetrics: string[];
   additionalComments?: string;
   
-  // Metadata
   sessionId: string;
   timestamp: string;
   type: 'research_pre';
@@ -416,7 +414,6 @@ export interface ResearchAlignedPostQuestionnaireData {
   featureUsagePreference: string[];
   featureImprovementSuggestions?: string;
   
-  // Metadata
   sessionId: string;
   timestamp: string;
   type: 'research_post';

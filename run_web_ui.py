@@ -33,7 +33,6 @@ def main():
     print("Multi-Role Prompting System for Fact vs Opinion Analysis")
     print("=" * 60)
     
-    # Check environment
     if not check_environment():
         sys.exit(1)
     

@@ -1,0 +1,121 @@
+<svg width="800" height="1000" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="clientGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="serverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f093fb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f5576c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="scraperGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="analyzerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#43e97b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#38f9d7;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="chatGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fa709a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fee140;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="ioGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffecd2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fcb69f;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="800" height="1000" fill="#f8f9fa"/>
+  
+  <!-- Title -->
+  <text x="400" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#2c3e50">System Architecture Diagram</text>
+  <text x="400" y="65" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#7f8c8d">Multi-Role News Analysis System</text>
+  
+  <!-- Input -->
+  <rect x="250" y="100" width="300" height="50" rx="25" fill="url(#ioGrad)" stroke="#d2691e" stroke-width="2"/>
+  <text x="400" y="130" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#8b4513">📥 INPUT: News Article URLs</text>
+  
+  <!-- Arrow down -->
+  <polygon points="400,170 390,190 410,190" fill="#34495e"/>
+  <rect x="398" y="170" width="4" height="20" fill="#34495e"/>
+  
+  <!-- Client -->
+  <rect x="250" y="210" width="300" height="80" rx="12" fill="url(#clientGrad)"/>
+  <text x="400" y="235" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">🖥️ CLIENT (FRONTEND)</text>
+  <text x="400" y="255" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">React/TypeScript Web Application</text>
+  <text x="400" y="275" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">User Interface &amp; Interaction</text>
+  
+  <!-- Flow label -->
+  <rect x="330" y="310" width="140" height="25" rx="12" fill="#34495e"/>
+  <text x="400" y="327" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white">HTTP Requests</text>
+  
+  <!-- Arrow down -->
+  <polygon points="400,350 390,370 410,370" fill="#34495e"/>
+  <rect x="398" y="350" width="4" height="20" fill="#34495e"/>
+  
+  <!-- Server Container -->
+  <rect x="150" y="390" width="500" height="320" rx="15" fill="url(#serverGrad)"/>
+  <text x="400" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white">🖥️ SERVER (BACKEND)</text>
+  
+  <!-- URL Scraper -->
+  <rect x="170" y="450" width="140" height="120" rx="12" fill="url(#scraperGrad)"/>
+  <text x="240" y="475" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">🔍 URL SCRAPER</text>
+  <text x="240" y="495" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Web Content</text>
+  <text x="240" y="510" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Extraction</text>
+  <text x="240" y="525" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">News Source</text>
+  <text x="240" y="540" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Processing</text>
+  <text x="240" y="555" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Proxy Routing</text>
+  
+  <!-- Multi-Role Analyzer -->
+  <rect x="330" y="450" width="140" height="120" rx="12" fill="url(#analyzerGrad)"/>
+  <text x="400" y="475" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">👥 MULTI-ROLE</text>
+  <text x="400" y="490" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">ANALYZER</text>
+  <text x="400" y="510" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Domain Expert</text>
+  <text x="400" y="525" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Analysis</text>
+  <text x="400" y="540" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Consensus Building</text>
+  <text x="400" y="555" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Fact vs Opinion</text>
+  
+  <!-- Chat Assistant -->
+  <rect x="490" y="450" width="140" height="120" rx="12" fill="url(#chatGrad)"/>
+  <text x="560" y="475" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">🤖 INTELLIGENT</text>
+  <text x="560" y="490" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">CHAT ASSISTANT</text>
+  <text x="560" y="510" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">AI-Powered</text>
+  <text x="560" y="525" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Conversations</text>
+  <text x="560" y="540" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Context-Aware</text>
+  <text x="560" y="555" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Responses</text>
+  
+  <!-- Data flow connections -->
+  <line x1="240" y1="570" x2="400" y2="570" stroke="#2c3e50" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="400" y1="570" x2="560" y2="570" stroke="#2c3e50" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- Flow label -->
+  <rect x="320" y="730" width="160" height="25" rx="12" fill="#34495e"/>
+  <text x="400" y="747" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white">Processed Results</text>
+  
+  <!-- Arrow down -->
+  <polygon points="400,770 390,790 410,790" fill="#34495e"/>
+  <rect x="398" y="770" width="4" height="20" fill="#34495e"/>
+  
+  <!-- Output -->
+  <rect x="200" y="810" width="400" height="100" rx="25" fill="url(#ioGrad)" stroke="#d2691e" stroke-width="2"/>
+  <text x="400" y="835" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#8b4513">📤 OUTPUT: Structured Analysis Results</text>
+  <text x="400" y="855" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#8b4513">• Fact vs Opinion Classification</text>
+  <text x="400" y="870" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#8b4513">• Expert Consensus Analysis</text>
+  <text x="400" y="885" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#8b4513">• Interactive Chat Interface</text>
+  <text x="400" y="900" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#8b4513">• Bias Detection Results</text>
+  
+  <!-- Data Flow Process -->
+  <rect x="50" y="930" width="700" height="60" rx="10" fill="#ecf0f1" stroke="#bdc3c7"/>
+  <text x="70" y="950" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#2c3e50">🔄 Data Flow Process:</text>
+  <text x="70" y="965" font-family="Arial, sans-serif" font-size="11" fill="#34495e">1. User submits URLs → 2. URL Scraper extracts content → 3. Multi-Role Analyzer classifies →</text>
+  <text x="70" y="980" font-family="Arial, sans-serif" font-size="11" fill="#34495e">4. Chat Assistant provides interaction → 5. Structured results returned to frontend</text>
+  
+  <!-- Arrow marker definition -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2c3e50"/>
+    </marker>
+  </defs>
+</svg>

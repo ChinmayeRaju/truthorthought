@@ -36,11 +36,9 @@ class GeminiCitationService:
         if not api_key:
             raise ValueError("GEMINI_API_KEY environment variable is required")
         
-        # Initialize the new GenAI client
         self.client = genai.Client(api_key=api_key)
         self.model_name = "gemini-2.5-flash-lite"
         
-        # Authoritative domains for citation credibility
         self.authoritative_domains = {
             'news': ['bbc.com', 'reuters.com', 'ap.org', 'cnn.com', 'guardian.com', 
                     'nytimes.com', 'washingtonpost.com', 'npr.org', 'skynews.com'],
@@ -65,10 +63,8 @@ class GeminiCitationService:
         print(f"🔍 Finding citations for: {sentence[:100]}...")
         
         try:
-            # Create verification prompt with search grounding
             verification_prompt = self._create_verification_prompt(sentence, domain)
             
-            # Use new GenAI SDK with Google Search
             contents = [
                 types.Content(
                     role="user",
@@ -90,10 +86,8 @@ class GeminiCitationService:
                 config=generate_content_config,
             )
             
-            # Parse response and extract citations
             citations = self._parse_gemini_response(response, sentence)
             
-            # Additional verification and scoring
             verified_citations = self._verify_and_score_citations(citations, sentence, domain)
             
             print(f"✅ Found {len(verified_citations)} verified citations for sentence")
@@ -177,10 +171,8 @@ IMPORTANT: Provide realistic, authoritative sources that would be expected to co
     def _parse_gemini_response(self, response: Any, original_sentence: str) -> List[Dict]:
         """Parse Gemini response and extract citation information"""
         try:
-            # Extract text content from response
             response_text = response.text if hasattr(response, 'text') else str(response)
             
-            # Try to find JSON in the response
             json_start = response_text.find('{')
             json_end = response_text.rfind('}') + 1
             
@@ -222,17 +214,14 @@ IMPORTANT: Provide realistic, authoritative sources that would be expected to co
                 reasoning = citation.get('reasoning', '')
                 base_score = citation.get('credibility_score', 0.5)
                 
-                # Skip if doesn't support the claim
                 if not supports_claim or support_level == 'contradicts':
                     print(f"❌ Skipping citation that doesn't support claim: {title}")
                     continue
                 
-                # Calculate verification score based on multiple factors
                 verification_score = self._calculate_verification_score(
                     domain_name, url, support_level, base_score
                 )
                 
-                # Only include citations with reasonable verification scores
                 if verification_score >= 0.6:
                     verified_citation = VerifiedCitation(
                         url=url,
@@ -252,19 +241,16 @@ IMPORTANT: Provide realistic, authoritative sources that would be expected to co
                 print(f"❌ Error processing citation: {e}")
                 continue
         
-        # Sort by verification score (highest first)
         verified_citations.sort(key=lambda x: x.verification_score, reverse=True)
         
-        return verified_citations[:5]  # Return top 5 citations max
+        return verified_citations[:5] 
     
     def _calculate_verification_score(self, domain: str, url: str, support_level: str, base_score: float) -> float:
         """Calculate verification score based on domain authority and other factors"""
         score = base_score
         
-        # Domain authority scoring
         domain_lower = domain.lower()
         
-        # Check against authoritative domains
         authority_bonus = 0.0
         for category, domains in self.authoritative_domains.items():
             for auth_domain in domains:
@@ -276,7 +262,6 @@ IMPORTANT: Provide realistic, authoritative sources that would be expected to co
         
         score += authority_bonus
         
-        # Support level scoring
         support_bonuses = {
             'direct': 0.2,
             'indirect': 0.0,
@@ -284,11 +269,9 @@ IMPORTANT: Provide realistic, authoritative sources that would be expected to co
         }
         score += support_bonuses.get(support_level, 0.0)
         
-        # URL quality check
         if url.startswith('https://') and len(url) > 50:  # Specific article URLs
             score += 0.1
         
-        # Ensure score is between 0 and 1
         return max(0.0, min(1.0, score))
     
     def extract_source_name(self, citation: VerifiedCitation) -> str:
@@ -298,7 +281,6 @@ IMPORTANT: Provide realistic, authoritative sources that would be expected to co
         
         domain = citation.domain.lower()
         
-        # Map common domains to readable source names
         source_mapping = {
             'bbc.co.uk': 'BBC',
             'bbc.com': 'BBC',
@@ -326,7 +308,6 @@ IMPORTANT: Provide realistic, authoritative sources that would be expected to co
             if domain_key in domain:
                 return source_name
         
-        # Extract from title if domain mapping fails
         title = citation.title.lower()
         if 'bbc' in title:
             return 'BBC'
@@ -349,7 +330,6 @@ IMPORTANT: Provide realistic, authoritative sources that would be expected to co
         elif 'al jazeera' in title:
             return 'Al Jazeera'
         
-        # Fallback: capitalize domain name
         if '.' in domain:
             base_domain = domain.split('.')[0]
             return base_domain.capitalize()
@@ -361,17 +341,13 @@ IMPORTANT: Provide realistic, authoritative sources that would be expected to co
         if not citations or len(citations) == 0:
             return original_sentence
         
-        # Use the highest-scoring citation as the primary source
         primary_citation = max(citations, key=lambda c: c.verification_score)
         source_name = self.extract_source_name(primary_citation)
         
-        # Create the attributed sentence
-        # Remove any existing punctuation at the start of the sentence
         clean_sentence = original_sentence.strip()
         if clean_sentence and clean_sentence[0] in '"\'':
             clean_sentence = clean_sentence[1:]
         
-        # Format the attribution
         attributed_sentence = f"{source_name} reported {clean_sentence}"
         
         return attributed_sentence
@@ -385,9 +361,8 @@ IMPORTANT: Provide realistic, authoritative sources that would be expected to co
         for i, sentence in enumerate(sentences, 1):
             print(f"\n📝 Processing sentence {i}/{len(sentences)}")
             
-            # Rate limiting to avoid API limits
             if i > 1:
-                time.sleep(2)  # 2 second delay between requests
+                time.sleep(2) 
             
             citations = self.get_citations_for_sentence(sentence, domain)
             results[sentence] = citations
@@ -396,9 +371,7 @@ IMPORTANT: Provide realistic, authoritative sources that would be expected to co
         
         return results
 
-# Example usage and testing
 if __name__ == "__main__":
-    # Test the citation service
     citation_service = GeminiCitationService()
     
     test_sentences = [

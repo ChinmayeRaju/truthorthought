@@ -9,16 +9,13 @@ import sys
 def test_flask_app():
     print("Starting Flask app...")
     
-    # Start the Flask app in a subprocess
     process = subprocess.Popen([sys.executable, 'app.py'], 
                               stdout=subprocess.PIPE, 
                               stderr=subprocess.PIPE)
     
-    # Wait a moment for the server to start
     time.sleep(3)
     
     try:
-        # Test if the server is responding
         response = requests.get('http://localhost:5000/api/health', timeout=5)
         if response.status_code == 200:
             print("✓ Flask app is running successfully!")
@@ -31,7 +28,6 @@ def test_flask_app():
         print(f"✗ Could not connect to Flask app: {e}")
         return False
     finally:
-        # Stop the process
         process.terminate()
         process.wait()
 

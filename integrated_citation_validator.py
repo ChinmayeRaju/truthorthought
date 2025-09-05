@@ -37,12 +37,10 @@ class IntegratedCitationValidator:
                 sentence = result.get('original_sentence', result.get('sentence', ''))
                 domain = analysis_data.get('domain', 'GENERAL')
                 
-                # Step 1: Get initial citations from Gemini
                 print(f"     Getting citations for: {sentence[:80]}...")
                 verified_citations = self.gemini_service.get_citations_for_sentence(sentence, domain)
                 
                 if verified_citations:
-                    # Step 2: Convert to dictionary format for comprehensive validation
                     citation_dicts = []
                     for vc in verified_citations:
                         citation_dict = {
@@ -57,12 +55,10 @@ class IntegratedCitationValidator:
                         }
                         citation_dicts.append(citation_dict)
                     
-                    # Step 3: Comprehensive URL validation
                     print(f"     Performing comprehensive URL validation...")
                     validated_citations = self.url_validator.validate_citation_urls_comprehensive(citation_dicts)
                     
                     if validated_citations:
-                        # Only include facts with verified working sources
                         enhanced_result['citations'] = validated_citations
                         enhanced_result['citation'] = validated_citations[0]  # Primary citation
                         enhanced_result['citation_quality_score'] = max([c['verification_score'] for c in validated_citations])
@@ -70,7 +66,6 @@ class IntegratedCitationValidator:
                         enhanced_result['all_urls_comprehensively_verified'] = True
                         enhanced_result['validation_timestamp'] = time.strftime('%Y-%m-%d %H:%M:%S')
                         
-                        # Create source-attributed sentence
                         primary_source = validated_citations[0]
                         source_name = self._extract_clean_source_name(primary_source['domain'])
                         enhanced_result['attributed_sentence'] = f"{source_name} reported {sentence}"
@@ -78,7 +73,6 @@ class IntegratedCitationValidator:
                         facts_with_verified_sources += 1
                         print(f"     ✅ Fact verified with {len(validated_citations)} working sources")
                     else:
-                        # No working sources found - trust the LLM's original intelligent classification
                         print(f"     ⚠️  No working sources found, but maintaining LLM's original classification")
                         enhanced_result['excluded_reason'] = "No comprehensively verified working sources found, but maintaining original LLM classification"
                         enhanced_result['original_classification'] = 'FACT'
@@ -86,7 +80,6 @@ class IntegratedCitationValidator:
                         enhanced_result['all_urls_comprehensively_verified'] = False
                         enhanced_result['consensus_reasoning'] = f"{enhanced_result.get('consensus_reasoning', '')} Note: No working citation URLs found, but maintaining original classification based on LLM's intelligent analysis of statement nature and context."
                 else:
-                    # No citations found - trust the LLM's original intelligent classification
                     print(f"     ⚠️  No citations found, but maintaining LLM's original classification")
                     enhanced_result['excluded_reason'] = "No citations found, but maintaining original LLM classification"
                     enhanced_result['original_classification'] = 'FACT'
@@ -96,12 +89,10 @@ class IntegratedCitationValidator:
             
             enhanced_results.append(enhanced_result)
         
-        # Update analysis data
         enhanced_analysis_data = analysis_data.copy()
         enhanced_analysis_data['results'] = enhanced_results
         enhanced_analysis_data['comprehensive_validation_timestamp'] = time.strftime('%Y-%m-%d %H:%M:%S')
         
-        # Calculate statistics
         verified_facts = [r for r in enhanced_results if r.get('final_classification') == 'FACT' and r.get('all_urls_comprehensively_verified')]
         facts_without_citations = [r for r in enhanced_results if r.get('final_classification') == 'FACT' and not r.get('all_urls_comprehensively_verified')]
         
@@ -148,7 +139,6 @@ class IntegratedCitationValidator:
             if domain_key in domain_lower:
                 return source_name
         
-        # Fallback
         if '.' in domain:
             return domain.split('.')[0].title()
         return "News Source"
@@ -160,7 +150,6 @@ class IntegratedCitationValidator:
         if not enhanced_analysis_data or 'results' not in enhanced_analysis_data:
             return "No analysis data available."
         
-        # Get only facts with verified sources
         verified_facts = [r for r in enhanced_analysis_data['results']
                          if r.get('final_classification') == 'FACT' and r.get('all_urls_comprehensively_verified')]
         
@@ -181,7 +170,6 @@ All potential facts were reclassified as opinions due to:
 Only facts with fully verified, accessible sources are included in this section.
 """
         
-        # Generate Facts section
         facts_section = f"""# Facts Section - Comprehensively Verified Sources
 
 *Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}*
@@ -203,7 +191,6 @@ Only facts with fully verified, accessible sources are included in this section.
             
             facts_section += f"**{i}.** {sentence}\n\n"
             
-            # Add source information
             if citations:
                 facts_section += f"   **Sources ({len(citations)} verified):**\n"
                 for j, citation in enumerate(citations, 1):
@@ -226,7 +213,6 @@ Only facts with fully verified, accessible sources are included in this section.
             
             facts_section += "\n"
         
-        # Add validation summary
         validation_summary = enhanced_analysis_data.get('facts_validation_summary', {})
         if validation_summary:
             facts_section += f"""## Validation Summary
@@ -285,15 +271,12 @@ Each fact in this section has undergone the following validation:
         print(f"📄 Facts section with verified sources saved to: {filename}")
         return filename
 
-# Example usage and testing
 if __name__ == "__main__":
     print("🔍 Testing Integrated Citation Validator for Facts Section")
     print("=" * 70)
     
-    # Test the complete system
     integrated_validator = IntegratedCitationValidator()
     
-    # Mock analysis data with facts
     test_analysis_data = {
         'results': [
             {
@@ -319,16 +302,13 @@ if __name__ == "__main__":
         'url': 'https://example.com/test'
     }
     
-    # Process facts with comprehensive validation
     enhanced_data = integrated_validator.get_verified_facts_with_working_sources(test_analysis_data)
     
-    # Generate Facts section
     facts_file = integrated_validator.save_facts_section_to_file(enhanced_data)
     
     print(f"\n✅ Integrated citation validation test complete!")
     print(f"📄 Facts section file: {facts_file}")
     
-    # Print summary
     validation_summary = enhanced_data.get('facts_validation_summary', {})
     print(f"📊 Facts with verified sources: {validation_summary.get('facts_with_verified_sources', 0)}")
     print(f"🚫 Facts excluded: {validation_summary.get('facts_excluded_no_sources', 0)}")

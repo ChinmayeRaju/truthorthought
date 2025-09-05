@@ -55,16 +55,14 @@ const ExitQuestionnaire: React.FC = () => {
 
       console.log('Exit questionnaire data:', exitData);
       
-      // Submit to backend using comprehensive data system
+      // Submit to backend
       const response = await apiService.submitQuestionnaire(exitData);
       
       if (response.success) {
-        // Also save to localStorage as backup
         const existingData = JSON.parse(localStorage.getItem('exitQuestionnaires') || '[]');
         existingData.push(exitData);
         localStorage.setItem('exitQuestionnaires', JSON.stringify(existingData));
 
-        // Log the questionnaire completion interaction
         try {
           await fetch('/api/log_interaction', {
             method: 'POST',

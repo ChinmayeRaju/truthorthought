@@ -17,7 +17,6 @@ def demo_integration():
     print("🎬 TRUTH OR THOUGHT ↔ BIAS RESEARCH INTEGRATION DEMO")
     print("=" * 60)
     
-    # Demo URLs - different sources covering similar topics
     demo_urls = [
         "https://www.bbc.co.uk/news/articles/c0e9py7e28xo",
         "https://edition.cnn.com/2024/12/10/politics/trump-biden-transition/index.html"
@@ -31,7 +30,6 @@ def demo_integration():
     print("-" * 40)
     
     try:
-        # Simulate multiple URL analysis
         analysis_response = requests.post(f"{base_url}/analyze_multiple", 
             json={
                 "urls": demo_urls,
@@ -63,7 +61,6 @@ def demo_integration():
                 print(f"\n🔬 STEP 2: Loading analysis in Bias Research...")
                 print("-" * 40)
                 
-                # Get all sessions to show the research interface
                 sessions_response = requests.get(f"{base_url}/get_analyzed_sessions")
                 
                 if sessions_response.status_code == 200:
@@ -84,7 +81,6 @@ def demo_integration():
                             print(f"\n🎯 STEP 3: Demonstrating research capabilities...")
                             print("-" * 40)
                             
-                            # Load the session for bias research
                             load_response = requests.get(f"{base_url}/load_session_for_bias/{latest_session.get('session_id')}")
                             
                             if load_response.status_code == 200:
@@ -99,7 +95,6 @@ def demo_integration():
                                     print(f"      - Original content for comparison")
                                     print(f"      - Detailed sentence analysis")
                                     
-                                    # Show research capabilities
                                     print(f"\n   🔬 Research Features Available:")
                                     print(f"      ✅ Split-screen analysis interface")
                                     print(f"      ✅ User interaction tracking")
@@ -126,7 +121,6 @@ def demo_integration():
                                     print(f"   - Use bias analysis tools")
                                     print(f"   - Export data for academic use")
                                     
-                                    # Offer to open browser
                                     user_input = input(f"\n🌐 Would you like to open the interfaces in your browser? (y/n): ")
                                     if user_input.lower() in ['y', 'yes']:
                                         print(f"🚀 Opening interfaces...")
@@ -171,7 +165,6 @@ if __name__ == "__main__":
     print("📋 This demo shows how to analyze articles and use them for bias research")
     print("")
     
-    # Check if server is running
     try:
         response = requests.get("http://localhost:5000", timeout=5)
         print("✅ Flask server is running")

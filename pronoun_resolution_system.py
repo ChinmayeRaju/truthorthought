@@ -12,7 +12,6 @@ from datetime import datetime
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
 @dataclass
@@ -43,7 +42,7 @@ class AttributedStatement:
     """Represents a statement attributed to a specific person"""
     statement: str
     attributed_person: PersonEntity
-    statement_type: str  # 'direct_quote', 'paraphrased', 'reported_speech'
+    statement_type: str  
     confidence_score: float
     position: int
     context: str
@@ -57,7 +56,6 @@ class PronounResolutionSystem:
     """
     
     def __init__(self):
-        # Initialize Gemini client
         api_key = os.getenv('GOOGLE_API_KEY') or os.getenv('GEMINI_API_KEY')
         if not api_key:
             raise ValueError("No Google API key found. Please set GOOGLE_API_KEY or GEMINI_API_KEY environment variable.")
@@ -66,29 +64,26 @@ class PronounResolutionSystem:
         self.model = genai.GenerativeModel(
             model_name="gemini-1.5-flash",
             generation_config={
-                "temperature": 0.3,  # Lower temperature for more consistent entity recognition
+                "temperature": 0.3,  
                 "top_p": 0.8,
                 "top_k": 40,
                 "max_output_tokens": 4096,
             }
         )
         
-        # Pronoun patterns
         self.pronouns = {
             'he', 'him', 'his', 'himself',
             'she', 'her', 'hers', 'herself', 
             'they', 'them', 'their', 'theirs', 'themselves'
         }
         
-        # Quote patterns
         self.quote_patterns = [
-            r'"([^"]*)"',  # Double quotes
-            r"'([^']*)'",  # Single quotes
-            r'"([^"]*)"',  # Smart quotes
-            r"'([^']*)'",  # Smart single quotes
+            r'"([^"]*)"', 
+            r"'([^']*)'", 
+            r'"([^"]*)"',  
+            r"'([^']*)'",  
         ]
         
-        # Speech attribution patterns
         self.attribution_patterns = [
             r'(\w+)\s+said',
             r'(\w+)\s+stated',
@@ -106,7 +101,6 @@ class PronounResolutionSystem:
             r'(\w+)\s+continued'
         ]
         
-        # Storage for analysis results
         self.entities: List[PersonEntity] = []
         self.pronoun_references: List[PronounReference] = []
         self.attributed_statements: List[AttributedStatement] = []
@@ -124,27 +118,21 @@ class PronounResolutionSystem:
             Dictionary containing analysis results
         """
         
-        # Reset storage
         self.entities = []
         self.pronoun_references = []
         self.attributed_statements = []
         
-        # Split text into sentences
         self.text_sentences = self._split_into_sentences(text)
         
-        # Step 1: Identify key personnel
         print("🔍 Step 1: Identifying key personnel...")
         self.entities = self._identify_personnel(text, title)
         
-        # Step 2: Find and resolve pronoun references
         print("🔗 Step 2: Resolving pronoun references...")
         self.pronoun_references = self._resolve_pronouns(text)
         
-        # Step 3: Identify and attribute statements
         print("💬 Step 3: Identifying attributed statements...")
         self.attributed_statements = self._identify_attributed_statements(text)
         
-        # Step 4: Classify statement types and verify factual claims
         print("✅ Step 4: Classifying statements and verifying claims...")
         self._classify_and_verify_statements()
         
@@ -157,7 +145,6 @@ class PronounResolutionSystem:
     
     def _split_into_sentences(self, text: str) -> List[str]:
         """Split text into sentences using basic sentence boundary detection"""
-        # Simple sentence splitting - could be enhanced with more sophisticated NLP
         sentences = re.split(r'[.!?]+\s+', text)
         return [s.strip() for s in sentences if s.strip()]
     
@@ -199,7 +186,6 @@ Focus on people who are quoted, make statements, or are central to the article's
             response = self.model.generate_content(prompt)
             response_text = response.text.strip()
             
-            # Extract JSON from response
             json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
             if json_match:
                 import json
@@ -217,7 +203,6 @@ Focus on people who are quoted, make statements, or are central to the article's
                         first_mention_position=i  # Will be updated with actual positions
                     )
                     
-                    # Find mention positions in text
                     entity.mention_positions = self._find_mention_positions(text, entity)
                     if entity.mention_positions:
                         entity.first_mention_position = entity.mention_positions[0]
@@ -235,10 +220,8 @@ Focus on people who are quoted, make statements, or are central to the article's
         """Find all positions where a person is mentioned in the text"""
         positions = []
         
-        # Search for various name forms
         name_variants = [entity.name, entity.full_name]
         
-        # Add common name variations
         if ' ' in entity.full_name:
             parts = entity.full_name.split()
             name_variants.extend([parts[0], parts[-1]])  # First and last name
@@ -259,16 +242,13 @@ Focus on people who are quoted, make statements, or are central to the article's
         words = text.split()
         
         for i, word in enumerate(words):
-            # Clean word of punctuation
             clean_word = re.sub(r'[^\w]', '', word.lower())
             
             if clean_word in self.pronouns:
-                # Get context window around pronoun
                 start_idx = max(0, i - 10)
                 end_idx = min(len(words), i + 10)
                 context = ' '.join(words[start_idx:end_idx])
                 
-                # Find sentence containing this pronoun
                 char_position = len(' '.join(words[:i]))
                 sentence = self._find_sentence_containing_position(text, char_position)
                 
@@ -279,7 +259,6 @@ Focus on people who are quoted, make statements, or are central to the article's
                     context_window=context
                 )
                 
-                # Resolve pronoun to entity
                 resolved_entity, confidence = self._resolve_pronoun_to_entity(pronoun_ref, text)
                 pronoun_ref.resolved_entity = resolved_entity
                 pronoun_ref.confidence_score = confidence
@@ -299,7 +278,7 @@ Focus on people who are quoted, make statements, or are central to the article's
         for sentence in sentences:
             if current_pos <= position <= current_pos + len(sentence):
                 return sentence
-            current_pos += len(sentence) + 1  # +1 for space/punctuation
+            current_pos += len(sentence) + 1  
         
         return ""
     
@@ -311,7 +290,6 @@ Focus on people who are quoted, make statements, or are central to the article's
         if not self.entities:
             return None, 0.0
         
-        # Gender-based filtering
         gender_pronouns = {
             'masculine': {'he', 'him', 'his', 'himself'},
             'feminine': {'she', 'her', 'hers', 'herself'},
@@ -324,29 +302,24 @@ Focus on people who are quoted, make statements, or are central to the article's
                 pronoun_gender = gender
                 break
         
-        # Score entities based on proximity and context
         entity_scores = []
         
         for entity in self.entities:
             score = 0.0
             
-            # Proximity score - closer mentions get higher scores
             if entity.mention_positions:
                 closest_mention = min(entity.mention_positions, 
                                     key=lambda x: abs(x - pronoun_ref.position))
                 distance = abs(closest_mention - pronoun_ref.position)
-                proximity_score = max(0, 1.0 - (distance / 1000))  # Normalize by 1000 chars
+                proximity_score = max(0, 1.0 - (distance / 1000)) 
                 score += proximity_score * 0.4
             
-            # Context relevance score
             context_score = 0.0
             context_lower = pronoun_ref.context_window.lower()
             
-            # Check if entity name appears in context
             if entity.name.lower() in context_lower:
                 context_score += 0.3
             
-            # Check for titles/organizations in context
             for title in entity.titles:
                 if title.lower() in context_lower:
                     context_score += 0.1
@@ -357,7 +330,6 @@ Focus on people who are quoted, make statements, or are central to the article's
             
             score += min(context_score, 0.4)
             
-            # Recency score - more recent mentions are more likely
             recent_mentions = [pos for pos in entity.mention_positions 
                              if pos < pronoun_ref.position and pos > pronoun_ref.position - 500]
             if recent_mentions:
@@ -366,10 +338,9 @@ Focus on people who are quoted, make statements, or are central to the article's
             
             entity_scores.append((entity, score))
         
-        # Sort by score and return best match
         entity_scores.sort(key=lambda x: x[1], reverse=True)
         
-        if entity_scores and entity_scores[0][1] > 0.3:  # Minimum confidence threshold
+        if entity_scores and entity_scores[0][1] > 0.3: 
             return entity_scores[0][0], entity_scores[0][1]
         
         return None, 0.0
@@ -381,10 +352,8 @@ Focus on people who are quoted, make statements, or are central to the article's
         
         statements = []
         
-        # Find direct quotes
         statements.extend(self._find_direct_quotes(text))
         
-        # Find reported speech and paraphrased statements
         statements.extend(self._find_reported_speech(text))
         
         return statements
@@ -398,7 +367,6 @@ Focus on people who are quoted, make statements, or are central to the article's
                 quote_text = match.group(1)
                 quote_position = match.start()
                 
-                # Find attribution around the quote
                 context_start = max(0, quote_position - 200)
                 context_end = min(len(text), quote_position + len(match.group()) + 200)
                 context = text[context_start:context_end]
@@ -410,7 +378,7 @@ Focus on people who are quoted, make statements, or are central to the article's
                         statement=quote_text,
                         attributed_person=attributed_person,
                         statement_type='direct_quote',
-                        confidence_score=0.9,  # High confidence for direct quotes
+                        confidence_score=0.9,  
                         position=quote_position,
                         context=context
                     )
@@ -421,14 +389,12 @@ Focus on people who are quoted, make statements, or are central to the article's
     def _find_quote_attribution(self, context: str, quote_position: int) -> Optional[PersonEntity]:
         """Find who is attributed with a quote based on surrounding context"""
         
-        # Look for attribution patterns before and after the quote
         for pattern in self.attribution_patterns:
             matches = list(re.finditer(pattern, context, re.IGNORECASE))
             
             for match in matches:
                 speaker_name = match.group(1)
                 
-                # Find matching entity
                 for entity in self.entities:
                     if (speaker_name.lower() in entity.name.lower() or 
                         speaker_name.lower() in entity.full_name.lower()):
@@ -440,7 +406,6 @@ Focus on people who are quoted, make statements, or are central to the article's
         """Find reported speech and paraphrased statements"""
         reported_statements = []
         
-        # Patterns for reported speech
         reported_patterns = [
             r'(\w+)\s+believes?\s+that\s+([^.!?]+)',
             r'(\w+)\s+thinks?\s+that\s+([^.!?]+)',
@@ -456,7 +421,6 @@ Focus on people who are quoted, make statements, or are central to the article's
                 speaker_name = match.group(1)
                 statement_text = match.group(2)
                 
-                # Find matching entity
                 attributed_person = None
                 for entity in self.entities:
                     if (speaker_name.lower() in entity.name.lower() or 
@@ -483,11 +447,9 @@ Focus on people who are quoted, make statements, or are central to the article's
         """
         
         for statement in self.attributed_statements:
-            # Use Gemini to classify if statement contains factual claims
             is_factual = self._is_factual_claim(statement.statement)
             statement.is_factual_claim = is_factual
             
-            # Verify credibility based on source
             if is_factual:
                 verification_status = self._verify_statement_credibility(statement)
                 statement.verification_status = verification_status
@@ -511,10 +473,8 @@ Respond with only "FACTUAL" if it contains verifiable facts, or "OPINION" if it'
     def _verify_statement_credibility(self, statement: AttributedStatement) -> str:
         """Verify the credibility of a factual statement based on the source"""
         
-        # Base credibility on person's credibility score and statement type
         base_credibility = statement.attributed_person.credibility_score
         
-        # Adjust based on statement type
         if statement.statement_type == 'direct_quote':
             credibility_multiplier = 1.0
         elif statement.statement_type == 'reported_speech':
@@ -536,7 +496,6 @@ Respond with only "FACTUAL" if it contains verifiable facts, or "OPINION" if it'
     def _generate_analysis_results(self) -> Dict[str, Any]:
         """Generate comprehensive analysis results"""
         
-        # Convert entities to dictionaries
         entities_data = []
         for entity in self.entities:
             entities_data.append({
@@ -550,7 +509,6 @@ Respond with only "FACTUAL" if it contains verifiable facts, or "OPINION" if it'
                 'pronouns_used': list(entity.pronouns_used)
             })
         
-        # Convert pronoun references to dictionaries
         pronoun_data = []
         for pronoun_ref in self.pronoun_references:
             pronoun_data.append({
@@ -561,7 +519,6 @@ Respond with only "FACTUAL" if it contains verifiable facts, or "OPINION" if it'
                 'confidence': pronoun_ref.confidence_score
             })
         
-        # Convert attributed statements to dictionaries
         statements_data = []
         for statement in self.attributed_statements:
             statements_data.append({
@@ -574,7 +531,6 @@ Respond with only "FACTUAL" if it contains verifiable facts, or "OPINION" if it'
                 'position': statement.position
             })
         
-        # Generate summary statistics
         total_pronouns = len(self.pronoun_references)
         resolved_pronouns = len([p for p in self.pronoun_references if p.resolved_entity])
         factual_statements = len([s for s in self.attributed_statements if s.is_factual_claim])
@@ -597,7 +553,6 @@ Respond with only "FACTUAL" if it contains verifiable facts, or "OPINION" if it'
             }
         }
 
-# Test function
 def test_pronoun_resolution_system():
     """Test the pronoun resolution system with sample text"""
     

@@ -122,7 +122,6 @@ const MainAnalysis: React.FC = () => {
           }
         }
         
-        // Generate summary after successful analysis
         if (result.session_id) {
           handleGenerateSummary(result.session_id);
         }
@@ -158,10 +157,8 @@ const MainAnalysis: React.FC = () => {
   };
 
   const StatementCard: React.FC<{ statement: Statement; type: 'fact' | 'opinion' }> = ({ statement, type }) => {
-    // Check if this was reclassified from fact to opinion due to missing citations
     const wasReclassified = statement.reasoning?.includes('reclassified as OPINION per verification standards');
     
-    // Debug logging
     console.log('StatementCard rendering:', {
       sentence: statement.sentence?.substring(0, 50) + '...',
       type,
@@ -184,7 +181,6 @@ const MainAnalysis: React.FC = () => {
           {(() => {
             const sentence = statement.sentence || '';
             
-            // Check if we have source_tag metadata from backend
             if (statement.source_tag) {
               const sourceTag = statement.source_tag;
               // Extract the sentence content after "SourceName reported"
@@ -220,7 +216,6 @@ const MainAnalysis: React.FC = () => {
               }
             }
             
-            // Fallback: try to match with expanded regex for outlets not yet using source_tag
             const sourceMatch = sentence.match(/^(BBC|CNN|Reuters|Guardian|The Guardian|The New York Times|Washington Post|NPR|Sky News|Associated Press|Metro|Al Jazeera|Fox News|NBC News|ABC News|CBS News|The Independent|Daily Mail|The Telegraph|USA Today|The Wall Street Journal|Bloomberg|Politico|HuffPost|Economic Times|Times of India|Hindustan Times|The Indian Express|NDTV|News18|Zee News|Firstpost|Mint|Business Standard|The Financial Express|Moneycontrol|CNBC|MarketWatch|Fortune|Forbes|TechCrunch|The Verge|Engadget|Wired|Ars Technica) reported (.+)$/);
             
             if (sourceMatch) {
@@ -344,10 +339,8 @@ const MainAnalysis: React.FC = () => {
   };
 
   const KeyFiguresCard: React.FC<{ keyFigures: KeyFiguresData }> = ({ keyFigures }) => {
-    // Group figures by source URL
     const figuresBySource: { [url: string]: KeyFigure[] } = {};
     
-    // Collect all figures from all categories
     const allFigures: KeyFigure[] = [];
     if (keyFigures.categories?.primary_actors?.figures) allFigures.push(...keyFigures.categories.primary_actors.figures);
     if (keyFigures.categories?.secondary_participants?.figures) allFigures.push(...keyFigures.categories.secondary_participants.figures);
@@ -483,12 +476,10 @@ const MainAnalysis: React.FC = () => {
           }
           style={{ marginBottom: 24 }}
         >
-          {/* Executive Summary */}
           <Card size="small" title="Executive Summary" style={{ marginBottom: 16 }}>
             <Paragraph>{singleSummary.executive_summary}</Paragraph>
           </Card>
 
-          {/* Main Themes */}
           {singleSummary.main_themes.length > 0 && (
             <Card size="small" title="Main Themes" style={{ marginBottom: 16 }}>
               <Space wrap>
@@ -690,7 +681,6 @@ const MainAnalysis: React.FC = () => {
             </Row>
           </Card>
 
-          {/* Common Themes */}
           {multiSummary.aggregated_data.common_themes.length > 0 && (
             <Card size="small" title="Common Themes Across Sources" style={{ marginBottom: 16 }}>
               <Space wrap>
@@ -823,7 +813,6 @@ Add multiple URLs to analyze and compare facts vs opinions across sources...`}
               <>
                 <Divider />
                 
-                {/* Analysis Header - Removed Domain and Specialists */}
                 <Card 
                   title={
                     <Space>
@@ -869,7 +858,6 @@ Add multiple URLs to analyze and compare facts vs opinions across sources...`}
                   </Row>
                 </Card>
 
-                {/* Content Summary */}
                 {summary && (
                   <SummaryCard
                     summary={summary.summary}
@@ -886,7 +874,6 @@ Add multiple URLs to analyze and compare facts vs opinions across sources...`}
                   </Card>
                 )}
 
-                {/* Consensus Summary */}
                 {results.results && (
                   <Card
                     title="Consensus Summary"

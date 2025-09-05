@@ -22,14 +22,12 @@ class FinalCitationSystem:
         """Get citations with verified working URLs for a sentence"""
         print(f"🔍 Getting verified citations with working URLs for: {sentence[:100]}...")
         
-        # Step 1: Get initial citations from Gemini
         verified_citations = self.gemini_service.get_citations_for_sentence(sentence, domain)
         
         if not verified_citations:
             print("❌ No citations found from Gemini service")
             return []
         
-        # Step 2: Convert to dictionary format for URL verification
         citation_dicts = []
         for vc in verified_citations:
             citation_dict = {
@@ -44,10 +42,8 @@ class FinalCitationSystem:
             }
             citation_dicts.append(citation_dict)
         
-        # Step 3: Verify all URLs and fix broken ones
         verified_url_citations = self.url_verifier.verify_citation_urls(citation_dicts)
         
-        # Step 4: Filter to only working URLs
         working_citations = []
         for citation in verified_url_citations:
             url_verification = citation.get('url_verification', {})
@@ -84,24 +80,20 @@ class FinalCitationSystem:
                 sentence = result.get('original_sentence', result.get('sentence', ''))
                 domain = analysis_data.get('domain', 'GENERAL')
                 
-                # Get verified citations with working URLs
                 working_citations = self.get_verified_citations_with_working_urls(sentence, domain)
                 
                 if working_citations:
-                    # Update with working citations
                     enhanced_result['citations'] = working_citations
                     enhanced_result['citation'] = working_citations[0]  # Primary citation
                     enhanced_result['citation_quality_score'] = max([c['verification_score'] for c in working_citations])
                     enhanced_result['total_supporting_sources'] = len(working_citations)
                     enhanced_result['all_urls_verified'] = True
                     
-                    # Create source-attributed sentence
                     primary_source = working_citations[0]
                     source_name = self._extract_clean_source_name(primary_source['domain'])
                     enhanced_result['attributed_sentence'] = f"{source_name} reported {sentence}"
                     
                 else:
-                    # No working citations found
                     enhanced_result['citation_warning'] = "No working citations found - consider reclassifying as opinion"
                     enhanced_result['citation_quality_score'] = 0.0
                     enhanced_result['total_supporting_sources'] = 0
@@ -109,12 +101,10 @@ class FinalCitationSystem:
             
             enhanced_results.append(enhanced_result)
         
-        # Update analysis data
         enhanced_analysis_data = analysis_data.copy()
         enhanced_analysis_data['results'] = enhanced_results
         enhanced_analysis_data['enhancement_timestamp'] = time.strftime('%Y-%m-%d %H:%M:%S')
         
-        # Calculate statistics
         facts_with_working_citations = len([r for r in enhanced_results 
                                           if r.get('final_classification') == 'FACT' and r.get('all_urls_verified')])
         total_facts = len([r for r in enhanced_results if r.get('final_classification') == 'FACT'])
@@ -153,7 +143,6 @@ class FinalCitationSystem:
             if domain_key in domain_lower:
                 return source_name
         
-        # Fallback
         if '.' in domain:
             return domain.split('.')[0].title()
         return "News Source"
@@ -165,7 +154,6 @@ class FinalCitationSystem:
         if not enhanced_analysis_data or 'results' not in enhanced_analysis_data:
             return "No analysis data available."
         
-        # Collect all working citations
         all_working_citations = []
         seen_urls = set()
         
@@ -183,10 +171,8 @@ class FinalCitationSystem:
         if not all_working_citations:
             return "No verified working sources available."
         
-        # Sort by verification score
         all_working_citations.sort(key=lambda x: x.get('verification_score', 0), reverse=True)
         
-        # Generate sources section
         sources_section = f"""# Verified Sources with Working URLs
 
 *Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}*
@@ -227,7 +213,6 @@ class FinalCitationSystem:
             
             sources_section += "\n"
         
-        # Add quality summary
         quality_summary = enhanced_analysis_data.get('citation_quality_summary', {})
         if quality_summary:
             sources_section += f"""## Citation Quality Summary
@@ -267,15 +252,12 @@ class FinalCitationSystem:
         print(f"📄 Final verified sources saved to: {filename}")
         return filename
 
-# Example usage and testing
 if __name__ == "__main__":
     print("🔍 Testing Final Citation System with URL Verification")
     print("=" * 70)
     
-    # Test the complete system
     final_system = FinalCitationSystem()
     
-    # Mock analysis data
     test_analysis_data = {
         'results': [
             {
@@ -296,16 +278,13 @@ if __name__ == "__main__":
         'url': 'https://example.com/test'
     }
     
-    # Enhance with working citations
     enhanced_data = final_system.enhance_analysis_with_working_citations(test_analysis_data)
     
-    # Generate final sources
     sources_file = final_system.save_final_sources_to_file(enhanced_data)
     
     print(f"\n✅ Final citation system test complete!")
     print(f"📄 Sources file: {sources_file}")
     
-    # Print summary
     quality_summary = enhanced_data.get('citation_quality_summary', {})
     print(f"📊 Working citation coverage: {quality_summary.get('working_coverage_percentage', 0):.1f}%")
     print(f"🔗 All URLs verified: {quality_summary.get('all_urls_verified', False)}")

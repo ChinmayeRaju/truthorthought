@@ -51,7 +51,7 @@ class ContentSummary:
     key_insights: List[KeyInsight]
     main_themes: List[str]
     executive_summary: str
-    content_type: str  # e.g., "news", "analysis", "opinion"
+    content_type: str  
     credibility_indicators: List[str]
 
 class ContentSummarizer:
@@ -81,10 +81,8 @@ class ContentSummarizer:
         print(f"🔍 Summarizing content: {title[:100]}...")
         
         try:
-            # Create comprehensive summarization prompt
             prompt = self._create_summarization_prompt(content, title, domain)
             
-            # Generate summary using Gemini
             contents = [
                 types.Content(
                     role="user",
@@ -97,7 +95,6 @@ class ContentSummarizer:
                 contents=contents,
             )
             
-            # Parse the structured response
             summary = self._parse_summary_response(response.text)
             
             print(f"✅ Content summarization completed")
@@ -105,7 +102,6 @@ class ContentSummarizer:
             
         except Exception as e:
             print(f"❌ Error in content summarization: {str(e)}")
-            # Return empty summary on error
             return ContentSummary(
                 key_personnel=[],
                 important_quotes=[],
@@ -193,19 +189,15 @@ Return only valid JSON without any additional text or formatting.
     def _parse_summary_response(self, response_text: str) -> ContentSummary:
         """Parse Gemini's JSON response into ContentSummary object"""
         try:
-            # Clean the response text
             cleaned_text = response_text.strip()
             
-            # Remove any markdown formatting
             if cleaned_text.startswith('```json'):
                 cleaned_text = cleaned_text[7:]
             if cleaned_text.endswith('```'):
                 cleaned_text = cleaned_text[:-3]
             
-            # Parse JSON
             data = json.loads(cleaned_text)
             
-            # Convert to dataclass objects
             key_personnel = [
                 KeyPersonnel(
                     name=p.get('name', ''),
@@ -257,7 +249,6 @@ Return only valid JSON without any additional text or formatting.
     
     def _create_fallback_summary(self, response_text: str) -> ContentSummary:
         """Create a basic summary when JSON parsing fails"""
-        # Try to extract some basic information using regex
         quotes = re.findall(r'"([^"]+)"', response_text)
         names = re.findall(r'\b[A-Z][a-z]+ [A-Z][a-z]+\b', response_text)
         
@@ -271,7 +262,7 @@ Return only valid JSON without any additional text or formatting.
                     context="",
                     significance="",
                     impact_score=0.5
-                ) for quote in quotes[:3]  # Take first 3 quotes
+                ) for quote in quotes[:3]  
             ],
             key_insights=[
                 KeyInsight(
@@ -305,7 +296,6 @@ Return only valid JSON without any additional text or formatting.
         all_insights = []
         all_themes = []
         
-        # Summarize each source individually
         for source in sources:
             content = source.get('content', source.get('formatted_content', ''))
             title = source.get('title', '')
@@ -318,13 +308,11 @@ Return only valid JSON without any additional text or formatting.
                 'summary': summary
             })
             
-            # Aggregate data
             all_personnel.extend(summary.key_personnel)
             all_quotes.extend(summary.important_quotes)
             all_insights.extend(summary.key_insights)
             all_themes.extend(summary.main_themes)
         
-        # Generate cross-source analysis
         cross_analysis = self._generate_cross_source_analysis(individual_summaries)
         
         return {
@@ -354,7 +342,6 @@ Return only valid JSON without any additional text or formatting.
     
     def _generate_cross_source_analysis(self, summaries: List[Dict]) -> Dict[str, Any]:
         """Generate analysis across multiple sources"""
-        # This could be enhanced with another Gemini call for cross-source analysis
         return {
             'consistency_analysis': 'Cross-source analysis would be implemented here',
             'conflicting_information': [],
@@ -368,7 +355,6 @@ Return only valid JSON without any additional text or formatting.
         for theme in all_themes:
             theme_counts[theme] = theme_counts.get(theme, 0) + 1
         
-        # Return themes that appear more than once
         return [theme for theme, count in theme_counts.items() if count > 1]
     
     def _rank_personnel(self, personnel: List[KeyPersonnel]) -> List[Dict]:

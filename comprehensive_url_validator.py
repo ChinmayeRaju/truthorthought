@@ -16,7 +16,6 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from urllib3.exceptions import InsecureRequestWarning
 
-# Suppress SSL warnings for testing
 warnings.filterwarnings('ignore', category=InsecureRequestWarning)
 
 @dataclass
@@ -47,10 +46,8 @@ class ComprehensiveURLValidator:
         self.timeout = timeout
         self.max_retries = max_retries
         
-        # Configure session with retry strategy
         self.session = requests.Session()
         
-        # Retry strategy for handling temporary failures
         retry_strategy = Retry(
             total=max_retries,
             status_forcelist=[429, 500, 502, 503, 504],
@@ -62,7 +59,6 @@ class ComprehensiveURLValidator:
         self.session.mount("http://", adapter)
         self.session.mount("https://", adapter)
         
-        # Set comprehensive headers
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -72,7 +68,6 @@ class ComprehensiveURLValidator:
             'Upgrade-Insecure-Requests': '1',
         })
         
-        # Error type mappings
         self.error_types = {
             400: "bad_request",
             401: "unauthorized", 
@@ -114,23 +109,19 @@ class ComprehensiveURLValidator:
         )
         
         try:
-            # Step 1: Basic URL format validation
             if not self._validate_url_format(url):
                 validation_result.error_type = "invalid_format"
                 validation_result.error_message = "Invalid URL format"
                 return validation_result
             
-            # Step 2: DNS resolution check
             if not self._check_dns_resolution(url):
                 validation_result.error_type = "dns_resolution_failed"
                 validation_result.error_message = "DNS resolution failed - domain not found"
                 return validation_result
             
-            # Step 3: SSL certificate validation (for HTTPS)
             ssl_valid = self._validate_ssl_certificate(url)
             validation_result.ssl_valid = ssl_valid
             
-            # Step 4: Initial HEAD request to check accessibility
             head_response = self._perform_head_request(url)
             if head_response is None:
                 validation_result.error_type = "connection_failed"
@@ -155,14 +146,12 @@ class ComprehensiveURLValidator:
             
             validation_result.server_responsive = True
             
-            # Step 7: Full GET request to verify content accessibility
             content_response = self._perform_get_request(validation_result.final_url)
             if content_response is None:
                 validation_result.error_type = "content_fetch_failed"
                 validation_result.error_message = "Failed to fetch content"
                 return validation_result
             
-            # Step 8: Content analysis
             content_analysis = self._analyze_content(content_response)
             validation_result.content_accessible = content_analysis['accessible']
             validation_result.content_readable = content_analysis['readable']
@@ -170,7 +159,6 @@ class ComprehensiveURLValidator:
             validation_result.content_length = content_analysis['length']
             validation_result.content_type = content_analysis['type']
             
-            # Step 9: Final validation
             if (validation_result.content_accessible and 
                 validation_result.content_readable and 
                 validation_result.server_responsive):
@@ -229,7 +217,7 @@ class ComprehensiveURLValidator:
     def _validate_ssl_certificate(self, url: str) -> bool:
         """Validate SSL certificate for HTTPS URLs"""
         if not url.startswith('https://'):
-            return True  # Not applicable for HTTP
+            return True  
         
         try:
             parsed = urlparse(url)
@@ -247,7 +235,7 @@ class ComprehensiveURLValidator:
                 url, 
                 timeout=self.timeout, 
                 allow_redirects=True,
-                verify=False  # Allow self-signed certificates for testing
+                verify=False  
             )
             return response
         except:
@@ -261,7 +249,7 @@ class ComprehensiveURLValidator:
                 timeout=self.timeout, 
                 allow_redirects=True,
                 verify=False,
-                stream=True  # Stream to avoid loading huge files
+                stream=True 
             )
             return response
         except:
@@ -278,33 +266,26 @@ class ComprehensiveURLValidator:
         }
         
         try:
-            # Check content type
             content_type = response.headers.get('content-type', '').lower()
             analysis['type'] = content_type
             
-            # Must be HTML content
             if 'text/html' not in content_type:
                 return analysis
             
-            # Check content length
             content_length = len(response.content)
             analysis['length'] = content_length
             
-            # Content must be substantial (more than 1KB)
             if content_length < 1024:
                 return analysis
             
             analysis['accessible'] = True
             
-            # Check if content is readable (contains text)
             try:
                 text_content = response.text
                 
-                # Must contain substantial text content
                 if len(text_content.strip()) > 500:
                     analysis['readable'] = True
                 
-                # Check for common error pages
                 error_indicators = [
                     'page not found', '404', 'error', 'not available',
                     'access denied', 'forbidden', 'server error',
@@ -316,7 +297,6 @@ class ComprehensiveURLValidator:
                     analysis['relevant'] = True
                 
             except UnicodeDecodeError:
-                # Content is not readable text
                 pass
             
         except Exception as e:
@@ -338,12 +318,9 @@ class ComprehensiveURLValidator:
                 print(f"   ⚠️  Citation {i} has no URL - skipping")
                 continue
             
-            # Perform comprehensive validation
             validation_result = self.validate_url_comprehensive(url)
             
-            # Only include citations with valid, accessible URLs
             if validation_result.is_valid:
-                # Update citation with validation info
                 validated_citation = citation.copy()
                 validated_citation['url'] = validation_result.final_url
                 validated_citation['validation_status'] = 'verified_working'
@@ -434,14 +411,12 @@ class ComprehensiveURLValidator:
         
         return report
 
-# Example usage and testing
 if __name__ == "__main__":
     print("🔍 Testing Comprehensive URL Validation System")
     print("=" * 70)
     
     validator = ComprehensiveURLValidator()
     
-    # Test URLs with various scenarios
     test_citations = [
         {
             'title': 'IPCC Climate Report',
@@ -469,13 +444,10 @@ if __name__ == "__main__":
         }
     ]
     
-    # Validate all URLs
     validated_citations = validator.validate_citation_urls_comprehensive(test_citations)
     
-    # Generate report
     report = validator.generate_validation_report(test_citations, validated_citations)
     
-    # Save report
     report_filename = f"comprehensive_validation_report_{time.strftime('%Y%m%d_%H%M%S')}.md"
     with open(report_filename, 'w', encoding='utf-8') as f:
         f.write(report)

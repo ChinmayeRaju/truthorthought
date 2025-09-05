@@ -1,8 +1,3 @@
-"""
-Intelligent Chat Assistant for Truth or Thought Analysis
-Sophisticated language model interface for analyzing article content
-"""
-
 import os
 import json
 import re
@@ -12,7 +7,6 @@ from datetime import datetime
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
 @dataclass
@@ -27,7 +21,6 @@ class ChatContext:
     analysis_summary: Dict[str, Any]
     session_id: str
     timestamp: datetime
-    # New fields for multiple URL support
     multiple_urls: Optional[List[str]] = None
     individual_results: Optional[List[Dict[str, Any]]] = None
     is_multi_url_analysis: bool = False
@@ -39,7 +32,6 @@ class IntelligentChatAssistant:
     """
     
     def __init__(self):
-        # Initialize Gemini client
         api_key = os.getenv('GOOGLE_API_KEY') or os.getenv('GEMINI_API_KEY')
         if not api_key:
             raise ValueError("No Google API key found. Please set GOOGLE_API_KEY or GEMINI_API_KEY environment variable.")
@@ -55,18 +47,15 @@ class IntelligentChatAssistant:
             }
         )
         
-        # Conversation history for context maintenance
         self.conversation_history: Dict[str, List[Dict[str, str]]] = {}
         
     def create_chat_context(self, analysis_data: Dict[str, Any], session_id: str) -> ChatContext:
         """Create chat context from analysis data - supports both single and multiple URL analysis"""
         
-        # Check if this is a multiple URL analysis
         is_multi_url = 'multiple_results' in analysis_data or 'urls' in analysis_data
         multiple_urls = analysis_data.get('urls', [])
         individual_results = analysis_data.get('multiple_results', [])
         
-        # Extract facts and opinions from results
         facts = []
         opinions = []
         
@@ -77,12 +66,10 @@ class IntelligentChatAssistant:
                 elif result.get('final_classification') == 'OPINION':
                     opinions.append(result)
         
-        # For multiple URL analysis, also collect facts/opinions from individual results
         if is_multi_url and individual_results:
             for url_result in individual_results:
                 if 'facts' in url_result:
                     for fact in url_result['facts']:
-                        # Add source information to distinguish between URLs
                         fact_with_source = fact.copy()
                         fact_with_source['source_url'] = url_result.get('url', '')
                         fact_with_source['source_title'] = url_result.get('title', 'Unknown Source')
@@ -90,13 +77,11 @@ class IntelligentChatAssistant:
                 
                 if 'opinions' in url_result:
                     for opinion in url_result['opinions']:
-                        # Add source information to distinguish between URLs
                         opinion_with_source = opinion.copy()
                         opinion_with_source['source_url'] = url_result.get('url', '')
                         opinion_with_source['source_title'] = url_result.get('title', 'Unknown Source')
                         opinions.append(opinion_with_source)
         
-        # Create enhanced analysis summary for multiple URLs
         analysis_summary = {
             'total_sentences': len(analysis_data.get('results', [])),
             'facts_count': len(facts),
@@ -109,14 +94,11 @@ class IntelligentChatAssistant:
             'individual_results_count': len(individual_results) if individual_results else 0
         }
         
-        # Determine title and content for multi-URL analysis
         if is_multi_url:
             title = f"Multi-Source Analysis ({len(multiple_urls)} URLs)" if multiple_urls else "Multi-Source Analysis"
-            # Combine content from all sources or use existing combined content
             if 'content' in analysis_data:
                 content = analysis_data['content']
             else:
-                # Fallback: combine content from individual results
                 content_parts = []
                 for url_result in individual_results:
                     if 'raw_content' in url_result and url_result['raw_content']:
@@ -147,20 +129,15 @@ class IntelligentChatAssistant:
         Maintains conversation context and provides analytical insights.
         """
         
-        # Initialize conversation history for this session if not exists
         if context.session_id not in self.conversation_history:
             self.conversation_history[context.session_id] = []
         
-        # Detect question type and intent
         question_type = self._classify_question(question)
         
-        # Build comprehensive context
         context_prompt = self._build_context_prompt(context, question_type)
         
-        # Build conversation history
         conversation_context = self._build_conversation_context(context.session_id)
         
-        # Create the main prompt - enhanced for multiple URLs
         if context.is_multi_url_analysis:
             main_prompt = f"""You are an expert AI assistant specializing in multi-source content analysis and critical thinking. You have analyzed multiple sources ({context.analysis_summary.get('urls_analyzed', 0)} URLs) and can provide sophisticated comparative insights about their content, themes, arguments, and implications.
 
@@ -211,11 +188,9 @@ RESPONSE GUIDELINES:
 RESPONSE:"""
 
         try:
-            # Generate response
             response = self.model.generate_content(main_prompt)
             answer = response.text.strip()
             
-            # Add to conversation history
             self.conversation_history[context.session_id].append({
                 'question': question,
                 'answer': answer,
@@ -223,7 +198,6 @@ RESPONSE:"""
                 'question_type': question_type
             })
             
-            # Keep conversation history manageable (last 10 exchanges)
             if len(self.conversation_history[context.session_id]) > 10:
                 self.conversation_history[context.session_id] = self.conversation_history[context.session_id][-10:]
             
@@ -264,7 +238,6 @@ RESPONSE:"""
     def _build_context_prompt(self, context: ChatContext, question_type: str) -> str:
         """Build comprehensive context prompt based on analysis data - supports multiple URLs"""
         
-        # Basic article information
         if context.is_multi_url_analysis:
             context_sections = [
                 f"MULTI-SOURCE ANALYSIS INFORMATION:",
@@ -304,7 +277,6 @@ RESPONSE:"""
                 ""
             ]
         
-        # Enhanced analysis summary for multiple URLs
         if context.is_multi_url_analysis:
             context_sections.extend([
                 f"COMPREHENSIVE ANALYSIS SUMMARY:",
@@ -328,7 +300,6 @@ RESPONSE:"""
                 ""
             ])
         
-        # Include relevant facts based on question type - enhanced for multiple URLs
         if question_type in ['facts', 'summary', 'general', 'sources'] and context.facts:
             if context.is_multi_url_analysis:
                 context_sections.append("IDENTIFIED FACTS (ACROSS ALL SOURCES):")
@@ -342,7 +313,6 @@ RESPONSE:"""
                     if source_url:
                         context_sections.append(f"   URL: {source_url}")
                     
-                    # Add citation info if available
                     if fact.get('citations') and len(fact['citations']) > 0:
                         citation = fact['citations'][0]  # Primary citation
                         context_sections.append(f"   Citation: {citation.get('title', 'Unknown')} ({citation.get('domain', 'Unknown domain')})")
@@ -355,7 +325,6 @@ RESPONSE:"""
                     sentence = fact.get('sentence', fact.get('original_sentence', ''))
                     context_sections.append(f"{i}. {sentence}")
                     
-                    # Add citation info if available
                     if fact.get('citations') and len(fact['citations']) > 0:
                         citation = fact['citations'][0]  # Primary citation
                         context_sections.append(f"   Source: {citation.get('title', 'Unknown')} ({citation.get('domain', 'Unknown domain')})")
@@ -363,7 +332,6 @@ RESPONSE:"""
                             context_sections.append(f"   Quality Score: {int(citation['verification_score'] * 100)}%")
                 context_sections.append("")
         
-        # Include relevant opinions based on question type - enhanced for multiple URLs
         if question_type in ['opinions', 'summary', 'general', 'bias'] and context.opinions:
             if context.is_multi_url_analysis:
                 context_sections.append("IDENTIFIED OPINIONS (ACROSS ALL SOURCES):")
@@ -384,7 +352,6 @@ RESPONSE:"""
                     context_sections.append(f"{i}. {sentence}")
                 context_sections.append("")
         
-        # Add content snippet for context
         if context.content:
             content_snippet = context.content[:1500] + "..." if len(context.content) > 1500 else context.content
             context_sections.extend([
@@ -393,7 +360,6 @@ RESPONSE:"""
                 ""
             ])
         
-        # Add verification summary if available
         if context.analysis_summary.get('verification_summary'):
             verification = context.analysis_summary['verification_summary']
             context_sections.extend([
@@ -422,7 +388,6 @@ RESPONSE:"""
     def _handle_error(self, question: str, error_message: str) -> str:
         """Handle errors gracefully with helpful responses"""
         
-        # Check for common error types
         if "quota" in error_message.lower() or "limit" in error_message.lower():
             return "I apologize, but I'm currently experiencing high demand. Please try your question again in a moment."
         
@@ -433,7 +398,6 @@ RESPONSE:"""
             return "I'm having trouble understanding your question. Could you please rephrase it or provide more specific details about what you'd like to know?"
         
         else:
-            # Generic error with helpful suggestions
             return f"""I apologize, but I encountered an issue while processing your question. Here are some things you can try:
 
 1. **Rephrase your question** - Try asking in a different way
@@ -451,7 +415,6 @@ Please try again with a rephrased question."""
         """Generate contextually relevant suggested questions - enhanced for multiple URLs"""
         suggestions = []
         
-        # Multi-URL specific questions
         if context.is_multi_url_analysis:
             suggestions.extend([
                 "How do the different sources compare in their coverage of this topic?",
@@ -475,7 +438,6 @@ Please try again with a rephrased question."""
                     "How do editorial perspectives differ between sources?"
                 ])
         else:
-            # Single URL analysis questions
             if context.facts:
                 suggestions.append("What are the main facts presented in this article?")
                 suggestions.append("Which facts have the strongest source verification?")
@@ -484,7 +446,6 @@ Please try again with a rephrased question."""
                 suggestions.append("What opinions or viewpoints are expressed?")
                 suggestions.append("How can I distinguish between facts and opinions here?")
         
-        # Domain-specific suggestions (enhanced for multi-URL)
         if context.domain.upper() == 'POLITICS':
             if context.is_multi_url_analysis:
                 suggestions.extend([
@@ -525,7 +486,6 @@ Please try again with a rephrased question."""
                     "What are the key events or developments mentioned?"
                 ])
         
-        # General analytical questions (adapted for multi-URL)
         if context.is_multi_url_analysis:
             suggestions.extend([
                 "Can you provide a comprehensive summary across all sources?",
@@ -541,7 +501,6 @@ Please try again with a rephrased question."""
                 "What additional context would help understand this topic better?"
             ])
         
-        # Return a selection of relevant suggestions (more for multi-URL)
         max_suggestions = 8 if context.is_multi_url_analysis else 6
         return suggestions[:max_suggestions]
     
@@ -550,7 +509,6 @@ Please try again with a rephrased question."""
         if session_id in self.conversation_history:
             del self.conversation_history[session_id]
 
-# Test functions
 def test_chat_assistant():
     """Test the intelligent chat assistant with single URL"""
     print("🤖 Testing Intelligent Chat Assistant (Single URL)")
@@ -559,7 +517,6 @@ def test_chat_assistant():
     try:
         assistant = IntelligentChatAssistant()
         
-        # Sample analysis data
         sample_data = {
             'content': 'Climate scientists report that global temperatures have risen by 1.1 degrees Celsius since pre-industrial times. Many experts believe this trend will continue without intervention.',
             'title': 'Climate Change Analysis',
@@ -582,7 +539,6 @@ def test_chat_assistant():
         
         context = assistant.create_chat_context(sample_data, 'test_session')
         
-        # Test questions
         test_questions = [
             "What are the main facts in this article?",
             "What sources support the climate claims?",
@@ -607,7 +563,6 @@ def test_multi_url_chat_assistant():
     try:
         assistant = IntelligentChatAssistant()
         
-        # Sample multi-URL analysis data
         multi_url_data = {
             'content': 'Combined content from multiple sources about climate change and renewable energy.',
             'title': 'Multi-Source Analysis (3 URLs)',
@@ -685,7 +640,7 @@ def test_multi_url_chat_assistant():
                     'raw_content': 'Climate policy frameworks around the world vary significantly...'
                 }
             ],
-            'results': []  # Combined results would be here
+            'results': []  
         }
         
         context = assistant.create_chat_context(multi_url_data, 'test_multi_session')
@@ -697,7 +652,6 @@ def test_multi_url_chat_assistant():
         print(f"   - Facts count: {len(context.facts)}")
         print(f"   - Opinions count: {len(context.opinions)}")
         
-        # Test multi-URL specific questions
         multi_url_questions = [
             "How do the different sources compare in their coverage?",
             "What are the main points of agreement across all sources?",
@@ -711,7 +665,6 @@ def test_multi_url_chat_assistant():
             answer = assistant.answer_question(question, context)
             print(f"A: {answer[:200]}...")
         
-        # Test suggested questions for multi-URL
         suggestions = assistant.get_suggested_questions(context)
         print(f"\n📝 Suggested questions for multi-URL analysis:")
         for i, suggestion in enumerate(suggestions, 1):

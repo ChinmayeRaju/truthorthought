@@ -48,7 +48,6 @@ const ResearchDashboard: React.FC = () => {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      // Load both legacy localStorage data and new comprehensive study data
       const legacyData = QuestionnaireAnalyzer.getAllSessionData();
       console.log('Loaded legacy session data:', legacyData);
       
@@ -75,13 +74,11 @@ const ResearchDashboard: React.FC = () => {
   const exportData = async () => {
     setExportLoading(true);
     try {
-      // Export comprehensive study data
       const result = await QuestionnaireAnalyzer.exportStudyData('all');
       
       if (result.success) {
         message.success(`Study data exported successfully! Files: ${Object.keys(result.files).join(', ')}`);
         
-        // Also export legacy data as backup
         const csv = QuestionnaireAnalyzer.exportToCSV(sessions);
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
@@ -109,13 +106,11 @@ const ResearchDashboard: React.FC = () => {
       const result = await QuestionnaireAnalyzer.exportStudyData(exportType);
       
       if (result.success && result.files) {
-        // Download each exported file
         const fileNames = Object.keys(result.files);
         let downloadCount = 0;
         
         for (const fileName of fileNames) {
           const filePath = result.files[fileName];
-          // Extract just the filename from the full path
           const actualFileName = filePath.split('\\').pop() || filePath.split('/').pop() || fileName;
           
           try {
@@ -129,7 +124,6 @@ const ResearchDashboard: React.FC = () => {
             document.body.removeChild(link);
             downloadCount++;
             
-            // Small delay between downloads to avoid browser blocking
             if (fileNames.length > 1) {
               await new Promise(resolve => setTimeout(resolve, 500));
             }
@@ -179,16 +173,13 @@ const ResearchDashboard: React.FC = () => {
     message.info(`Viewing details for participant ${participant.session_id}`);
   };
 
-  // Calculate summary statistics from both legacy and comprehensive data
   const completedSessions = sessions.filter(s => s.preQuestionnaire && s.postQuestionnaire);
   const preOnlySessions = sessions.filter(s => s.preQuestionnaire && !s.postQuestionnaire);
   const completionRate = sessions.length > 0 ? (completedSessions.length / sessions.length) * 100 : 0;
   
-  // Use comprehensive statistics if available
   const stats = studyData.statistics || {};
   const participants = studyData.participants || [];
 
-  // Analyze data using analysis functions
   const taskLoadAnalysis = QuestionnaireAnalyzer.analyzeTaskLoad(completedSessions);
   const clarityAnalysis = QuestionnaireAnalyzer.analyzeSystemClarity(completedSessions);
   const trustAnalysis = QuestionnaireAnalyzer.analyzeTrustFactors(completedSessions);
@@ -201,7 +192,6 @@ const ResearchDashboard: React.FC = () => {
   const exitQuestionnaireData = QuestionnaireAnalyzer.getAllExitQuestionnaireData();
   const exitAnalysis = QuestionnaireAnalyzer.analyzeExitQuestionnaire(exitQuestionnaireData);
 
-  // Calculate average satisfaction (using a relevant metric from new questionnaire)
   const avgClarity = clarityAnalysis.averageClarity;
 
   const overviewCards = [

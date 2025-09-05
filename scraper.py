@@ -19,18 +19,14 @@ def route_through_proxy(url: str) -> str:
     Returns:
         Proxied URL in format: https://yazzy.carter.works/[original_url]
     """
-    # Validate URL format
     parsed = urlparse(url)
     if not parsed.scheme or not parsed.netloc:
-        # If URL doesn't have scheme, assume https
         if not url.startswith(('http://', 'https://')):
             url = 'https://' + url
     
-    # Route through proxy
     proxy_url = f"https://yazzy.carter.works/{url}"
     print(f"🔄 Routing URL through proxy: {url} -> {proxy_url}")
     return proxy_url
-# Configuration constants
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
 }
@@ -43,7 +39,6 @@ NEWS_SOURCES = {
 
 MAX_ARTICLES_PER_SOURCE = 10
 
-# Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -58,18 +53,15 @@ class NewsContentScraper:
         Returns dict with title, content, and metadata
         """
         try:
-            # Route through proxy for better article access
             proxied_url = route_through_proxy(url)
             response = self.session.get(proxied_url, timeout=15)
             response.raise_for_status()
             
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            # Extract title
             title_element = soup.find('title')
             title = title_element.get_text(strip=True) if title_element else "No Title"
             
-            # Extract main content - try common selectors
             content_selectors = [
                 'article',
                 '.article-content',
@@ -94,7 +86,6 @@ class NewsContentScraper:
                         content_text = ' '.join(content_parts)
                         break
             
-            # Fallback to all paragraph text
             if not content_text:
                 paragraphs = soup.find_all('p')
                 content_parts = []
@@ -160,7 +151,7 @@ class NewsScraper:
         content = []
         for element in content_elements:
             text = element.get_text(strip=True)
-            if text and len(text) > 50:  # Filter out very short paragraphs
+            if text and len(text) > 50:  
                 content.append(text)
         
         return ' '.join(content)
@@ -171,12 +162,10 @@ class NewsScraper:
         """
         logger.info(f"Scraping {source_name}...")
         
-        # Get main page content
         main_page_content = self.get_page_content(source_config['url'])
         if not main_page_content:
             return []
         
-        # Extract article links
         article_links = self.extract_article_links(
             main_page_content, 
             source_config['url'], 
@@ -187,7 +176,6 @@ class NewsScraper:
         for i, link in enumerate(article_links):
             logger.info(f"Scraping article {i+1}/{len(article_links)} from {source_name}")
             
-            # Get article content
             article_content = self.get_page_content(link)
             if article_content:
                 content = self.extract_article_content(
@@ -203,7 +191,6 @@ class NewsScraper:
                         'timestamp': time.time()
                     })
             
-            # Be respectful to the server
             time.sleep(1)
         
         return articles

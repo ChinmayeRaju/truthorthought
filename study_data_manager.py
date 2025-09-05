@@ -23,23 +23,17 @@ class StudyParticipant:
     start_time: Optional[str] = None
     end_time: Optional[str] = None
     
-    # Pre-questionnaire data
     comprehensive_pre: Optional[Dict[str, Any]] = None
     research_pre: Optional[Dict[str, Any]] = None
     
-    # Post-questionnaire data
     research_post: Optional[Dict[str, Any]] = None
     
-    # Bias analysis questionnaire data
     bias_analysis: Optional[Dict[str, Any]] = None
     
-    # Exit questionnaire data
     exit_questionnaire: Optional[Dict[str, Any]] = None
     
-    # Analysis sessions
     analysis_sessions: List[Dict[str, Any]] = field(default_factory=list)
     
-    # Interaction data
     interactions: List[Dict[str, Any]] = field(default_factory=list)
 
 class StudyDataManager:
@@ -51,10 +45,8 @@ class StudyDataManager:
         self.sessions_file = os.path.join(data_dir, "analysis_sessions.json")
         self.interactions_file = os.path.join(data_dir, "interactions.json")
         
-        # Ensure data directory exists
         os.makedirs(data_dir, exist_ok=True)
         
-        # Load existing data
         self.participants = self._load_participants()
         self.analysis_sessions = self._load_analysis_sessions()
         self.interactions = self._load_interactions()
@@ -136,7 +128,6 @@ class StudyDataManager:
         try:
             participant = self.get_or_create_participant(session_id)
             
-            # Add metadata
             data_with_metadata = {
                 **data,
                 'timestamp': datetime.now().isoformat(),
@@ -144,7 +135,6 @@ class StudyDataManager:
                 'type': questionnaire_type
             }
             
-            # Store based on questionnaire type
             if questionnaire_type == 'comprehensive_pre':
                 participant.comprehensive_pre = data_with_metadata
             elif questionnaire_type == 'research_pre':
@@ -167,14 +157,12 @@ class StudyDataManager:
     def save_analysis_session(self, session_id: str, analysis_data: Dict[str, Any]) -> bool:
         """Save analysis session data"""
         try:
-            # Store in analysis sessions
             self.analysis_sessions[session_id] = {
                 'timestamp': datetime.now().isoformat(),
                 'analysis_data': analysis_data
             }
             self._save_analysis_sessions()
             
-            # Also link to participant
             participant = self.get_or_create_participant(session_id)
             participant.analysis_sessions.append({
                 'session_id': session_id,
@@ -208,7 +196,6 @@ class StudyDataManager:
             self.interactions.append(interaction)
             self._save_interactions()
             
-            # Also add to participant
             participant = self.get_or_create_participant(session_id)
             participant.interactions.append(interaction)
             self._save_participants()
@@ -242,16 +229,12 @@ class StudyDataManager:
         exported_files = {}
         
         try:
-            # Export comprehensive study data
             self._export_comprehensive_data(output_dir, timestamp, exported_files)
             
-            # Export questionnaire-specific data
             self._export_questionnaire_data(output_dir, timestamp, exported_files)
             
-            # Export analysis sessions
             self._export_analysis_sessions(output_dir, timestamp, exported_files)
             
-            # Export interactions
             self._export_interactions(output_dir, timestamp, exported_files)
             
             return exported_files
@@ -271,7 +254,6 @@ class StudyDataManager:
         exported_files = {}
         
         try:
-            # Export only questionnaire-specific data
             self._export_questionnaire_data(output_dir, timestamp, exported_files)
             return exported_files
             
@@ -290,7 +272,6 @@ class StudyDataManager:
         exported_files = {}
         
         try:
-            # Export only analysis sessions
             self._export_analysis_sessions(output_dir, timestamp, exported_files)
             return exported_files
             
@@ -309,7 +290,6 @@ class StudyDataManager:
         exported_files = {}
         
         try:
-            # Export only interactions
             self._export_interactions(output_dir, timestamp, exported_files)
             return exported_files
             
@@ -328,7 +308,6 @@ class StudyDataManager:
         exported_files = {}
         
         try:
-            # Export comprehensive pre-questionnaire
             filename = f"comprehensive_pre_questionnaire_{timestamp}.csv"
             filepath = os.path.join(output_dir, filename)
             rows = []
@@ -341,7 +320,6 @@ class StudyDataManager:
                 df.to_csv(filepath, index=False, encoding='utf-8')
                 exported_files['comprehensive_pre_questionnaire'] = filepath
             
-            # Export research pre-questionnaire
             filename = f"research_pre_questionnaire_{timestamp}.csv"
             filepath = os.path.join(output_dir, filename)
             rows = []
@@ -371,63 +349,51 @@ class StudyDataManager:
         exported_files = {}
         
         try:
-            # Get post questionnaire column structure
             post_questionnaire_columns = set()
             for participant in self.participants.values():
                 if participant.research_post:
-                    # Remove metadata from sample to get clean column structure
                     sample = participant.research_post.copy()
                     metadata_fields = ['timestamp', 'type', 'sessionId', 'session_id', 'analysisSessionData']
                     for field in metadata_fields:
                         sample.pop(field, None)
                     post_questionnaire_columns.update(sample.keys())
             
-            # Collect ALL unique columns from ALL bias analysis records
             bias_analysis_columns = set()
             for participant in self.participants.values():
                 if participant.bias_analysis:
                     sample = participant.bias_analysis.copy()
-                    # Remove analysis-related data and metadata, keep only questionnaire responses
                     fields_to_remove = ['biasSessionData', 'content', 'domain', 'facts', 'opinions', 'url', 'urls', 'title', 'timestamp', 'type', 'sessionId', 'session_id']
                     for field in fields_to_remove:
                         sample.pop(field, None)
                     bias_analysis_columns.update(sample.keys())
             
-            # Combine post questionnaire columns with bias-specific columns for identical structure
             all_columns = post_questionnaire_columns.union(bias_analysis_columns)
             
-            # Export research post-questionnaire
             filename = f"research_post_questionnaire_{timestamp}.csv"
             filepath = os.path.join(output_dir, filename)
             rows = []
             for participant in self.participants.values():
                 if participant.research_post:
-                    # Remove metadata fields, keep only questionnaire responses
                     clean_data = participant.research_post.copy()
                     metadata_fields = ['timestamp', 'type', 'sessionId', 'session_id', 'analysisSessionData']
                     for field in metadata_fields:
                         clean_data.pop(field, None)
                     
-                    # Create aligned data structure with ALL columns (same as bias analysis)
                     aligned_data = {}
                     for column in all_columns:
-                        # Use post questionnaire value if available, otherwise empty string
                         aligned_data[column] = clean_data.get(column, '')
                     
                     rows.append(aligned_data)
             
             if rows:
                 df = pd.DataFrame(rows)
-                # Ensure all columns are present, even if empty
                 for column in all_columns:
                     if column not in df.columns:
                         df[column] = ''
-                # Reorder columns alphabetically for consistency (same as bias analysis)
                 df = df[sorted(all_columns)]
                 df.to_csv(filepath, index=False, encoding='utf-8')
                 exported_files['research_post_questionnaire'] = filepath
             else:
-                # Create an empty file to indicate no data available
                 with open(filepath, 'w', encoding='utf-8') as f:
                     f.write('No post-questionnaire data available\n')
                 exported_files['research_post_questionnaire'] = filepath
@@ -449,49 +415,39 @@ class StudyDataManager:
         exported_files = {}
         
         try:
-            # Get post questionnaire column structure for reference
             post_questionnaire_columns = set()
             for participant in self.participants.values():
                 if participant.research_post:
-                    # Remove metadata from sample to get clean column structure
                     sample = participant.research_post.copy()
                     metadata_fields = ['timestamp', 'type', 'sessionId', 'session_id', 'analysisSessionData']
                     for field in metadata_fields:
                         sample.pop(field, None)
                     post_questionnaire_columns.update(sample.keys())
             
-            # Collect ALL unique columns from ALL bias analysis records
             bias_analysis_columns = set()
             for participant in self.participants.values():
                 if participant.bias_analysis:
                     sample = participant.bias_analysis.copy()
-                    # Remove analysis-related data and metadata, keep only questionnaire responses
                     fields_to_remove = ['biasSessionData', 'content', 'domain', 'facts', 'opinions', 'url', 'urls', 'title', 'timestamp', 'type', 'sessionId', 'session_id']
                     for field in fields_to_remove:
                         sample.pop(field, None)
                     bias_analysis_columns.update(sample.keys())
             
-            # Combine post questionnaire columns with bias-specific columns
             all_columns = post_questionnaire_columns.union(bias_analysis_columns)
             
-            # Export bias analysis questionnaire (post_experiment_questionnaire2 type)
             filename = f"bias_analysis_questionnaire_{timestamp}.csv"
             filepath = os.path.join(output_dir, filename)
             rows = []
             for participant in self.participants.values():
                 if participant.bias_analysis:
-                    # Extract only the questionnaire responses, exclude biasSessionData and other analysis data
                     questionnaire_data = participant.bias_analysis.copy()
                     
-                    # Remove analysis-related data and metadata, keep only questionnaire responses
                     fields_to_remove = ['biasSessionData', 'content', 'domain', 'facts', 'opinions', 'url', 'urls', 'title', 'timestamp', 'type', 'sessionId', 'session_id']
                     for field in fields_to_remove:
                         questionnaire_data.pop(field, None)
                     
-                    # Create aligned data structure with ALL columns (post + bias-specific)
                     aligned_data = {}
                     for column in all_columns:
-                        # Use bias analysis value if available, otherwise empty string
                         aligned_data[column] = questionnaire_data.get(column, '')
                     questionnaire_data = aligned_data
                     
@@ -499,16 +455,13 @@ class StudyDataManager:
             
             if rows:
                 df = pd.DataFrame(rows)
-                # Ensure all columns are present, even if empty
                 for column in all_columns:
                     if column not in df.columns:
                         df[column] = ''
-                # Reorder columns alphabetically for consistency
                 df = df[sorted(all_columns)]
                 df.to_csv(filepath, index=False, encoding='utf-8')
                 exported_files['bias_analysis_questionnaire'] = filepath
             else:
-                # Create an empty file to indicate no data available
                 with open(filepath, 'w', encoding='utf-8') as f:
                     f.write('No bias analysis questionnaire data available\n')
                 exported_files['bias_analysis_questionnaire'] = filepath
@@ -530,7 +483,6 @@ class StudyDataManager:
         exported_files = {}
         
         try:
-            # Export exit questionnaire
             filename = f"exit_questionnaire_{timestamp}.csv"
             filepath = os.path.join(output_dir, filename)
             rows = []
@@ -569,7 +521,6 @@ class StudyDataManager:
                 'num_interactions': len(participant.interactions)
             }
             
-            # Add pre-questionnaire data
             if participant.comprehensive_pre:
                 for key, value in participant.comprehensive_pre.items():
                     if key not in ['timestamp', 'session_id', 'type']:
@@ -580,13 +531,11 @@ class StudyDataManager:
                     if key not in ['timestamp', 'session_id', 'type']:
                         row[f'res_pre_{key}'] = value
             
-            # Add post-questionnaire data
             if participant.research_post:
                 for key, value in participant.research_post.items():
                     if key not in ['timestamp', 'session_id', 'type']:
                         row[f'res_post_{key}'] = value
             
-            # Add exit questionnaire data
             if participant.exit_questionnaire:
                 for key, value in participant.exit_questionnaire.items():
                     if key not in ['timestamp', 'session_id', 'type']:
@@ -692,7 +641,6 @@ class StudyDataManager:
             if participant.exit_questionnaire:
                 stats['completed_exit'] += 1
             
-            # Full study completion (has pre and post questionnaires)
             if ((participant.comprehensive_pre or participant.research_pre) and 
                 participant.research_post):
                 stats['completed_full_study'] += 1
@@ -703,5 +651,4 @@ class StudyDataManager:
         
         return stats
 
-# Global instance
 study_data_manager = StudyDataManager()

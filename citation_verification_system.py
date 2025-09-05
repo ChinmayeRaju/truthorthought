@@ -20,8 +20,8 @@ load_dotenv()
 @dataclass
 class CitationIssue:
     """Represents an issue found with a citation"""
-    issue_type: str  # 'broken_link', 'incomplete_info', 'low_credibility', 'missing_date', 'invalid_format'
-    severity: str    # 'critical', 'high', 'medium', 'low'
+    issue_type: str  
+    severity: str   
     description: str
     suggested_fix: str
     original_citation: Dict
@@ -37,8 +37,8 @@ class VerifiedSourceEntry:
     access_date: str
     snippet: str
     credibility_score: float
-    verification_status: str  # 'verified', 'partially_verified', 'unverified', 'broken'
-    citation_format: Dict  # Different citation formats (APA, MLA, Chicago, etc.)
+    verification_status: str  
+    citation_format: Dict  
     supporting_facts: List[str]
     
 class CitationVerificationSystem:
@@ -54,16 +54,13 @@ class CitationVerificationSystem:
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
         
-        # Authoritative domain rankings for credibility scoring
         self.domain_credibility = {
-            # Tier 1: Highest credibility (0.9-1.0)
             'bbc.co.uk': 0.95, 'bbc.com': 0.95,
             'reuters.com': 0.98,
             'ap.org': 0.97, 'apnews.com': 0.97,
             'npr.org': 0.92,
             'pbs.org': 0.90,
             
-            # Tier 2: High credibility (0.8-0.89)
             'cnn.com': 0.85, 'edition.cnn.com': 0.85,
             'theguardian.com': 0.88, 'guardian.com': 0.88,
             'nytimes.com': 0.87,
@@ -71,14 +68,12 @@ class CitationVerificationSystem:
             'wsj.com': 0.89,
             'economist.com': 0.88,
             
-            # Tier 3: Good credibility (0.7-0.79)
             'skynews.com': 0.75,
             'aljazeera.com': 0.78,
             'cbsnews.com': 0.76,
             'nbcnews.com': 0.76,
             'abcnews.go.com': 0.75,
             
-            # Government and Academic (0.85-0.95)
             '.gov': 0.92,
             '.edu': 0.88,
             '.ac.uk': 0.88,
@@ -86,7 +81,6 @@ class CitationVerificationSystem:
             'un.org': 0.90,
             'europa.eu': 0.89,
             
-            # Scientific (0.85-0.98)
             'nature.com': 0.96,
             'science.org': 0.96,
             'cell.com': 0.95,
@@ -130,12 +124,10 @@ class CitationVerificationSystem:
             if citations:
                 analysis_results['facts_with_citations'] += 1
                 
-                # Analyze each citation
                 for citation in citations:
                     issues = self._analyze_single_citation(citation)
                     analysis_results['citation_issues'].extend(issues)
                     
-                    # Categorize issues
                     for issue in issues:
                         if issue.issue_type == 'broken_link':
                             analysis_results['broken_links'].append(issue)
@@ -144,15 +136,12 @@ class CitationVerificationSystem:
                         elif issue.issue_type == 'low_credibility':
                             analysis_results['low_credibility_sources'].append(issue)
             
-            # Verify and enhance citations
             enhanced_citations = self._verify_and_enhance_citations(fact, analysis_data.get('domain', 'GENERAL'))
             if enhanced_citations:
                 analysis_results['verified_sources'].extend(enhanced_citations)
         
-        # Calculate overall citation quality score
         analysis_results['overall_score'] = self._calculate_citation_quality_score(analysis_results)
         
-        # Generate recommendations
         analysis_results['recommendations'] = self._generate_recommendations(analysis_results)
         
         return analysis_results
@@ -197,7 +186,6 @@ class CitationVerificationSystem:
                 original_citation=citation
             ))
         
-        # Check credibility score
         credibility = self._calculate_domain_credibility(domain or url)
         if credibility < 0.7:
             issues.append(CitationIssue(
@@ -208,7 +196,6 @@ class CitationVerificationSystem:
                 original_citation=citation
             ))
         
-        # Check for missing publication date
         if not citation.get('publication_date'):
             issues.append(CitationIssue(
                 issue_type='missing_date',
@@ -237,24 +224,20 @@ class CitationVerificationSystem:
         if not domain_or_url:
             return 0.5
         
-        # Extract domain from URL if needed
         if domain_or_url.startswith('http'):
             domain = urlparse(domain_or_url).netloc.lower()
         else:
             domain = domain_or_url.lower()
         
-        # Check exact matches first
         if domain in self.domain_credibility:
             return self.domain_credibility[domain]
         
-        # Check for partial matches (e.g., .gov, .edu)
         for pattern, score in self.domain_credibility.items():
             if pattern.startswith('.') and domain.endswith(pattern):
                 return score
             elif pattern in domain:
                 return score
         
-        # Default score for unknown domains
         return 0.6
     
     def _verify_and_enhance_citations(self, fact: Dict, domain: str) -> List[VerifiedSourceEntry]:
@@ -267,12 +250,10 @@ class CitationVerificationSystem:
         print(f"🔍 Verifying citations for: {sentence[:100]}...")
         
         try:
-            # Get verified citations from Gemini service
             verified_citations = self.gemini_service.get_citations_for_sentence(sentence, domain)
             
             enhanced_sources = []
             for i, vc in enumerate(verified_citations):
-                # Create enhanced source entry
                 source_entry = VerifiedSourceEntry(
                     id=f"source_{int(time.time())}_{i}",
                     title=vc.title,
@@ -298,7 +279,6 @@ class CitationVerificationSystem:
         """Generate multiple citation formats (APA, MLA, Chicago)"""
         current_date = datetime.now().strftime('%Y-%m-%d')
         
-        # Extract publication year from date if available
         pub_year = "n.d."
         if citation.publication_date:
             try:
@@ -306,12 +286,10 @@ class CitationVerificationSystem:
             except:
                 pub_year = "n.d."
         
-        # Clean title
         title = citation.title.strip()
         if not title.endswith('.'):
             title += '.'
         
-        # Extract author/organization from domain
         domain_parts = citation.domain.split('.')
         organization = domain_parts[0].title() if domain_parts else "Unknown"
         
@@ -328,17 +306,14 @@ class CitationVerificationSystem:
         if total_facts == 0:
             return 0.0
         
-        # Base score from citation coverage
         coverage_score = (analysis_results['facts_with_citations'] / total_facts) * 0.4
         
-        # Penalty for issues
         total_issues = len(analysis_results['citation_issues'])
         critical_issues = len([i for i in analysis_results['citation_issues'] if i.severity == 'critical'])
         high_issues = len([i for i in analysis_results['citation_issues'] if i.severity == 'high'])
         
         issue_penalty = (critical_issues * 0.2 + high_issues * 0.1) / max(total_facts, 1)
         
-        # Bonus for verified sources
         verified_bonus = min(len(analysis_results['verified_sources']) / total_facts, 0.3)
         
         final_score = max(0.0, min(1.0, coverage_score - issue_penalty + verified_bonus))
@@ -354,24 +329,19 @@ class CitationVerificationSystem:
         if total_facts == 0:
             return ["No facts found to analyze."]
         
-        # Coverage recommendations
         coverage_rate = facts_with_citations / total_facts
         if coverage_rate < 0.8:
             recommendations.append(f"Improve citation coverage: Only {coverage_rate:.1%} of facts have citations. Target: 90%+")
         
-        # Broken link recommendations
         if analysis_results['broken_links']:
             recommendations.append(f"Fix {len(analysis_results['broken_links'])} broken links - these are critical issues")
         
-        # Credibility recommendations
         if analysis_results['low_credibility_sources']:
             recommendations.append(f"Replace {len(analysis_results['low_credibility_sources'])} low-credibility sources with more authoritative ones")
         
-        # Completeness recommendations
         if analysis_results['incomplete_citations']:
             recommendations.append(f"Complete {len(analysis_results['incomplete_citations'])} incomplete citations with missing information")
         
-        # Quality recommendations
         overall_score = analysis_results['overall_score']
         if overall_score < 0.7:
             recommendations.append("Overall citation quality is below acceptable standards. Focus on high-credibility sources and complete information.")
@@ -387,7 +357,6 @@ class CitationVerificationSystem:
         if not verified_sources:
             return "No verified sources available."
         
-        # Sort sources by credibility score (highest first)
         sorted_sources = sorted(verified_sources, key=lambda x: x.credibility_score, reverse=True)
         
         sources_section = f"## Sources ({format_style.upper()} Format)\n\n"
@@ -454,23 +423,18 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         for i, rec in enumerate(analysis_results['recommendations'], 1):
             report += f"{i}. {rec}\n"
         
-        # Add verified sources section
         if analysis_results['verified_sources']:
             report += "\n" + self.generate_sources_section(analysis_results['verified_sources'])
         
-        # Write to file
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(report)
         
         print(f"📄 Citation analysis report saved to: {output_file}")
         return output_file
 
-# Example usage and testing
 if __name__ == "__main__":
-    # Test the citation verification system
     verification_system = CitationVerificationSystem()
     
-    # Mock analysis data for testing
     test_analysis_data = {
         'results': [
             {
@@ -487,7 +451,7 @@ if __name__ == "__main__":
             {
                 'sentence': 'Bitcoin reached an all-time high of over $60,000 in 2021.',
                 'final_classification': 'FACT',
-                'citations': []  # Missing citations
+                'citations': []  
             }
         ],
         'domain': 'SCIENCE'
@@ -496,10 +460,7 @@ if __name__ == "__main__":
     print("🔍 Testing Citation Verification System")
     print("=" * 60)
     
-    # Analyze the citation system
     analysis_results = verification_system.analyze_citation_system(test_analysis_data)
     
-    # Export report
     report_file = verification_system.export_citation_report(analysis_results)
     
-    print(f"\n✅ Analysis complete! Report saved to: {report_file}")

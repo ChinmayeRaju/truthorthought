@@ -775,15 +775,14 @@ class MultiRolePromptingSystem:
             return "ERROR: No sentences found to analyze"
         
         consensus_results = []
-        analysis_limit = min(len(sentences), 1)  # Limit for API costs with multi-role
-        
+        analysis_limit = min(len(sentences), 1) 
+
         for i, sentence in enumerate(sentences[:analysis_limit], 1):
             print(f"   Multi-role analyzing sentence {i}/{analysis_limit}...")
             consensus = self.multi_analyzer.analyze_sentence_multi_role(sentence, domain)
             consensus_results.append(consensus)
-            time.sleep(1)  # Rate limiting between sentences
+            time.sleep(1)  
         
-        # Store analysis data for chat interface
         self.last_analysis_data = {
             'content': data['content'],
             'results': consensus_results,
@@ -847,7 +846,6 @@ def main():
             f.write(result)
         print(f"\nMulti-role analysis saved to {filename}")
         
-        # Start interactive chat interface
         try:
             chat = system.get_chat_interface()
             chat.start_chat()

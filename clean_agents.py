@@ -16,7 +16,6 @@ from scraper import NewsContentScraper
 from gemini_citation_service import GeminiCitationService, VerifiedCitation
 from integrated_citation_validator import IntegratedCitationValidator
 
-# Load environment variables
 load_dotenv()
 
 # Domain-specific role configurations
@@ -108,7 +107,6 @@ class DomainDetector:
     def _llm_context_analysis(self, url: str, title: str, content: str) -> str:
         """Use LLM to analyze content context and determine domain"""
         try:
-            # Use substantial content for better context (up to 1500 chars)
             content_sample = content[:1500] if content else ""
             
             prompt = f"""Analyze this article's content and context to determine which domain/sector it belongs to. Focus on the MAIN TOPIC and PRIMARY SUBJECT MATTER.
@@ -155,7 +153,6 @@ Read the ENTIRE content carefully. Respond with ONLY the domain name:"""
             response = self.client.generate_content(prompt)
             detected_domain = response.strip().upper()
             
-            # Validate the response
             valid_domains = ['LIFESTYLE', 'CONFLICT', 'POLITICS', 'ENVIRONMENT', 'HEALTH', 
                            'TECHNOLOGY', 'FINANCE', 'SPORTS', 'ENTERTAINMENT', 'SCIENCE', 
                            'LEGAL', 'NEWS', 'GENERAL']
@@ -178,11 +175,10 @@ Read the ENTIRE content carefully. Respond with ONLY the domain name:"""
             
         text = (title + " " + content).lower()
         
-        # Parse URL for domain indicators
         parsed_url = urlparse(url.lower()) if url else None
         domain = parsed_url.netloc.lower() if parsed_url else ""
         path = parsed_url.path.lower() if parsed_url else ""
-        # Basic keyword detection for fallback
+        # Basic keyword detection
         if any(word in text for word in ['food', 'restaurant', 'brand', 'kfc', 'greggs', 'menu', 'collaboration']):
             return 'LIFESTYLE'
         elif any(word in text for word in ['deforestation', 'climate', 'environment', 'amazon rainforest', 'pollution']):
@@ -196,7 +192,6 @@ Read the ENTIRE content carefully. Respond with ONLY the domain name:"""
         elif any(word in text for word in ['football', 'basketball', 'sports', 'team', 'game', 'match']):
             return 'SPORTS'
         
-        # News domain fallback
         if any(keyword in domain for keyword in ['bbc', 'cnn', 'npr', 'nytimes', 'washingtonpost', 'guardian']):
             return 'NEWS'
         
@@ -243,7 +238,6 @@ class CleanGeminiClient:
             raise ValueError("GOOGLE_API_KEY not found in environment variables")
         
         genai.configure(api_key=api_key)
-        # Model equipped for search
         self.model = genai.GenerativeModel(
             'gemini-1.5-flash',
             tools=['google_search_retrieval']
@@ -287,12 +281,10 @@ class CitationVerifier:
             if not title or not url:
                 return False
             
-            # First, check URL accessibility
             if not self._check_url_accessibility(url):
                 print(f"❌ Citation rejected: {title} (Reason: URL_NOT_ACCESSIBLE)")
                 return False
             
-            # Enhanced verification prompt with URL accessibility confirmation
             prompt = f"""Verify if this citation is valid and relevant for the given fact claim.
 
 FACT CLAIM: {fact_text[:300]}
@@ -354,43 +346,34 @@ Response:"""
             from urllib.parse import urlparse
             from scraper import route_through_proxy
             
-            # Basic URL format validation
             parsed = urlparse(url)
             if not parsed.scheme or not parsed.netloc:
                 print(f"🔍 URL format invalid: {url}")
                 return False
             
-            # Route through proxy for better accessibility
             proxied_url = route_through_proxy(url)
             
-            # Try HEAD request first (faster)
             try:
                 response = requests.head(proxied_url, timeout=15, allow_redirects=True)
-                # Only accept 200 as truly accessible for HEAD requests
                 if response.status_code == 200:
                     return True
-                elif response.status_code == 405:  # Method not allowed, try GET
-                    pass  # Continue to GET request
+                elif response.status_code == 405: 
+                    pass  
                 else:
                     print(f"🔍 URL check failed: {url} (HEAD Status: {response.status_code})")
                     return False
             except requests.RequestException:
-                pass  # Continue to GET request if HEAD fails
+                pass  
             
-            # Try GET request as fallback or if HEAD returned 405
             try:
                 response = requests.get(proxied_url, timeout=15, allow_redirects=True)
-                # Be more strict - only 200 is acceptable
                 if response.status_code == 200:
-                    # Additional check: ensure we got actual content, not just a redirect page
-                    if len(response.content) > 1000:  # Must have substantial content
-                        # Extra validation: check if it's not an error page
+                    if len(response.content) > 1000:  
                         content_text = response.text.lower()
                         error_indicators = ['404', 'not found', 'page not found', 'error', 'access denied', 
                                           'forbidden', 'unauthorized', 'temporarily unavailable',
                                           'this page does not exist', 'page cannot be found']
                         
-                        # If content contains error indicators, reject it
                         if any(indicator in content_text for indicator in error_indicators):
                             print(f"🔍 URL check failed: {url} (Content indicates error page)")
                             return False
@@ -408,7 +391,7 @@ Response:"""
             
         except Exception as e:
             print(f"🔍 URL accessibility check failed for {url}: {e}")
-            return False  # If we can't check, assume it's not accessible
+            return False  
 
 class Agent:
     """Base agent class"""
@@ -421,7 +404,6 @@ class Agent:
     def analyze(self, content: str, full_article_context: str = "") -> AnalysisResult:
         """Analyze content with web grounding and full article context"""
         
-        # Prepare context section if full article is provided
         context_section = ""
         if full_article_context and len(full_article_context.strip()) > 0:
             context_section = f"""
@@ -534,27 +516,23 @@ Make sure all strings are properly quoted and there are no trailing commas. For 
     def _parse_response(self, response: str) -> AnalysisResult:
         """Parse JSON response from agent"""
         try:
-            # Clean the response to extract JSON
             response = response.strip()
             if response.startswith('```json'):
                 response = response[7:]
             if response.endswith('```'):
                 response = response[:-3]
             
-            # Try to find JSON block within the response
             start = response.find('{')
             end = response.rfind('}') + 1
             if start != -1 and end > start:
                 json_str = response[start:end]
                 
-                # Clean up common JSON formatting issues
-                json_str = json_str.replace('\n', ' ')  # Remove newlines
-                json_str = re.sub(r',\s*}', '}', json_str)  # Remove trailing commas
-                json_str = re.sub(r',\s*]', ']', json_str)  # Remove trailing commas in arrays
+                json_str = json_str.replace('\n', ' ') 
+                json_str = re.sub(r',\s*}', '}', json_str)  
+                json_str = re.sub(r',\s*]', ']', json_str) 
                 
                 data = json.loads(json_str)
             else:
-                # If no valid JSON structure found, create a default structure
                 print(f"No valid JSON found in response: {response[:100]}...")
                 data = {
                     'classification': 'MIXED',
@@ -602,7 +580,6 @@ class ConsensusBuilder:
                 sources_summary=[]
             )
         
-        # Count classifications
         classifications = [r.classification for r in results]
         fact_count = classifications.count('FACT')
         opinion_count = classifications.count('OPINION')
@@ -610,7 +587,6 @@ class ConsensusBuilder:
         
         total_agents = len(results)
         
-        # Determine final classification based on majority
         if fact_count > opinion_count and fact_count > mixed_count:
             final_classification = 'FACT'
             agreeing_results = [r for r in results if r.classification == 'FACT']
@@ -618,9 +594,8 @@ class ConsensusBuilder:
             final_classification = 'OPINION'
             agreeing_results = [r for r in results if r.classification == 'OPINION']
         elif fact_count == opinion_count and fact_count > mixed_count:
-            # Equal facts and opinions - tie situation
-            final_classification = 'CONTESTED'  # Neither clearly fact nor opinion
-            agreeing_results = results  # Use all results for confidence calculation
+            final_classification = 'CONTESTED' 
+            agreeing_results = results 
         elif mixed_count >= fact_count and mixed_count >= opinion_count:
             final_classification = 'MIXED'
             agreeing_results = [r for r in results if r.classification == 'MIXED']
@@ -628,25 +603,19 @@ class ConsensusBuilder:
             final_classification = 'INCONCLUSIVE'
             agreeing_results = results
         
-        # Calculate confidence score
         if final_classification == 'CONTESTED':
-            # For contested results, average all confidences but reduce overall confidence
             all_confidences = [r.confidence for r in results]
             base_confidence = sum(all_confidences) / len(all_confidences)
-            confidence = base_confidence * 0.7  # Reduce confidence for contested results
+            confidence = base_confidence * 0.7 
         elif agreeing_results:
-            # Average confidence of agreeing agents
             confidence = sum(r.confidence for r in agreeing_results) / len(agreeing_results)
-            # Boost confidence based on consensus strength
             consensus_ratio = len(agreeing_results) / total_agents
-            confidence = confidence * (0.5 + 0.5 * consensus_ratio)  # Scale between 50-100% of original
+            confidence = confidence * (0.5 + 0.5 * consensus_ratio) 
         else:
             confidence = 0.5
         
-        # Ensure confidence is between 0 and 1
         confidence = max(0.0, min(1.0, confidence))
         
-        # Build consensus reasoning with vote breakdown
         reasoning_parts = []
         reasoning_parts.append(f"Vote breakdown: {fact_count} FACT, {opinion_count} OPINION, {mixed_count} MIXED out of {total_agents} agents")
         
@@ -655,12 +624,10 @@ class ConsensusBuilder:
         
         consensus_reasoning = f"Final classification: {final_classification} | " + " | ".join(reasoning_parts)
         
-        # Aggregate evidence
         evidence_summary = []
         for result in results:
             evidence_summary.extend(result.evidence)
 
-        # Aggregate sources
         sources_summary = []
         seen_urls = set()
         for result in results:
@@ -693,17 +660,13 @@ class CleanAnalysisSystem:
         self.client = CleanGeminiClient()
         self.consensus_builder = ConsensusBuilder()
         self.scraper = NewsContentScraper()
-        # Pass the LLM client to the domain detector for intelligent detection
         self.domain_detector = DomainDetector(self.client)
-        # Add Gemini citation service with Google Search grounding
         self.citation_service = GeminiCitationService()
-        # Add integrated citation validator for comprehensive URL validation
         self.citation_validator = IntegratedCitationValidator()
         self.last_analysis_data = None
         self.formatter = SimpleFormatter()
         self.current_domain = 'GENERAL'
         
-        # Initialize with default GENERAL agents
         self.agents = self._create_agents_for_domain('GENERAL')
     
     def _extract_source_name_from_url(self, url: str) -> str:
@@ -715,11 +678,9 @@ class CleanAnalysisSystem:
         parsed = urlparse(url.lower())
         domain = parsed.netloc
         
-        # Remove 'www.' prefix if present
         if domain.startswith('www.'):
             domain = domain[4:]
         
-        # Map common domains to readable source names
         source_mapping = {
             'bbc.co.uk': 'BBC',
             'bbc.com': 'BBC',
@@ -772,11 +733,9 @@ class CleanAnalysisSystem:
             'arstechnica.com': 'Ars Technica'
         }
         
-        # Check for exact domain matches
         if domain in source_mapping:
             return source_mapping[domain]
         
-        # Fallback: capitalize domain name and remove TLD
         if '.' in domain:
             base_domain = domain.split('.')[0]
             return base_domain.capitalize()
@@ -800,13 +759,10 @@ class CleanAnalysisSystem:
         parsed = urlparse(url.lower())
         domain = parsed.netloc
         
-        # Remove 'www.' prefix if present
         if domain.startswith('www.'):
             domain = domain[4:]
         
-        # Define color schemes for different outlet types
         outlet_colors = {
-            # Major International News
             'bbc.co.uk': {'color': '#BB1919', 'style': 'primary'},
             'bbc.com': {'color': '#BB1919', 'style': 'primary'},
             'cnn.com': {'color': '#CC0000', 'style': 'primary'},
@@ -816,7 +772,6 @@ class CleanAnalysisSystem:
             'washingtonpost.com': {'color': '#002244', 'style': 'primary'},
             'independent.co.uk': {'color': '#DC143C', 'style': 'primary'},
             
-            # Indian News Outlets
             'economictimes.indiatimes.com': {'color': '#FF8C00', 'style': 'warning'},
             'economictimes.com': {'color': '#FF8C00', 'style': 'warning'},
             'timesofindia.indiatimes.com': {'color': '#1E3A8A', 'style': 'info'},
@@ -824,22 +779,18 @@ class CleanAnalysisSystem:
             'indianexpress.com': {'color': '#8B0000', 'style': 'primary'},
             'ndtv.com': {'color': '#FF4500', 'style': 'warning'},
             
-            # Business & Finance
             'bloomberg.com': {'color': '#000000', 'style': 'dark'},
             'wsj.com': {'color': '#0274B6', 'style': 'info'},
             'financialexpress.com': {'color': '#1B4F72', 'style': 'info'},
             'moneycontrol.com': {'color': '#2E8B57', 'style': 'success'},
             
-            # Technology
             'techcrunch.com': {'color': '#0F7B0F', 'style': 'success'},
             'theverge.com': {'color': '#FA4616', 'style': 'warning'},
             'wired.com': {'color': '#000000', 'style': 'dark'},
             
-            # Default fallback
             'default': {'color': '#6B7280', 'style': 'secondary'}
         }
         
-        # Get color scheme for this outlet
         color_scheme = outlet_colors.get(domain, outlet_colors['default'])
         
         return {
@@ -916,10 +867,8 @@ class CleanAnalysisSystem:
         print(f"Scraped {len(scraped_data['content'])} characters")
         print(f"Title: {scraped_data.get('title', 'N/A')}")
         
-        # Add URL to scraped data for source tracking
         scraped_data['url'] = url
         
-        # Detect domain and update agents
         detected_domain = self.domain_detector.detect_domain(
             url,
             scraped_data.get('title', ''),
@@ -981,27 +930,23 @@ class CleanAnalysisSystem:
             response = self.client.generate_content(prompt)
             formatted_content = response.strip()
             
-            # Additional post-processing to ensure no media references
             lines = formatted_content.split('\n')
             clean_lines = []
             
             for line in lines:
                 line_lower = line.lower()
-                # Skip lines that contain media references
                 if any(word in line_lower for word in [
                     'photograph:', 'image:', 'video:', 'getty images', 'afp', 'reuters',
                     'view image', 'fullscreen', 'screenshot', 'photo by', 'credit:',
                     'shutterstock', 'associated press', 'ap photo', 'picture:'
                 ]):
                     continue
-                # Skip very short lines that might be captions
                 if len(line.strip()) < 20 and any(word in line_lower for word in ['photo', 'image', 'video']):
                     continue
                 clean_lines.append(line)
             
             formatted_content = '\n'.join(clean_lines)
             
-            # Ensure we have a proper title
             if not formatted_content.startswith('#'):
                 formatted_content = f"# {title}\n\n{formatted_content}"
             
@@ -1018,29 +963,23 @@ class CleanAnalysisSystem:
             return "ERROR: No sentences found to analyze"
         
         consensus_results = []
-        # Always analyze exactly 5 sentences per URL (not 5 total across all URLs)
         analysis_limit = min(len(sentences), 5)
         
         print(f"📊 Analyzing {analysis_limit} sentences from this URL (5 sentences per URL policy)")
         
         for i, sentence in enumerate(sentences[:analysis_limit], 1):
             print(f"   Analyzing sentence {i}/{analysis_limit} from this URL...")
-            # Pass the full article content as context for better classification
             consensus = self.analyze_single_content(sentence, domain, data['content'])
             consensus_results.append(consensus)
-            time.sleep(1)  # Rate limiting between sentences
+            time.sleep(1) 
         
-        # Store analysis data for later access
-        # Convert ConsensusResult objects to dictionaries for compatibility
         formatted_results = []
         for i, consensus in enumerate(consensus_results):
             sentence_text = sentences[i] if i < len(sentences) else f"Result {i+1}"
             
-            # Extract citation information from sources if this is a FACT
             citations = []
-            attributed_sentence = sentence_text  # Default to original sentence
-            
-            # Create source-attributed sentence based on the original URL
+            attributed_sentence = sentence_text  
+
             source_url = data.get('url', '')
             if source_url:
                 source_name = self._extract_source_name_from_url(source_url)
@@ -1050,7 +989,6 @@ class CleanAnalysisSystem:
             if hasattr(consensus, 'final_classification') and consensus.final_classification == 'FACT':
                 print(f"🔍 Getting verified citations for FACT using Gemini with Google Search...")
                 
-                # Use Gemini citation service to find and verify citations
                 verified_citations = self.citation_service.get_citations_for_sentence(
                     sentence_text, domain
                 )
@@ -1058,7 +996,6 @@ class CleanAnalysisSystem:
                 if verified_citations:
                     print(f"✅ Found {len(verified_citations)} verified citations with Google Search")
                     
-                    # Convert VerifiedCitation objects to dictionary format for compatibility
                     citations = []
                     for vc in verified_citations:
                         citations.append({
@@ -1070,57 +1007,47 @@ class CleanAnalysisSystem:
                             'reasoning': vc.reasoning
                         })
                     
-                    # For critical domains (POLITICS, CONFLICT), show multiple sources
-                    # For other domains, show primary source but keep others available
+                  
                     critical_domains = ['POLITICS', 'CONFLICT', 'WAR', 'LEGAL']
                     if domain in critical_domains:
-                        # Show up to 4 verified sources for critical domains
                         citations = citations[:4]
                     else:
-                        # Show up to 2 verified sources for other domains
                         citations = citations[:2]
                         
                 else:
                     print(f"⚠️  No verified citations found for fact using Gemini, but keeping original LLM classification")
-                    # Let the LLM's intelligent classification stand - it already considered the context and nature of the statement
-                    # The enhanced prompt should have guided the LLM to classify appropriately based on factual vs subjective nature
                     consensus.consensus_reasoning = f"{consensus.consensus_reasoning} Note: No working citation URLs found, but maintaining original classification based on LLM's intelligent analysis of statement nature and context."
             
-            # Create source tag metadata for UI rendering
             source_tag = self._create_source_tag(source_url)
             
-            # Create a result object that matches what the frontend expects
             formatted_result = {
-                'sentence': attributed_sentence,  # Use source-attributed sentence for facts
-                'original_sentence': sentence_text,  # Keep original for reference
-                'source_url': source_url,  # Add source URL for reference
-                'source_name': source_tag['name'],  # Use normalized source name from tag
-                'source_tag': source_tag,  # Complete source tag metadata for UI rendering
+                'sentence': attributed_sentence, 
+                'original_sentence': sentence_text,  
+                'source_url': source_url,  
+                'source_name': source_tag['name'], 
+                'source_tag': source_tag,  
                 'final_classification': consensus.final_classification if hasattr(consensus, 'final_classification') else 'MIXED',
                 'consensus_confidence': consensus.confidence if hasattr(consensus, 'confidence') else 0.5,
-                'citation': citations[0] if citations else None,  # Primary citation for backward compatibility
-                'citations': citations,  # Multiple citations for enhanced display
+                'citation': citations[0] if citations else None, 
+                'citations': citations, 
                 'consensus_reasoning': consensus.consensus_reasoning if hasattr(consensus, 'consensus_reasoning') else 'Analysis completed'
             }
             formatted_results.append(formatted_result)
         
-        # Store initial analysis data
         initial_analysis_data = {
             'content': data['content'],
-            'results': formatted_results,  # Use formatted results
+            'results': formatted_results,  
             'consensus_result': {
                 'sources_summary': self._extract_sources_from_results(consensus_results)
             },
-            'domain': domain,  # Store the detected domain
+            'domain': domain, 
             'title': data.get('title', ''),
             'url': data.get('url', '')
         }
         
-        # Apply comprehensive URL validation to filter facts with working sources
         print(f"🔧 Applying comprehensive URL validation to filter facts...")
         self.last_analysis_data = self.citation_validator.get_verified_facts_with_working_sources(initial_analysis_data)
         
-        # Format output similar to the MultiRolePromptingSystem
         return self._format_results(consensus_results, data.get('title', ''), domain)
     
     def _extract_sources_from_results(self, consensus_results):
@@ -1129,13 +1056,11 @@ class CleanAnalysisSystem:
         seen_urls = set()
         
         for result in consensus_results:
-            # Access sources_summary attribute correctly from ConsensusResult
             if hasattr(result, 'sources_summary') and result.sources_summary:
                 for source in result.sources_summary:
                     if isinstance(source, dict) and source.get('url') and source['url'] not in seen_urls:
                         sources.append(source)
                         seen_urls.add(source['url'])
-            # Also check agent_results for individual agent sources
             elif hasattr(result, 'agent_results'):
                 for agent_result in result.agent_results:
                     if hasattr(agent_result, 'sources') and agent_result.sources:
@@ -1173,23 +1098,19 @@ Respond with ONLY a JSON array of the extracted sentences. No other text:
             response = self.client.generate_content(prompt)
             response_text = response.strip()
             
-            # Parse JSON response - handle markdown formatting
             import json
             try:
-                # Clean up response text - remove markdown formatting
                 clean_response = response_text.strip()
                 if clean_response.startswith('```json'):
-                    clean_response = clean_response[7:]  # Remove ```json
+                    clean_response = clean_response[7:]  
                 if clean_response.endswith('```'):
-                    clean_response = clean_response[:-3]  # Remove ```
+                    clean_response = clean_response[:-3] 
                 clean_response = clean_response.strip()
                 
                 sentences = json.loads(clean_response)
                 if isinstance(sentences, list):
-                    # Ensure we have at most 5 sentences
                     valid_sentences = sentences[:5]
                     
-                    # Ensure each sentence is well-formed
                     processed_sentences = []
                     for sentence in valid_sentences:
                         if isinstance(sentence, str) and len(sentence.strip()) > 10:
@@ -1215,10 +1136,8 @@ Respond with ONLY a JSON array of the extracted sentences. No other text:
         """Fallback method using rule-based extraction if LLM fails"""
         print("🔄 Using fallback rule-based sentence extraction...")
         
-        # Basic sentence splitting
         sentences = re.split(r'(?<=[.!?])\s+(?=[A-Z])', text)
         
-        # Simple filtering
         filtered_sentences = []
         for s in sentences:
             s = s.strip()
@@ -1227,18 +1146,15 @@ Respond with ONLY a JSON array of the extracted sentences. No other text:
                 
             s_lower = s.lower()
             
-            # Skip obvious metadata/timestamps
             if any(pattern in s_lower for pattern in [
                 'published', 'updated', 'photo', 'image', 'video', 'getty', 'reuters',
                 'share', 'follow', 'subscribe', 'click here', 'read more'
             ]):
                 continue
             
-            # Ensure well-formed
             s = self._ensure_well_formed_sentence(s)
             filtered_sentences.append(s)
             
-            # Limit to 5 sentences
             if len(filtered_sentences) >= 5:
                 break
         
@@ -1248,11 +1164,9 @@ Respond with ONLY a JSON array of the extracted sentences. No other text:
         """Ensure sentence is well-formed with proper punctuation and capitalization"""
         sentence = sentence.strip()
         
-        # Capitalize first letter
         if sentence and sentence[0].islower():
             sentence = sentence[0].upper() + sentence[1:]
         
-        # Ensure proper ending punctuation
         if sentence and sentence[-1] not in '.!?':
             sentence += '.'
         
@@ -1269,20 +1183,16 @@ Respond with ONLY a JSON array of the extracted sentences. No other text:
         while i < len(sentences):
             current_sentence = sentences[i]
             
-            # Check if next sentence should be grouped with current one
             if i + 1 < len(sentences):
                 next_sentence = sentences[i + 1]
                 
-                # Group sentences if they are related (same topic, continuation, etc.)
                 if self._should_group_sentences(current_sentence, next_sentence):
-                    # Combine sentences for fact checking
                     combined = f"{current_sentence} {next_sentence}"
                     grouped_sentences.append(combined)
                     print(f"📝 Grouped related sentences: {combined[:100]}...")
-                    i += 2  # Skip next sentence as it's been combined
+                    i += 2 
                     continue
             
-            # Add single sentence
             grouped_sentences.append(current_sentence)
             i += 1
         
@@ -1290,11 +1200,9 @@ Respond with ONLY a JSON array of the extracted sentences. No other text:
     
     def _should_group_sentences(self, sentence1: str, sentence2: str) -> bool:
         """Determine if two sentences should be grouped for fact checking"""
-        # Convert to lowercase for comparison
         s1_lower = sentence1.lower()
         s2_lower = sentence2.lower()
         
-        # Group if second sentence starts with connecting words
         connecting_words = [
             'this', 'that', 'these', 'those', 'it', 'they', 'he', 'she',
             'however', 'moreover', 'furthermore', 'additionally', 'meanwhile',
@@ -1305,13 +1213,10 @@ Respond with ONLY a JSON array of the extracted sentences. No other text:
         if first_word in connecting_words:
             return True
         
-        # Group if sentences are short and likely part of same fact
         if len(sentence1) < 80 and len(sentence2) < 80:
-            # Check for shared keywords (names, places, numbers)
             words1 = set(s1_lower.split())
             words2 = set(s2_lower.split())
             
-            # Look for proper nouns, numbers, or specific terms
             shared_important = words1.intersection(words2)
             important_words = [w for w in shared_important if
                              len(w) > 3 and (w[0].isupper() or w.isdigit() or
@@ -1322,13 +1227,9 @@ Respond with ONLY a JSON array of the extracted sentences. No other text:
         
         return False
         
-        print(f"Debug: Original sentences: {len(sentences)}, Filtered: {len(filtered_sentences)}")
-        print(f"Debug: First 3 filtered sentences: {filtered_sentences[:3] if filtered_sentences else 'None'}")
-        return filtered_sentences
     
     def _format_results(self, consensus_results: List[ConsensusResult], title: str = "", domain: str = "GENERAL") -> str:
         """Format analysis results - return empty for bias research to avoid cluttering interface"""
-        # Return empty string to completely remove consensus summary from display
         return ""
         
         return "\n".join(output)

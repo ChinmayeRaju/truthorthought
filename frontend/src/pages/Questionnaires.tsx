@@ -50,7 +50,6 @@ const Questionnaires: React.FC = () => {
       setLoading(true);
       const values = await form.validateFields();
       
-      // Generate session ID
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
       const dataToSave = {
@@ -60,11 +59,9 @@ const Questionnaires: React.FC = () => {
         type: 'basic'
       };
       
-      // Submit to backend (saves to Excel)
       const response = await apiService.submitQuestionnaire(dataToSave);
       
       if (response.success) {
-        // Also store questionnaire data in localStorage as backup
         localStorage.setItem(`questionnaire_${sessionId}`, JSON.stringify(dataToSave));
         
         message.success('Questionnaire completed and saved! Redirecting to analysis...');

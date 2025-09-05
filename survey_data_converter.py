@@ -13,9 +13,7 @@ from datetime import datetime
 
 class SurveyDataConverter:
     def __init__(self):
-        # Define conversion mappings
         self.nasa_tlx_mapping = {
-            # Already correct 0-100 scale
             0: 0,   # Very Low
             25: 25, # Low  
             50: 50, # Medium
@@ -23,7 +21,6 @@ class SurveyDataConverter:
             100: 100 # Very High
         }
         
-        # Convert 1-5 scale to 0-100 scale for System Understanding
         self.system_understanding_mapping = {
             1: 0,   # Very Unclear
             2: 25,  # Unclear
@@ -32,7 +29,6 @@ class SurveyDataConverter:
             5: 100  # Very Clear
         }
         
-        # Convert 1-5 scale to 0-100 scale for Model Impact
         self.model_impact_mapping = {
             1: 0,   # Strongly Disagree / Very Difficult
             2: 25,  # Disagree / Difficult
@@ -41,17 +37,14 @@ class SurveyDataConverter:
             5: 100  # Strongly Agree / Very Easy
         }
         
-        # Usability scales (1-7) - keep as is
         self.usability_mapping = {
             1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7
         }
         
-        # Prior Knowledge (1-5) - keep as is
         self.prior_knowledge_mapping = {
             1: 1, 2: 2, 3: 3, 4: 4, 5: 5
         }
         
-        # Define field categories
         self.nasa_tlx_fields = [
             'mentalDemand', 'effortRequired', 'frustrationLevel', 
             'physicalDemand', 'temporalDemand', 'performance', 'effort', 'frustration'
@@ -86,40 +79,31 @@ class SurveyDataConverter:
         if pd.isna(value) or value == '' or value == 'nan':
             return ''
         
-        # Handle text fields - keep as is
         if field_name in self.text_fields:
             return str(value)
         
-        # Handle numeric conversions
         try:
             numeric_value = float(value)
             
-            # NASA-TLX fields (already 0-100, but ensure consistency)
             if field_name in self.nasa_tlx_fields:
                 return int(numeric_value)
             
-            # System Understanding fields (convert 1-5 to 0-100)
             elif field_name in self.system_understanding_fields:
                 return self.system_understanding_mapping.get(int(numeric_value), int(numeric_value))
             
-            # Model Impact fields (convert 1-5 to 0-100)
             elif field_name in self.model_impact_fields:
                 return self.model_impact_mapping.get(int(numeric_value), int(numeric_value))
             
-            # Usability fields (keep 1-7 as is)
             elif field_name in self.usability_fields:
                 return int(numeric_value)
             
-            # Prior Knowledge fields (keep 1-5 as is)
             elif field_name in self.prior_knowledge_fields:
                 return int(numeric_value)
             
             else:
-                # Unknown field, keep as is
                 return int(numeric_value)
                 
         except (ValueError, TypeError):
-            # If conversion fails, return as string
             return str(value)
 
     def convert_csv_file(self, input_file, output_file=None):
@@ -129,28 +113,23 @@ class SurveyDataConverter:
             return False
         
         try:
-            # Read the CSV file
             df = pd.read_csv(input_file)
             
             print(f"Converting {input_file}...")
             print(f"Original shape: {df.shape}")
             
-            # Convert each field
             for column in df.columns:
                 if column in df.columns:
                     df[column] = df[column].apply(lambda x: self.convert_value(x, column))
             
-            # Generate output filename if not provided
             if output_file is None:
                 base_name = os.path.splitext(input_file)[0]
                 output_file = f"{base_name}_converted.csv"
             
-            # Save converted data
             df.to_csv(output_file, index=False)
             print(f"Converted data saved to: {output_file}")
             print(f"Converted shape: {df.shape}")
             
-            # Show sample of converted data
             print("\nSample of converted data:")
             print(df.head())
             print("\n" + "="*50 + "\n")
@@ -169,7 +148,6 @@ class SurveyDataConverter:
             print(f"Research data directory not found: {research_data_dir}")
             return
         
-        # Find all CSV files
         csv_files = glob.glob(os.path.join(research_data_dir, "*.csv"))
         
         if not csv_files:
@@ -181,10 +159,8 @@ class SurveyDataConverter:
             print(f"  - {file}")
         print()
         
-        # Convert each file
         converted_files = []
         for csv_file in csv_files:
-            # Skip already converted files
             if "_converted" in csv_file:
                 continue
                 
@@ -236,10 +212,8 @@ def main():
     print("Survey Data Converter")
     print("=" * 30)
     
-    # Show conversion mappings
     converter.show_conversion_mapping()
     
-    # Convert all survey data
     converter.convert_all_survey_data()
 
 

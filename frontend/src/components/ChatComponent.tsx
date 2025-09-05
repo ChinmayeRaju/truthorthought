@@ -217,7 +217,6 @@ What would you like to know about this analysis?`,
         />
       </div>
 
-      {/* Suggested Questions */}
       {currentSuggestions.length > 0 && (
         <div style={{ marginBottom: 16 }}>
           <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -251,7 +250,6 @@ What would you like to know about this analysis?`,
         </div>
       )}
       
-      {/* Input Area */}
       <div style={{ display: 'flex', gap: 12 }}>
         <Input.TextArea
           value={inputValue}

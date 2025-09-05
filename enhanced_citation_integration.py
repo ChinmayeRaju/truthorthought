@@ -26,10 +26,8 @@ class EnhancedCitationIntegration:
         if not analysis_data or 'results' not in analysis_data:
             return analysis_data
         
-        # First, analyze current citation quality
         citation_analysis = self.verification_system.analyze_citation_system(analysis_data)
         
-        # Enhance each fact with verified citations
         enhanced_results = []
         facts = [r for r in analysis_data['results'] if r.get('final_classification') == 'FACT']
         
@@ -41,14 +39,12 @@ class EnhancedCitationIntegration:
             if result.get('final_classification') == 'FACT':
                 print(f"   Enhancing fact {len([r for r in enhanced_results if r.get('final_classification') == 'FACT']) + 1}...")
                 
-                # Get verified citations for this fact
                 sentence = result.get('original_sentence', result.get('sentence', ''))
                 domain = analysis_data.get('domain', 'GENERAL')
                 
                 verified_citations = self.gemini_service.get_citations_for_sentence(sentence, domain)
                 
                 if verified_citations:
-                    # Convert to enhanced format
                     enhanced_citations = []
                     for vc in verified_citations:
                         enhanced_citation = {
@@ -66,34 +62,29 @@ class EnhancedCitationIntegration:
                         }
                         enhanced_citations.append(enhanced_citation)
                     
-                    # Update the result with enhanced citations
                     enhanced_result['citations'] = enhanced_citations
                     enhanced_result['citation'] = enhanced_citations[0] if enhanced_citations else None
                     enhanced_result['citation_quality_score'] = max([c['verification_score'] for c in enhanced_citations]) if enhanced_citations else 0.0
                     enhanced_result['total_supporting_sources'] = len(enhanced_citations)
                     
-                    # Create source-attributed sentence
                     if enhanced_citations:
                         primary_source = enhanced_citations[0]
                         source_name = self._extract_clean_source_name(primary_source['domain'])
                         enhanced_result['attributed_sentence'] = f"{source_name} reported {sentence}"
                     
                 else:
-                    # No verified citations found - mark as potential issue
                     enhanced_result['citation_warning'] = "No verified citations found - consider reclassifying as opinion"
                     enhanced_result['citation_quality_score'] = 0.0
                     enhanced_result['total_supporting_sources'] = 0
             
             enhanced_results.append(enhanced_result)
         
-        # Update analysis data with enhanced results
         enhanced_analysis_data = analysis_data.copy()
         enhanced_analysis_data['results'] = enhanced_results
         enhanced_analysis_data['citation_analysis'] = citation_analysis
         enhanced_analysis_data['enhancement_timestamp'] = time.strftime('%Y-%m-%d %H:%M:%S')
         enhanced_analysis_data['total_verified_sources'] = len(citation_analysis.get('verified_sources', []))
         
-        # Add summary statistics
         facts_with_verified_citations = len([r for r in enhanced_results 
                                            if r.get('final_classification') == 'FACT' and r.get('citations')])
         total_facts = len([r for r in enhanced_results if r.get('final_classification') == 'FACT'])
@@ -128,7 +119,6 @@ class EnhancedCitationIntegration:
         """Generate multiple citation formats"""
         current_date = time.strftime('%Y-%m-%d')
         
-        # Extract publication year
         pub_year = "n.d."
         if hasattr(citation, 'publication_date') and citation.publication_date:
             try:
@@ -136,12 +126,10 @@ class EnhancedCitationIntegration:
             except:
                 pub_year = "n.d."
         
-        # Clean title
         title = citation.title.strip()
         if not title.endswith('.'):
             title += '.'
         
-        # Extract organization from domain
         domain_parts = citation.domain.split('.')
         organization = domain_parts[0].title() if domain_parts else "Unknown"
         
@@ -182,12 +170,10 @@ class EnhancedCitationIntegration:
         
         domain_lower = domain.lower()
         
-        # Check for exact matches
         for domain_key, source_name in source_mapping.items():
             if domain_key in domain_lower:
                 return source_name
         
-        # Fallback: capitalize first part of domain
         if '.' in domain:
             base_domain = domain.split('.')[0]
             return base_domain.title()
@@ -201,7 +187,6 @@ class EnhancedCitationIntegration:
         if not enhanced_analysis_data or 'results' not in enhanced_analysis_data:
             return "No analysis data available for sources section."
         
-        # Collect all verified citations from facts
         all_citations = []
         seen_urls = set()
         
@@ -216,10 +201,8 @@ class EnhancedCitationIntegration:
         if not all_citations:
             return "No verified sources available."
         
-        # Sort by verification score (highest first)
         all_citations.sort(key=lambda x: x.get('verification_score', 0), reverse=True)
         
-        # Generate sources section
         sources_section = f"""# Verified Sources and Citations
 
 *Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}*
@@ -235,12 +218,10 @@ class EnhancedCitationIntegration:
 """
         
         for i, citation in enumerate(all_citations, 1):
-            # Get citation format
             citation_formats = citation.get('citation_formats', {})
             citation_text = citation_formats.get(format_style, citation_formats.get('apa', ''))
             
             if not citation_text:
-                # Fallback citation format
                 title = citation.get('title', 'Unknown Title')
                 url = citation.get('url', '')
                 domain = citation.get('domain', '')
@@ -249,7 +230,6 @@ class EnhancedCitationIntegration:
             
             sources_section += f"**{i}.** {citation_text}\n\n"
             
-            # Add metadata
             sources_section += f"   - **URL:** [{citation.get('url', 'N/A')}]({citation.get('url', '#')})\n"
             sources_section += f"   - **Credibility Score:** {citation.get('verification_score', 0):.2f}/1.0 ({citation.get('credibility_level', 'Unknown')})\n"
             sources_section += f"   - **Domain:** {citation.get('domain', 'Unknown')}\n"
@@ -266,7 +246,6 @@ class EnhancedCitationIntegration:
             
             sources_section += "\n"
         
-        # Add citation quality summary
         citation_summary = enhanced_analysis_data.get('citation_quality_summary', {})
         if citation_summary:
             sources_section += f"""## Citation Quality Assessment
@@ -303,7 +282,6 @@ class EnhancedCitationIntegration:
         print(f"📄 Enhanced sources section saved to: {filename}")
         return filename
 
-# Integration function for the main application
 def integrate_enhanced_citations_into_analysis(analysis_system: CleanAnalysisSystem, url: str) -> Dict:
     """
     Integrate enhanced citations into the main analysis workflow
@@ -311,7 +289,6 @@ def integrate_enhanced_citations_into_analysis(analysis_system: CleanAnalysisSys
     """
     print("🚀 Starting enhanced citation integration...")
     
-    # Perform standard analysis
     result = analysis_system.analyze_url(url)
     analysis_data = analysis_system.last_analysis_data
     
@@ -330,13 +307,10 @@ def integrate_enhanced_citations_into_analysis(analysis_system: CleanAnalysisSys
     print("✅ Enhanced citation integration complete!")
     return enhanced_data
 
-# Example usage and testing
 if __name__ == "__main__":
-    # Test the enhanced citation integration
     print("🔍 Testing Enhanced Citation Integration")
     print("=" * 60)
     
-    # Create mock analysis data for testing
     test_analysis_data = {
         'results': [
             {
@@ -364,11 +338,9 @@ if __name__ == "__main__":
         'url': 'https://example.com/test'
     }
     
-    # Test the integration
     integration_system = EnhancedCitationIntegration()
     enhanced_data = integration_system.enhance_analysis_with_verified_citations(test_analysis_data)
     
-    # Generate sources section
     sources_file = integration_system.save_enhanced_sources_to_file(enhanced_data)
     
     print(f"\n✅ Enhanced citation integration test complete!")

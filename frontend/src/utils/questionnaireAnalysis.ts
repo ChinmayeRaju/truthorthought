@@ -3,44 +3,42 @@ import type { ExitQuestionnaireData } from '../types';
 
 export interface PreQuestionnaireData {
   // News Familiarity
-  newsFamiliarity: number; // 1-5 Likert scale
-  newsFrequency: string; // daily/weekly/monthly/rarely
-  factOpinionConfidence: number; // 1-5 Likert scale
-  
+  newsFamiliarity: number;
+  newsFrequency: string; 
+  factOpinionConfidence: number; 
   // Trust & Bias
-  trustedOutlets: string[]; // BBC/CNN/Guardian/Other
-  outletsBiased: string; // yes/no
-  biasedOutletsSpecify?: string; // text
-  aiFamiliarityTools: number; // 1-5 Likert scale
+  trustedOutlets: string[];
+  outletsBiased: string; 
+  biasedOutletsSpecify?: string; 
+  aiFamiliarityTools: number; 
   
   // Reading Habits
-  headlineReliance: number; // 1-5 Likert scale
-  crossCheckFrequency: number; // 1-5 Likert scale
+  headlineReliance: number; 
+  crossCheckFrequency: number; 
   
   // Demographics
-  techExperience: string; // beginner/intermediate/advanced/expert
+  techExperience: string;
   age: string;
   profession: string;
 }
 
 export interface PostQuestionnaireData {
   // Task Difficulty (NASA-TLX)
-  mentalDemand: number; // 0-100 slider
-  effortRequired: number; // 0-100 slider
-  frustrationLevel: number; // 0-100 slider
-  
+  mentalDemand: number; 
+  effortRequired: number; 
+  frustrationLevel: number; 
   // System Clarity
-  factOpinionClarity: number; // 1-5 Likert scale
-  controlLevel: number; // 1-5 Likert scale
-  sourceInfluence: number; // 1-5 Likert scale
-  explanationHelpfulness: number; // 1-5 Likert scale
+  factOpinionClarity: number; 
+  controlLevel: number;
+  sourceInfluence: number;
+  explanationHelpfulness: number;
   
   // Features & Issues
-  mostHelpfulFeature: string[]; // checkboxes
-  otherHelpfulFeature?: string; // text
-  issuesEncountered: string; // text
-  missedFacts: number; // 1-5 Likert scale
-  missedFactsSpecify?: string; // text
+  mostHelpfulFeature: string[]; 
+  otherHelpfulFeature?: string; 
+  issuesEncountered: string; 
+  missedFacts: number;
+  missedFactsSpecify?: string; 
   
   // Final Comments
   additionalComments: string; // text
@@ -596,7 +594,6 @@ export class QuestionnaireAnalyzer {
       const participantsData = await response.json();
       console.log('Loaded participants data from file:', participantsData);
       
-      // Convert the data structure to match what the API would return
       const participants = Object.values(participantsData).map((participant: any) => ({
         session_id: participant.session_id,
         participant_id: participant.participant_id,
@@ -614,7 +611,6 @@ export class QuestionnaireAnalyzer {
         num_interactions: participant.interactions ? participant.interactions.length : 0
       }));
       
-      // Calculate basic statistics
       const stats = {
         total_participants: participants.length,
         completed_comprehensive_pre: participants.filter(p => p.has_comprehensive_pre).length,
@@ -642,9 +638,7 @@ export class QuestionnaireAnalyzer {
     }
   }
 
-  /**
-   * Export study data to CSV files
-   */
+
   static async exportStudyData(exportType: string = 'all'): Promise<{
     success: boolean;
     message: string;
@@ -665,9 +659,7 @@ export class QuestionnaireAnalyzer {
     }
   }
 
-  /**
-   * Get specific participant data
-   */
+
   static async getParticipantData(sessionId: string): Promise<{
     success: boolean;
     participant: any;

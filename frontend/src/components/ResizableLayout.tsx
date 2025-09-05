@@ -3,11 +3,11 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 interface ResizableLayoutProps {
   leftPanel: React.ReactNode;
   rightPanel: React.ReactNode;
-  initialLeftWidth?: number; // percentage (0-100)
-  minLeftWidth?: number; // percentage
-  maxLeftWidth?: number; // percentage
+  initialLeftWidth?: number; 
+  minLeftWidth?: number;
+  maxLeftWidth?: number; 
   height?: string;
-  gap?: number; // gap in pixels
+  gap?: number;
 }
 
 const ResizableLayout: React.FC<ResizableLayoutProps> = ({
@@ -32,10 +32,10 @@ const ResizableLayout: React.FC<ResizableLayoutProps> = ({
     if (!isDragging || !containerRef.current) return;
 
     const containerRect = containerRef.current.getBoundingClientRect();
-    const containerWidth = containerRect.width - gap; // Account for gap
+    const containerWidth = containerRect.width - gap; 
     const mouseX = e.clientX - containerRect.left;
     
-    // Calculate new left width as percentage
+    
     const newLeftWidth = Math.min(
       Math.max((mouseX / containerWidth) * 100, minLeftWidth),
       maxLeftWidth
@@ -81,7 +81,6 @@ const ResizableLayout: React.FC<ResizableLayoutProps> = ({
         width: '100%'
       }}
     >
-      {/* Left Panel */}
       <div
         style={{
           width: `${leftWidth}%`,
@@ -92,7 +91,6 @@ const ResizableLayout: React.FC<ResizableLayoutProps> = ({
         {leftPanel}
       </div>
 
-      {/* Draggable Handle */}
       <div
         onMouseDown={handleMouseDown}
         style={{
@@ -123,7 +121,6 @@ const ResizableLayout: React.FC<ResizableLayoutProps> = ({
           }
         }}
       >
-        {/* Drag Handle Visual Indicator */}
         <div
           style={{
             width: 4,
@@ -166,7 +163,6 @@ const ResizableLayout: React.FC<ResizableLayoutProps> = ({
         </div>
       </div>
 
-      {/* Right Panel */}
       <div
         style={{
           width: `${rightWidth}%`,

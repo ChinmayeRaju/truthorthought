@@ -46,13 +46,11 @@ export const apiService = {
     return response.data;
   },
 
-  // Get analyzed sessions for bias research
   getAnalyzedSessions: async (): Promise<{ success: boolean; sessions: SessionInfo[] }> => {
     const response = await api.get('/get_analyzed_sessions');
     return response.data;
   },
 
-  // Load specific session for bias research
   loadSessionForBias: async (sessionId: string): Promise<BiasAnalysisSession> => {
     const response = await api.get(`/load_session_for_bias/${sessionId}`);
     return response.data;
@@ -84,7 +82,6 @@ export const apiService = {
     return response.data;
   },
 
-  // Summarize content directly
   summarizeContent: async (content: string, title: string = '', domain: string = 'GENERAL'): Promise<SummaryResponse> => {
     const response = await api.post('/summarize_content', {
       content,
@@ -94,7 +91,6 @@ export const apiService = {
     return response.data;
   },
 
-  // Summarize content from an existing session
   summarizeSession: async (sessionId: string): Promise<SummaryResponse> => {
     const response = await api.post(`/summarize_session/${sessionId}`);
     return response.data;
@@ -106,7 +102,6 @@ export const apiService = {
     return response.data;
   },
 
-  // Health check
   healthCheck: async (): Promise<{ status: string; timestamp: string }> => {
     const response = await api.get('/health');
     return response.data;

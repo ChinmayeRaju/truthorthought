@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Architecture Diagram - Dissertation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .diagram-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .diagram-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 40px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 15px;
+        }
+
+        .architecture-flow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .component-block {
+            border-radius: 12px;
+            padding: 25px 35px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+            color: white;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .component-block:hover {
+            transform: translateY(-5px);
+        }
+
+        .client {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .server-container {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .server-title {
+            font-size: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .server-components {
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .url-scraper {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .multi-role-analyzer {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .chat-assistant {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .arrow {
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid #34495e;
+            margin: 10px auto;
+            position: relative;
+        }
+
+        .arrow::after {
+            content: '';
+            position: absolute;
+            top: -25px;
+            left: -15px;
+            width: 30px;
+            height: 3px;
+            background: #34495e;
+        }
+
+        .flow-label {
+            background: #34495e;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 10px auto;
+            display: inline-block;
+        }
+
+        .data-flow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .horizontal-arrow {
+            width: 60px;
+            height: 3px;
+            background: #34495e;
+            position: relative;
+            margin: 15px 0;
+        }
+
+        .horizontal-arrow::after {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: -6px;
+            width: 0;
+            height: 0;
+            border-left: 12px solid #34495e;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+        }
+
+        .component-description {
+            font-size: 12px;
+            font-weight: normal;
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+
+        .input-output {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #8b4513;
+            font-weight: bold;
+            padding: 15px 25px;
+            border-radius: 25px;
+            margin: 15px 0;
+            border: 2px solid #d2691e;
+        }
+
+        @media (max-width: 768px) {
+            .server-components {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .component-block {
+                min-width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="diagram-container">
+        <div class="diagram-title">
+            System Architecture Diagram
+            <div style="font-size: 16px; font-weight: normal; color: #7f8c8d; margin-top: 10px;">
+                Multi-Role News Analysis System
+            </div>
+        </div>
+
+        <div class="architecture-flow">
+            <!-- Input -->
+            <div class="input-output">
+                📥 INPUT: News Article URLs
+            </div>
+
+            <div class="arrow"></div>
+
+            <!-- Client (Frontend) -->
+            <div class="component-block client">
+                <div>🖥️ CLIENT (FRONTEND)</div>
+                <div class="component-description">
+                    React/TypeScript Web Application<br>
+                    User Interface & Interaction
+                </div>
+            </div>
+
+            <div class="data-flow">
+                <div class="flow-label">HTTP Requests</div>
+                <div class="horizontal-arrow"></div>
+            </div>
+
+            <!-- Server (Backend) -->
+            <div class="server-container">
+                <div class="server-title">🖥️ SERVER (BACKEND)</div>
+                <div class="server-components">
+                    <div class="component-block url-scraper">
+                        <div>🔍 URL SCRAPER</div>
+                        <div class="component-description">
+                            Web Content Extraction<br>
+                            News Source Processing<br>
+                            Proxy Routing
+                        </div>
+                    </div>
+
+                    <div class="component-block multi-role-analyzer">
+                        <div>👥 MULTI-ROLE ANALYZER</div>
+                        <div class="component-description">
+                            Domain Expert Analysis<br>
+                            Consensus Building<br>
+                            Fact vs Opinion Classification
+                        </div>
+                    </div>
+
+                    <div class="component-block chat-assistant">
+                        <div>🤖 INTELLIGENT CHAT ASSISTANT</div>
+                        <div class="component-description">
+                            AI-Powered Conversations<br>
+                            Context-Aware Responses<br>
+                            Analysis Discussion
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-flow">
+                <div class="flow-label">Processed Results</div>
+                <div class="horizontal-arrow"></div>
+            </div>
+
+            <!-- Output -->
+            <div class="input-output">
+                📤 OUTPUT: Structured Analysis Results
+                <div style="font-size: 12px; margin-top: 5px; font-weight: normal;">
+                    • Fact vs Opinion Classification<br>
+                    • Expert Consensus Analysis<br>
+                    • Interactive Chat Interface<br>
+                    • Bias Detection Results
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Flow Legend -->
+        <div style="margin-top: 40px; padding: 20px; background: #ecf0f1; border-radius: 10px;">
+            <h3 style="color: #2c3e50; margin-bottom: 15px;">🔄 Data Flow Process:</h3>
+            <div style="color: #34495e; line-height: 1.6;">
+                <strong>1.</strong> User submits news article URL(s) through the frontend interface<br>
+                <strong>2.</strong> URL Scraper extracts and processes content from news sources<br>
+                <strong>3.</strong> Multi-Role Analyzer applies domain expert analysis for classification<br>
+                <strong>4.</strong> Intelligent Chat Assistant provides interactive discussion capabilities<br>
+                <strong>5.</strong> Structured analysis results returned to frontend for user interaction
+            </div>
+        </div>
+    </div>
+</body>
+</html>

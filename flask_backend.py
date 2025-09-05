@@ -8,15 +8,12 @@ from flask_cors import CORS
 from study_data_manager import StudyDataManager
 import logging
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize Flask app
 app = Flask(__name__)
 CORS(app)
 
-# Initialize study data manager
 study_data_manager = StudyDataManager()
 
 @app.route('/api/submit_questionnaire', methods=['POST'])
@@ -126,7 +123,6 @@ def export_study_data():
 def download_export(filename):
     """Download exported file"""
     try:
-        # Get the data directory from study_data_manager
         data_dir = study_data_manager.data_dir
         return send_from_directory(data_dir, filename, as_attachment=True)
     except FileNotFoundError:

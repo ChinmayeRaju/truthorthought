@@ -62,7 +62,6 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
       const currentSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const questionnaireKey = `research_post_questionnaire_${currentSessionId}`;
       
-      // Get analysis session data from localStorage if available
       let analysisSessionData = null;
       try {
         const storedAnalysisData = localStorage.getItem(`analysis_session_${currentSessionId}`);
@@ -81,11 +80,10 @@ const ResearchAlignedPostQuestionnaire: React.FC = () => {
         ...(analysisSessionData && { analysisSessionData })
       };
       
-      // Submit to backend using comprehensive data system
+      // Submit to backend
       const response = await apiService.submitQuestionnaire(dataToSave);
       
       if (response.success) {
-        // Also save to localStorage as backup
         localStorage.setItem(questionnaireKey, JSON.stringify(dataToSave));
         
         // Log the questionnaire completion interaction
